@@ -59,15 +59,16 @@ Die WebView lädt ausschließlich gepackte App-Dateien über `WebViewAssetLoader
 JDK 17, Android SDK 35, Gradle 8.11.1, Node 22:
 
 ```sh
-npm install --ignore-scripts --no-audit
+npm ci --ignore-scripts --no-audit
 npm run assets
 npm test
 npx playwright install --with-deps chromium
 npm run smoke
+node scripts/download-test-photo.cjs
 gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug
 ```
 
-Echte Modelle separat prüfen, etwa `MODEL=clip32 npm run models`. Der Actions-Workflow prüft alle drei Modelle mit einem realen Pizzafoto, 25 Bildwerten, Offline-Cache mit frischem Worker und einem Negativbild. Zusätzlich: UI, Speicherung nach Neustart, 100 Profile, eigene Wertung, Rezensionskopie, signierte Community-Ereignisse gegen isolierte Test-Relays, Bestätigungsfluss, Kommentare und Android-15-Emulator-Smoke-Test. Die CI prüft die APK-Signatur mit `apksigner` und erzeugt SHA-256-Prüfsummen. Bei Fehlern gibt es Screenshots und Logs als Artifacts.
+Echte Modelle separat prüfen, etwa `MODEL=clip32 npm run models`. Der Actions-Workflow prüft alle drei Modelle mit einem realen Pizzafoto, 25 Bildwerten, Offline-Cache mit frischem Worker und einem Negativbild. Zusätzlich: UI, Speicherung nach Neustart, 100 Profile, eigene Wertung, Rezensionskopie, signierte Community-Ereignisse gegen isolierte Test-Relays, Bestätigungsfluss, Kommentare und Android-15-Emulator-Smoke-Test inklusive echter CLIP-Fotoanalyse in der gepackten WebView und verschlüsselter Identität nach Neustart. Die CI prüft die APK-Signatur mit `apksigner` und erzeugt SHA-256-Prüfsummen. Bei Fehlern gibt es Screenshots und Logs als Artifacts.
 
 Die ursprünglichen Uploads sind unverändert in `source-original/` archiviert.
 

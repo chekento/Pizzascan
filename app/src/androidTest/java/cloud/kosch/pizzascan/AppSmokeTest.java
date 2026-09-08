@@ -55,4 +55,37 @@ public class AppSmokeTest {
 
         }
     }
+    @Test public void realLocalModelRunsInPackagedAndroidWorker() throws Exception {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            ready(scenario);
+            try (java.io.InputStream input = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("pizza.jpg")) {
+                android.graphics.Bitmap source = android.graphics.BitmapFactory.decodeStream(input);
+                android.graphics.Bitmap scaled = android.graphics.Bitmap.createScaledBitmap(source, 400, 300, true);
+                java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+                scaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 85, bytes);
+                String photo = "data:image/jpeg;base64," + android.util.Base64.encodeToString(bytes.toByteArray(), android.util.Base64.NO_WRAP);
+                scaled.recycle(); source.recycle();
+                js(scenario, "window.nativeModelResult='pending';window.nativeModelWorker=new Worker('vendor/ai-worker.js',{type:'module'});"
+                    + "nativeModelWorker.onerror=e=>window.nativeModelResult='worker error: '+e.message;"
+                    + "nativeModelWorker.onmessage=e=>{if(e.data.type==='error')window.nativeModelResult=e.data.message;"
+                    + "if(e.data.type==='result'){window.nativeModelResult=e.data.scores.length===25&&e.data.pizzaMatch>=.35?'ok':'invalid result';nativeModelWorker.terminate();}};"
+                    + "nativeModelWorker.postMessage({type:'analyze',id:'clip32',photo:" + org.json.JSONObject.quote(photo) + "});");
+            }
+            long deadline = SystemClock.elapsedRealtime() + 240000;
+            String result;
+            do { SystemClock.sleep(500); result = js(scenario, "window.nativeModelResult"); }
+            while ("\"pending\"".equals(result) && SystemClock.elapsedRealtime()<deadline);
+            assertEquals("Real local model must run in the packaged HTTPS WebView", "\"ok\"", result);
+            js(scenario, "window.identityCheck='pending';PizzaCommunity.identity(bridge).then(k=>{localStorage.setItem('pizzascan-test-pubkey',k);window.identityCheck='ok';}).catch(()=>window.identityCheck='error');");
+            long keyDeadline = SystemClock.elapsedRealtime() + 10000;
+            while (!"\"ok\"".equals(js(scenario,"window.identityCheck")) && SystemClock.elapsedRealtime()<keyDeadline) SystemClock.sleep(200);
+            assertEquals("\"ok\"", js(scenario,"window.identityCheck"));
+            scenario.recreate(); ready(scenario);
+            js(scenario, "window.identityCheck='pending';PizzaCommunity.identity(bridge).then(k=>window.identityCheck=k===localStorage.getItem('pizzascan-test-pubkey')?'ok':'changed').catch(()=>window.identityCheck='error');");
+            keyDeadline = SystemClock.elapsedRealtime() + 10000;
+            while (!"\"ok\"".equals(js(scenario,"window.identityCheck")) && SystemClock.elapsedRealtime()<keyDeadline) SystemClock.sleep(200);
+            assertEquals("Encrypted community identity must survive activity recreation", "\"ok\"", js(scenario,"window.identityCheck"));
+        }
+    }
+
 }

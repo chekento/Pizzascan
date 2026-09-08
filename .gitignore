@@ -10,3 +10,5 @@ test-results/
 *.apk
 *.aab
 *.zip
+
+app/src/androidTest/assets/

@@ -20,7 +20,7 @@ jobs:
           node-version: '22'
       - name: Bundle web assets and run tests
         run: |
-          if [ -f package-lock.json ]; then npm install --ignore-scripts --no-audit; else npm install --ignore-scripts --no-audit; fi
+          npm ci --ignore-scripts --no-audit
           npm run assets
           npm test
           mkdir -p test-results
@@ -28,6 +28,7 @@ jobs:
           tar -czf test-results/web-bundle.tar.gz web
           npx playwright install --with-deps chromium
           npm run smoke
+          node tests/relay-connectivity.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -44,7 +45,7 @@ jobs:
           node-version: '22'
       - name: Install pinned web dependencies and bundle assets
         run: |
-          if [ -f package-lock.json ]; then npm install --ignore-scripts --no-audit; else npm install --ignore-scripts --no-audit; fi
+          npm ci --ignore-scripts --no-audit
           npm run assets
           npm test
           node --check web/script.js
@@ -61,7 +62,9 @@ jobs:
           path: ~/.android/debug.keystore
           key: pizzascan-development-signing-v1
       - name: Build APK, instrumented tests and Android lint
-        run: gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug
+        run: |
+          node scripts/download-test-photo.cjs
+          gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug
       - name: Verify and collect the APK
         run: |
           mkdir -p artifacts
@@ -118,7 +121,7 @@ jobs:
           node-version: '22'
       - name: Install browser model runtime
         run: |
-          npm install --ignore-scripts --no-audit
+          npm ci --ignore-scripts --no-audit
           npm run assets
           npx playwright install --with-deps chromium
       - name: Real model inference, offline cache and negative image
