@@ -1,0 +1,12 @@
+.gradle/
+**/build/
+local.properties
+node_modules/
+web/vendor/
+artifacts/
+test-results/
+*.jks
+*.keystore
+*.apk
+*.aab
+*.zip
