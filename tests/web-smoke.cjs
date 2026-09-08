@@ -1,90 +1,13 @@
-const {chromium} = require('playwright');
-const fs = require('node:fs');
-const path = require('node:path');
-const http = require('node:http');
-const assert = require('node:assert/strict');
-const root=path.resolve(__dirname,'../web');
-const types={'.html':'text/html','.js':'application/javascript','.css':'text/css','.png':'image/png','.woff2':'font/woff2','.woff':'font/woff'};
-const server=http.createServer((req,res)=>{
-  const name=path.resolve(root,'.'+decodeURIComponent(req.url.split('?')[0]==='/'?'/index.html':req.url.split('?')[0]));
-  if(!name.startsWith(root+path.sep)||!fs.existsSync(name)||!fs.statSync(name).isFile()){res.writeHead(404);res.end();return;}
-  res.setHeader('Content-Type',types[path.extname(name)]||'application/octet-stream');fs.createReadStream(name).pipe(res);
-});
-(async()=>{
-  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-  const base=`http://127.0.0.1:${server.address().port}`;
-  fs.mkdirSync('test-results',{recursive:true});
-  const browser=await chromium.launch({headless:true});
-  const ctx=await browser.newContext({viewport:{width:393,height:760},deviceScaleFactor:1});
-  const page=await ctx.newPage(), errors=[], missing=[];
-  async function until(fn) {
-    const deadline=Date.now()+15000;
-    while(Date.now()<deadline) { if(await page.evaluate(fn)) return; await new Promise(resolve=>setTimeout(resolve,100)); }
-    throw new Error('Condition did not become true: '+fn.toString());
-  }
-  page.on('pageerror',e=>{errors.push(e.message);console.error('PAGE ERROR:',e.message);});
-  page.on('response',r=>{if(r.url().startsWith(base)&&r.status()>=400)missing.push(r.url());});
-  const tile=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z1SIAAAAASUVORK5CYII=','base64');
-  await page.route('**/tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:tile}));
-  await page.route('**/nominatim.openstreetmap.org/**',r=>r.fulfill({json:[{lat:'53.5511',lon:'9.9937',display_name:'Hamburg'}]}));
-  await page.route('**/overpass-api.de/**',r=>r.fulfill({json:{elements:[
-    {type:'way',id:1,center:{lat:53.5511,lon:9.9937},tags:{name:'Fixture Pizza One',cuisine:'pizza',opening_hours:'24/7'}},
-    {type:'node',id:2,lat:53.552,lon:9.998,tags:{name:'Pizza <img src=x onerror=alert(1)>',cuisine:'pizza',amenity:'fast_food'}},
-    {type:'node',id:3,lat:53.55,lon:9.995,tags:{name:'Fixture Pizza Three',cuisine:'pizza'}}
-  ]}}));
-  page.on('dialog',d=>d.accept(d.type()==='prompt'?'Test crawl':undefined));
-  try {
-    await page.goto(base); await until(()=>window.PizzaScan?.ready);
-    await page.locator('#deny-location').click();
-    await until(()=>window.PizzaScan.diagnostics().places===3);
-    await page.locator('#dock-menu').click(); await page.locator('#ai-search-button').click();
-    assert.equal(await page.locator('#discovery-results .place-card').count(),3);
-    assert.equal(await page.locator('#discovery-results img').count(),0,'Untrusted venue name must stay text');
-    await page.locator('#discovery-results [data-action=save]').first().click();
-    assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().saved),1);
-    await page.locator('#discovery-results [data-action=visit]').first().click();
-    await page.locator('#discovery-results [data-action=rate]').first().click();
-    await page.locator('#comment').fill('Smoke test rating'); await page.locator('#submit-rating').click();
-    assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().ratings),1);
-    await page.reload();await until(()=>window.PizzaScan?.ready);
-    assert.deepEqual(await page.evaluate(()=>{const d=PizzaScan.diagnostics();return [d.saved,d.visited,d.ratings];}),[1,1,1]);
-    await page.locator('#dock-menu').click();await page.locator('#ratings-database-button').click();
-    assert.match(await page.locator('#ratings-table').innerText(),/Smoke test rating/);
-    await page.evaluate(()=>PizzaScan.back());
-    await page.locator('#dock-menu').click();await page.locator('#pizza-crawl-button').click();
-    await page.locator('#generate-crawl').click();await page.locator('#save-crawl').click();
-    await page.evaluate(()=>PizzaScan.back());await page.locator('#dock-menu').click();await page.locator('#saved-spots-button').click();
-    assert.match(await page.locator('#saved-spots-list').innerText(),/Test crawl/);
-    await page.evaluate(()=>PizzaScan.back());await page.locator('#dock-menu').click();await page.locator('#photo-analyzer-button').click();
-    await page.locator('#photo-upload').setInputFiles({name:'pizza.png',mimeType:'image/png',buffer:tile});
-    await until(()=>document.getElementById('preview-image').src.startsWith('blob:'));
-    assert.equal(await page.locator('#analyze-photo').isDisabled(),true);
-    await page.evaluate(()=>PizzaScan.back());await page.locator('#dock-saved').click();
-    const invalid=Buffer.from(JSON.stringify([{name:'Bad',lat:1000,lng:2}]));
-    await page.locator('#import-json-input').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:invalid});
-    await until(()=>document.getElementById('map-message-area').textContent.includes('Import failed'));
-    assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().saved),1);
-    const download=page.waitForEvent('download');await page.locator('#export-json-button').click();
-    const file=await download;await file.saveAs('test-results/export.json');
-    assert.equal(JSON.parse(fs.readFileSync('test-results/export.json','utf8')).length,1);
-    await page.locator('#map-message-area').click();
-    await page.screenshot({path:'test-results/saved-places-mobile.png'});
-    await page.evaluate(()=>PizzaScan.back());await page.locator('#theme-toggle').click();
-    assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('dark-mode')),true);
-    await page.unroute('**/overpass-api.de/**');await page.route('**/overpass-api.de/**',r=>r.abort());
-    await page.goto(base);await until(()=>window.PizzaScan?.ready);
-    assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().saved),1);
-    await page.locator('#dock-saved').click();
-    assert.match(await page.locator('#want-to-visit-list').innerText(),/Fixture Pizza One/);
-    await page.setViewportSize({width:740,height:393});
-    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Landscape must not overflow horizontally');
-    await page.screenshot({path:'test-results/saved-places-landscape.png'});
-    assert.deepEqual(errors,[],'No JavaScript runtime errors');assert.deepEqual(missing,[],'All packaged resources exist');
-  } catch (e) {
-    console.error('SMOKE FAILURE:', e);
-    console.error('Page errors:', errors);
-    await page.screenshot({path:'test-results/failure.png'}).catch(()=>{});
-    throw e;
-  } finally { await browser.close();server.close(); }
-  console.log('PASS: startup, source data, injection safety, save/visit/rate, restart persistence, crawl, photo preview, invalid import, export, theme, remote outage, landscape.');
-})().catch(e=>{console.error(e);server.close();process.exit(1);});
+const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('node:assert/strict');
+const {server,until,mapFixtures}=require('./helpers.cjs');
+(async()=>{const {server:s,url}=await server(),browser=await chromium.launch();const ctx=await browser.newContext({viewport:{width:393,height:820},permissions:['clipboard-read','clipboard-write'],geolocation:{latitude:53.5511,longitude:9.9937}});const page=await ctx.newPage(),errors=[];fs.mkdirSync('test-results',{recursive:true});page.on('pageerror',e=>{errors.push(e.message);console.error('PAGE',e.message)});await mapFixtures(page);page.on('dialog',d=>d.accept());
+ // UI fixture only; tests/model-integration.cjs exercises real model weights separately.
+ await ctx.addInitScript(()=>{window.Worker=class{postMessage(m){setTimeout(()=>{const scores=PizzaAnalysis.results(Array.from({length:100},(_,i)=>i%4===2?3:0));this.onmessage({data:{type:'result',scores,overall:PizzaAnalysis.overall(scores),method:PizzaAnalysis.method,createdAt:new Date().toISOString()}})},20)}terminate(){}};});
+ const events=[];await page.routeWebSocket(/wss:\/\/(relay\.damus\.io|nos\.lol)\//,ws=>{ws.onMessage(raw=>{const m=JSON.parse(raw);if(m[0]==='EVENT'){events.push(m[1]);ws.send(JSON.stringify(['OK',m[1].id,true,'saved by local test relay']));}if(m[0]==='REQ'){for(const e of events.filter(e=>m[2].kinds.includes(e.kind)))ws.send(JSON.stringify(['EVENT',m[1],e]));ws.send(JSON.stringify(['EOSE',m[1]]));}});});
+ try{await page.goto(url);await until(page,()=>PizzaScan.ready);await page.locator('#welcome-start').click();await until(page,()=>PizzaScan.diagnostics().places===2);assert.equal(await page.locator('#places img').count(),0);await page.locator('#places [data-action=save]').first().click();await page.screenshot({path:'test-results/map-mobile.png'});await page.locator('#places [data-action=choose]').first().click();
+ const png=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=400;c.height=300;const x=c.getContext('2d');x.fillStyle='#f8cb78';x.fillRect(0,0,400,300);x.fillStyle='#d94e26';x.beginPath();x.arc(200,150,115,0,Math.PI*2);x.fill();return c.toDataURL().split(',')[1];});await page.locator('#photo-input').setInputFiles({name:'fixture.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});await until(page,()=>!document.getElementById('analyze').disabled);await page.locator('#analyze').click();await until(page,()=>PizzaScan.diagnostics().reports===1);assert.equal(await page.locator('#criteria-panel .metric').count(),25);await page.locator('#experts-tab').click();assert.equal(await page.locator('#expert-select option').count(),100);await page.locator('#expert-select').selectOption('100');assert.equal(await page.locator('#expert-detail tbody tr').count(),25);await page.screenshot({path:'test-results/profile-mobile.png'});await page.locator('#criteria-tab').click();assert.equal(await page.locator('#review-draft').isDisabled(),true);
+ await page.locator('#own-rating').fill('7.8');await page.locator('#own-notes').fill('Der Rand hat mir gut gefallen.');await page.locator('#visited').check();await page.locator('#save-own').click();await until(page,()=>!document.getElementById('review-draft').disabled);await page.locator('#review-draft').click();assert.match(await page.locator('#draft-text').inputValue(),/7,8/);assert.match(await page.locator('#sheet-body').innerText(),/4 von 5 Sternen/);await page.locator('#draft-text').fill('Mein bearbeiteter Rezensionstext.');await page.locator('#copy-draft').click();await until(page,()=>document.getElementById('toast').textContent==='Rezension kopiert');assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'Mein bearbeiteter Rezensionstext.');await page.screenshot({path:'test-results/review-mobile.png'});
+ await page.reload();await until(page,()=>PizzaScan.ready);assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().reports),1);assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().saved),1);await page.locator('#nav-photo').click();await page.locator('[data-action=report]').first().click();await page.locator('#publish-review').click();assert.equal(await page.locator('#confirm-publish').isDisabled(),true);assert.equal(events.length,0,'No automatic public events');await page.locator('#public-consent').check();await page.locator('#confirm-publish').click();await until(page,()=>document.getElementById('load-community'));assert.ok(events.length>=1,'Signed event sent only to mocked relay');await page.locator('#load-community').click();await until(page,()=>document.getElementById('community-status').textContent.includes('verifizierte'));assert.equal(await page.locator('#community-feed [data-action=public-detail]').count(),1);
+ await page.locator('[data-action=public-detail]').click();await page.locator('[data-action=comments]').click();await until(page,()=>document.getElementById('send-comment'));await page.locator('#comment-text').fill('Testkommentar, nur lokaler Relay.');await page.locator('#send-comment').click();await until(page,()=>document.getElementById('comments').textContent.includes('Testkommentar, nur lokaler Relay.'));assert.ok(events.some(e=>e.kind===1));
+ await page.evaluate(()=>PizzaScan.back());await page.locator('#settings-open').click();await page.locator('input[value=siglip]').check();await page.locator('#dark-mode').check();await page.locator('#settings-save').click();await page.reload();await until(page,()=>PizzaScan.ready);assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().model),'siglip');assert.equal(await page.locator('body').evaluate(b=>b.classList.contains('dark')),true);await page.locator('#settings-open').click();await page.screenshot({path:'test-results/settings-mobile.png'});await page.setViewportSize({width:740,height:393});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);console.log('PASS map, photo, 25 criteria, 100 profiles, personal score, review draft, persistence, explicit community consent, real signatures, relay ACK, feed, comment, settings, dark, landscape');
+ }catch(e){await page.screenshot({path:'test-results/failure.png'}).catch(()=>{});throw e;}finally{await browser.close();s.close();}})().catch(e=>{console.error(e);process.exit(1)});

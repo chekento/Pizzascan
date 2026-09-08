@@ -1,461 +1,76 @@
-/* PizzaScan Android edition. Adapted from the supplied HTML/CSS prototype.
- * Local data only; no WebSim account, mock venues, API keys or cloud ratings.
- */
-document.addEventListener('DOMContentLoaded', () => {
-  'use strict';
-  const C = window.PizzaCore, $ = id => document.getElementById(id);
-  const KEY = 'pizzascan-state-v1', CACHE = 'pizzascan-map-cache-v1';
-  const on = (id, event, fn) => { if ($(id)) $(id).addEventListener(event, fn); };
-  const text = (id, value) => { if ($(id)) $(id).textContent = value; };
-  let noticeTimer, priorFocus, photoUrl;
-  function notify(message, type = 'info', ms = 6500) {
-    clearTimeout(noticeTimer);
-    const el = $('map-message-area');
-    el.textContent = message;
-    el.className = 'map-message ' + type;
-    el.style.display = 'block';
-    if (ms) noticeTimer = setTimeout(() => { el.style.display = 'none'; }, ms);
-  }
-  on('map-message-area', 'click', () => { $('map-message-area').style.display = 'none'; });
-  const defaultState = () => ({version: 1, want: [], visited: [], ratings: [], crawls: [],
-    profile: {name: 'Pizza Explorer', favoriteStyle: 'neapolitan', favoriteToppings: [], joinDate: new Date().toISOString()},
-    dark: false, welcomed: false, navigation: 'walking', map: {lat: 53.5511, lng: 9.9937, zoom: 13}});
-  const ratingFields = ['ambiance','service','cleanliness','value','crust','sauce','cheese','toppings','bake'];
-  function validateRating(r) {
-    const p = C.place(r.place);
-    if (!ratingFields.every(k => typeof r[k] === 'number' && Number.isFinite(r[k]) && r[k] >= 1 && r[k] <= 5)
-      || !Number.isFinite(r.restaurantWeight) || r.restaurantWeight < 20 || r.restaurantWeight > 80
-      || !Number.isFinite(r.firstBite) || r.firstBite < .1 || r.firstBite > 10) throw new Error('Invalid rating in backup.');
-    const result = {id: String(r.id || p.placeId).slice(0,150), place:p,
-      createdAt: Number.isFinite(Date.parse(r.createdAt)) ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
-      comment: String(r.comment || '').slice(0,2000), restaurantWeight:r.restaurantWeight, firstBite:r.firstBite};
-    ratingFields.forEach(k => { result[k] = r[k]; });
-    result.score = C.ratingScore(result);
-    return result;
-  }
-  function validateState(data) {
-    if (!data || data.version !== 1) throw new Error('This is not a supported PizzaScan backup.');
-    const d = defaultState();
-    d.want = C.importPlaces(data.want);
-    d.visited = C.importPlaces(data.visited);
-    if (!Array.isArray(data.ratings) || data.ratings.length > 5000 || !Array.isArray(data.crawls) || data.crawls.length > 200) throw new Error('Invalid ratings or crawls in backup.');
-    d.ratings = data.ratings.map(validateRating);
-    d.crawls = data.crawls.map(c => {
-      const stops = C.importPlaces(c.stops);
-      if (stops.length < 1 || stops.length > 3) throw new Error('A crawl must have 1–3 stops.');
-      return {id:String(c.id).slice(0,120),name:String(c.name || 'Pizza crawl').slice(0,100),stops,
-        mode: ['walking','bicycling','driving','transit'].includes(c.mode) ? c.mode : 'walking',
-        origin: c.origin && C.coords(c.origin.lat,c.origin.lng) ? {lat:c.origin.lat,lng:c.origin.lng} : null};
-    });
-    if (data.profile && typeof data.profile === 'object') {
-      d.profile.name = String(data.profile.name || 'Pizza Explorer').slice(0,80);
-      d.profile.favoriteStyle = String(data.profile.favoriteStyle || 'neapolitan').slice(0,50);
-      d.profile.favoriteToppings = Array.isArray(data.profile.favoriteToppings) ? data.profile.favoriteToppings.map(t=>String(t).slice(0,60)).slice(0,20) : [];
-      if (Number.isFinite(Date.parse(data.profile.joinDate))) d.profile.joinDate = new Date(data.profile.joinDate).toISOString();
-    }
-    d.dark = data.dark === true; d.welcomed = data.welcomed === true;
-    d.navigation = ['walking','bicycling','driving','transit'].includes(data.navigation) ? data.navigation : 'walking';
-    if (data.map && C.coords(data.map.lat,data.map.lng) && Number.isFinite(data.map.zoom)) d.map = {lat:data.map.lat,lng:data.map.lng,zoom:Math.max(3,Math.min(19,data.map.zoom))};
-    return d;
-  }
-  let state = defaultState();
-  try { const raw = localStorage.getItem(KEY); if (raw) state = validateState(JSON.parse(raw)); }
-  catch { notify('Saved data could not be read. You can restore a JSON backup in My Ratings.', 'error', 0); }
-  function commit(next) {
-    try { localStorage.setItem(KEY, JSON.stringify(next)); state = next; return true; }
-    catch { notify('Storage is full or unavailable. Your change could not be saved. Export a backup before freeing space.', 'error', 0); return false; }
-  }
-  function native(message) {
-    if (!window.PizzaScanNative?.postMessage) return false;
-    try { window.PizzaScanNative.postMessage(JSON.stringify(message)); return true; }
-    catch { notify('The Android action could not start.', 'error'); return false; }
-  }
-  function openExternal(url) {
-    if (!/^(https?:|tel:|geo:)/.test(url)) return;
-    if (!native({type:'open',url})) window.open(url, '_blank', 'noopener,noreferrer');
-  }
-  function exportJSON(data, name) {
-    const value = JSON.stringify(data, null, 2);
-    if (native({type:'save',text:value,name})) return;
-    const url = URL.createObjectURL(new Blob([value],{type:'application/json'}));
-    const a = document.createElement('a'); a.href=url; a.download=name; document.body.append(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 30000);
-  }
-  async function share(value) {
-    if (native({type:'share',text:value})) return;
-    try {
-      if (navigator.share) await navigator.share({text:value});
-      else { await navigator.clipboard.writeText(value); notify('Copied to clipboard.'); }
-    } catch (e) { if (e.name !== 'AbortError') notify('Sharing is unavailable. Please try again.', 'error'); }
-  }
-  function menu(open) {
-    $('control-panel').classList.toggle('minimized', !open);
-    $('dock-menu').setAttribute('aria-expanded',String(open));
-    $('modal-backdrop').hidden = !open;
-    if (open) $('filter-controls').classList.add('collapsed');
-  }
-  function closePanels() {
-    document.querySelectorAll('.panel-modal').forEach(p => { p.style.display='none'; });
-    $('rating-popup-overlay').style.display='none';
-    $('social-share-overlay').style.display='none';
-    menu(false);
-    priorFocus?.focus?.();
-  }
-  function panel(id) {
-    priorFocus = document.activeElement;
-    closePanels();
-    const p = $(id); if (!p) return;
-    p.style.display='flex';
-    $('filter-controls').classList.add('collapsed');
-    $('modal-backdrop').hidden=false;
-    p.querySelector('.modal-content')?.scrollTo(0,0);
-    p.querySelector('button')?.focus();
-  }
-  document.querySelectorAll('.panel-modal .close-button').forEach(b=>b.addEventListener('click',closePanels));
-  on('modal-backdrop','click',closePanels);
-  on('panel-toggle-btn','click',()=>menu(false));
-  on('dock-menu','click',()=>{ const open=$('control-panel').classList.contains('minimized'); closePanels(); menu(open); });
-  on('collapse-filters','click',()=>{
-    const collapsed=$('filter-controls').classList.toggle('collapsed');
-    $('collapse-filters').setAttribute('aria-expanded',String(!collapsed));
-    $('collapse-filters').innerHTML=`<i class="fas fa-chevron-${collapsed?'down':'up'}"></i>`;
-  });
-  function applyTheme() {
-    document.body.classList.toggle('dark-mode',state.dark);
-    $('theme-toggle').innerHTML=`<i class="fas fa-${state.dark?'sun':'moon'}"></i>`;
-    $('theme-toggle').setAttribute('aria-label',state.dark?'Use light theme':'Use dark theme');
-  }
-  applyTheme();
-  on('theme-toggle','click',()=>{ if(commit({...state,dark:!state.dark})) applyTheme(); });
-  $('navigation-mode').value=state.navigation;
-  on('navigation-mode','change',()=>commit({...state,navigation:$('navigation-mode').value}));
-  if (!window.L) { notify('The map library could not load. Reinstall this APK or update Android System WebView.', 'error',0); return; }
-  const map=L.map('map',{zoomControl:false,minZoom:3,maxZoom:19}).setView([state.map.lat,state.map.lng],state.map.zoom);
-  L.control.zoom({position:'bottomright'}).addTo(map);
-  const tile=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
-  }).addTo(map);
-  let lastTileNotice=0;
-  tile.on('tileerror',()=>{ if(Date.now()-lastTileNotice>60000) { lastTileNotice=Date.now(); notify('Some map tiles could not load. Check your connection; saved places remain available.','error'); } });
-  let places=[], markers=new Map(), userLocation=null, userMarker=null, routeLine=null, currentCrawl=null;
-  let requestController=null, requestSerial=0, fetchTimer, lastQuery='', lastQueryAt=0, searchBusy=false, lastSearchAt=0;
-  try {
-    const cache=JSON.parse(localStorage.getItem(CACHE));
-    if(cache && Array.isArray(cache.places)) places=C.importPlaces(cache.places);
-  } catch { /* A corrupt map cache never blocks the local app. */ }
-  const types={pizzeria:'Pizzeria',cafe:'Cafe',fast_food:'Fast food',food_truck:'Food truck',vending_pizza:'Pizza vending machine',other:'Pizza place'};
-  const emojis={pizzeria:'🍕',cafe:'☕',fast_food:'🍟',food_truck:'🚚',vending_pizza:'🏧',other:'🍕'};
-  const average = id => { const r=state.ratings.filter(r=>r.place.placeId===id); return r.length?r.reduce((a,r)=>a+r.score,0)/r.length:null; };
-  function findPlace(id) { return [...places,...state.want,...state.visited,...state.ratings.map(r=>r.place),...(currentCrawl?.stops||[])].find(p=>p.placeId===id); }
-  const has = (list,id) => state[list].some(p=>p.placeId===id);
-  function markerIcon(p) {
-    const visited=has('visited',p.placeId),saved=has('want',p.placeId);
-    return L.divIcon({className:'',html:`<div class="pizza-marker ${visited?'visited':saved?'saved':''}"><span>${visited?'✓':saved?'⭐':emojis[p.type]||'🍕'}</span></div>`,iconSize:[36,36],iconAnchor:[18,36],popupAnchor:[0,-34]});
-  }
-  function action(label, name, id, className='') {
-    return `<button class="${className}" data-action="${name}" data-id="${C.esc(id)}">${label}</button>`;
-  }
-  function placeActions(p, popup=false) {
-    return `<div class="place-actions">${popup?'':action('Map','map',p.placeId)}${action(has('want',p.placeId)?'★ Saved':'☆ Save', 'save',p.placeId)}${action(has('visited',p.placeId)?'✓ Visited':'Mark visited','visit',p.placeId)}${action('Rate','rate',p.placeId)}${action('Directions','navigate',p.placeId)}${action('Share','share',p.placeId)}</div>`;
-  }
-  function popup(p) {
-    const score=average(p.placeId),site=C.website(p.website);
-    const hours=p.openingHours==='24/7'?'Listed as 24/7':p.openingHours?`Opening hours: ${C.esc(p.openingHours)}`:'Opening hours unknown';
-    return `<div class="popup-content"><h3>${C.esc(p.name)}</h3><p>${C.esc(types[p.type]||p.type)}</p><p>${C.esc(p.address)}</p><p>${hours}</p><p class="muted">Check current opening hours with the venue.</p>${site?`<p><a data-external="${C.esc(site)}" href="${C.esc(site)}">Website ↗</a></p>`:''}${p.phone?`<p><a href="tel:${C.esc(p.phone.replace(/[^+\d*#(), -]/g,''))}" data-external="tel:${C.esc(p.phone.replace(/[^+\d*#(), -]/g,''))}">${C.esc(p.phone)}</a></p>`:''}<p>${score===null?'No personal rating':`My rating: ${score.toFixed(1)}/10`}</p>${placeActions(p,true)}</div>`;
-  }
-  function renderMarkers() {
-    markers.forEach(m=>map.removeLayer(m)); markers.clear();
-    const enabled=new Set([...document.querySelectorAll('.filter-checkbox:checked')].map(c=>c.dataset.type));
-    const combined=new Map();
-    if($('saved-spots-checkbox').checked) for(const p of places) {
-      if(!enabled.has(p.type in types?p.type:'other')) continue;
-      if(!$('show-closed-checkbox').checked && /^(off|closed)$/i.test(p.openingHours.trim())) continue;
-      if(has('visited',p.placeId) && !$('show-visited-checkbox').checked) continue;
-      combined.set(p.placeId,p);
-    }
-    if($('want-to-visit-checkbox').checked) state.want.forEach(p=>combined.set(p.placeId,p));
-    if($('show-visited-checkbox').checked) state.visited.forEach(p=>combined.set(p.placeId,p));
-    for(const p of combined.values()) {
-      const m=L.marker([p.lat,p.lng],{icon:markerIcon(p),title:p.name}).bindPopup(()=>popup(p),{maxWidth:290}).addTo(map);
-      markers.set(p.placeId,m);
-    }
-  }
-  document.querySelectorAll('#filter-controls input').forEach(i=>i.addEventListener('change',renderMarkers));
-  function cards(list, empty='No places found here yet.') {
-    return list.length ? list.map(p=>`<article class="place-card"><h3>${C.esc(p.name)}</h3><p class="place-meta">${C.esc(types[p.type]||p.type)} · ${C.distance(userLocation||map.getCenter(),p).toFixed(2)} km straight line</p>${placeActions(p)}</article>`).join('') : `<p class="empty-state">${C.esc(empty)}</p>`;
-  }
-  function renderList(list) { $(list==='want'?'want-to-visit-list':'visited-places-list').innerHTML=cards(state[list],list==='want'?'Save a pizza place from the map to find it here.':'Mark a pizza place as visited to find it here.'); }
-  function togglePlace(list,p) {
-    const existed=has(list,p.placeId);
-    const entries=existed?state[list].filter(x=>x.placeId!==p.placeId):[...state[list],{...p,[list==='visited'?'visitedAt':'addedAt']:new Date().toISOString()}];
-    if(entries.length>5000) { notify('This list has reached 5,000 places.','error'); return; }
-    if(commit({...state,[list]:entries})) { renderMarkers(); renderList(list); updateStats(); notify(existed?'Place removed.':list==='want'?'Place saved on this device.':'Visit saved on this device.'); }
-  }
-  async function fetchPlaces(force=false) {
-    if(map.getZoom()<12) { requestController?.abort(); requestSerial++; notify('Zoom in to search for pizza places.'); return; }
-    const b=map.getBounds();
-    if(b.getEast()-b.getWest()>2 || b.getNorth()-b.getSouth()>2) { notify('Zoom in to a smaller area.'); return; }
-    const bbox=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].map(x=>x.toFixed(5)).join(',');
-    if(!force && bbox===lastQuery && Date.now()-lastQueryAt<20000) return;
-    lastQuery=bbox; lastQueryAt=Date.now();
-    requestController?.abort(); requestController=new AbortController();
-    const own=requestController, serial=++requestSerial;
-    const timeout=setTimeout(()=>own.abort(),30000);
-    notify('Finding pizza places in this area…','loading',0);
-    const query=`[out:json][timeout:25];(nwr["cuisine"~"pizza|pizzeria",i](${bbox});nwr["vending"~"pizza",i](${bbox});nwr["vending:pizza"="yes"](${bbox});nwr["amenity"~"restaurant|fast_food|cafe|food_truck|bar|pub"]["name"~"pizza|pizzeria|pizze",i](${bbox}););out center tags;`;
-    try {
-      const response=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:new URLSearchParams({data:query}),signal:own.signal});
-      if(!response.ok) throw new Error(response.status===429?'The map service is busy. Wait briefly and refresh.':`Map service error (${response.status}).`);
-      const data=await response.json();
-      if(data.remark) throw new Error('The map service could not complete the search. Zoom in or retry.');
-      const result=C.fromOverpass(data.elements);
-      if(serial!==requestSerial) return;
-      places=result; renderMarkers();
-      try { localStorage.setItem(CACHE,JSON.stringify({places:places.slice(0,3000),updatedAt:new Date().toISOString()})); } catch { /* cache is optional */ }
-      notify(result.length?`${result.length} pizza places loaded from OpenStreetMap.`:'No pizza places mapped here. Try another area.');
-      if($('ai-results-area').style.display==='flex') $('discovery-results').innerHTML=cards(places);
-    } catch(e) {
-      if(serial!==requestSerial) return;
-      lastQueryAt=0;
-      notify(e.name==='AbortError'?'Search timed out. Try a smaller map area.':navigator.onLine?e.message+' Previously loaded and saved places remain available.':'Offline. Previously loaded and saved places remain available.','error');
-    } finally { clearTimeout(timeout); }
-  }
-  function scheduleFetch() { clearTimeout(fetchTimer); fetchTimer=setTimeout(()=>fetchPlaces(),750); }
-  map.on('moveend',()=>{
-    const center=map.getCenter();
-    commit({...state,map:{lat:center.lat,lng:center.lng,zoom:map.getZoom()}});
-    scheduleFetch();
-  });
-  async function search() {
-    const query=$('map-search-input').value.trim();
-    if(!query) { notify('Enter a place, city or address to search.','error'); $('map-search-input').focus(); return; }
-    if(searchBusy) return;
-    if(Date.now()-lastSearchAt<1100) { notify('Wait a moment before searching again.'); return; }
-    lastSearchAt=Date.now();
-    searchBusy=true; $('map-search-btn').disabled=true;
-    const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),15000);
-    notify(`Searching for “${query}”…`,'loading',0);
-    try {
-      const url=new URL('https://nominatim.openstreetmap.org/search');
-      url.search=new URLSearchParams({format:'jsonv2',q:query,limit:'5'});
-      const response=await fetch(url,{signal:controller.signal});
-      if(!response.ok) throw new Error('The address service is unavailable. Try again later.');
-      const results=await response.json();
-      if(!Array.isArray(results) || !results.length) { notify('No address found. Try adding a city or country.'); return; }
-      const p=results[0],lat=Number(p.lat),lng=Number(p.lon);
-      if(!C.coords(lat,lng)) throw new Error('The address service returned invalid coordinates.');
-      $('map-search-input').blur(); $('searchbar-suggestions').style.display='none';
-      map.setView([lat,lng],15); scheduleFetch(); notify('Address found. Loading nearby pizza places.');
-    } catch(e) { notify(e.name==='AbortError'?'Address search timed out. Try again.':e.message,'error'); }
-    finally { clearTimeout(timeout); searchBusy=false; $('map-search-btn').disabled=false; }
-  }
-  on('map-search-btn','click',search);
-  on('map-search-input','keydown',e=>{ if(e.key==='Enter') search(); });
-  on('map-search-input','input',()=>{
-    const q=$('map-search-input').value.trim().toLowerCase(), el=$('searchbar-suggestions');
-    if(q.length<2) { el.style.display='none'; return; }
-    const matches=places.filter(p=>p.name.toLowerCase().includes(q)).slice(0,5);
-    el.innerHTML=matches.map(p=>action(C.esc(p.name),'map',p.placeId)).join('');
-    el.style.display=matches.length?'block':'none';
-  });
-  function location() {
-    closePanels();
-    if(!navigator.geolocation) { notify('Location is unavailable. Search for your city instead.','error'); return; }
-    notify('Finding your location…','loading',0);
-    navigator.geolocation.getCurrentPosition(p=>{
-      userLocation={lat:p.coords.latitude,lng:p.coords.longitude};
-      if(!C.coords(userLocation.lat,userLocation.lng)) { notify('Invalid GPS coordinates.','error'); return; }
-      if(userMarker) map.removeLayer(userMarker);
-      userMarker=L.circleMarker([userLocation.lat,userLocation.lng],{radius:9,color:'#fff',weight:3,fillColor:'#167fdf',fillOpacity:1}).addTo(map).bindPopup('Your location');
-      map.setView([userLocation.lat,userLocation.lng],14); scheduleFetch();
-      notify(`Location found (accuracy about ${Math.round(p.coords.accuracy)} m).`);
-    },e=>{
-      notify(e.code===1?'Location permission was denied. You can search by city or retry Location.':'Location unavailable. Enable GPS or search by city.','error');
-      scheduleFetch();
-    },{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
-  }
-  on('location-button','click',location); on('dock-location','click',location);
-  on('refresh-button','click',()=>{closePanels();fetchPlaces(true);});
-  on('dock-explore','click',()=>{closePanels();fetchPlaces(true);});
-  on('dock-saved','click',()=>{renderList('want');panel('want-to-visit-area');});
-  const panels={'want-to-visit-button':'want-to-visit-area','visited-places-button':'visited-places-area',
-    'ai-search-button':'ai-results-area','ai-recommendation-button':'ai-recommendation-area',
-    'pizza-crawl-button':'pizza-crawl-area','photo-analyzer-button':'photo-analyzer-area',
-    'trend-insights-button':'trend-insights-area','saved-spots-button':'saved-spots-area',
-    'ratings-database-button':'ratings-database-area','achievements-button':'achievements-area',
-    'leaderboard-button':'leaderboard-area','profile-button':'profile-area'};
-  Object.entries(panels).forEach(([button,id])=>on(button,'click',()=>{
-    renderList('want'); renderList('visited'); renderRatings(); updateStats(); renderCrawls();
-    $('discovery-results').innerHTML=cards(places);
-    $('area-summary').innerHTML=Object.entries(types).map(([type,name])=>`<div class="place-card">${C.esc(name)} <strong>${places.filter(p=>p.type===type).length}</strong></div>`).join('');
-    panel(id);
-  }));
-  document.addEventListener('click',e=>{
-    const link=e.target.closest('[data-external]');
-    if(link) {e.preventDefault();openExternal(link.dataset.external);return;}
-    const b=e.target.closest('[data-action]'); if(!b) return;
-    const p=findPlace(b.dataset.id);
-    if(p) switch(b.dataset.action) {
-      case 'map': closePanels();$('searchbar-suggestions').style.display='none';map.setView([p.lat,p.lng],16);renderMarkers();markers.get(p.placeId)?.openPopup();break;
-      case 'save': togglePlace('want',p);break;
-      case 'visit': togglePlace('visited',p);break;
-      case 'rate': openRating(p);break;
-      case 'navigate': openExternal(C.directions([p],state.navigation,userLocation));break;
-      case 'share': share(`${p.name}\nhttps://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=17/${p.lat}/${p.lng}`);break;
-    }
-    if(b.dataset.action==='delete-rating') {
-      if(confirm('Delete this local rating?') && commit({...state,ratings:state.ratings.filter(r=>r.id!==b.dataset.id)})) {renderRatings();renderMarkers();updateStats();}
-    }
-    if(b.dataset.action.startsWith('crawl-')) {
-      const c=state.crawls.find(c=>c.id===b.dataset.id); if(!c) return;
-      if(b.dataset.action==='crawl-export') exportJSON(c,'pizzascan-crawl.json');
-      if(b.dataset.action==='crawl-go') openExternal(C.directions(c.stops,c.mode,c.origin));
-      if(b.dataset.action==='crawl-delete' && confirm('Delete this saved crawl?') && commit({...state,crawls:state.crawls.filter(x=>x.id!==c.id)})) renderCrawls();
-    }
-  });
-  let ratingPlace=null;
-  function sliders() {
-    $('pizza-weight').value=100-Number($('restaurant-weight').value);
-    document.querySelectorAll('#rating-form input[type="range"]').forEach(i=>{ const span=i.parentElement.querySelector('.rating-value');if(span) span.textContent=i.value+(i.id.endsWith('weight')?'%':''); });
-  }
-  function openRating(p) {
-    closePanels(); ratingPlace=p; $('rating-form').reset(); sliders();
-    text('rating-place-name',p.name); $('rating-place-id').value=p.placeId;$('rating-lat').value=p.lat;$('rating-lng').value=p.lng;
-    $('rating-popup-overlay').style.display='flex';$('rating-popup-content').scrollTop=0;
-  }
-  document.querySelectorAll('#rating-form input[type="range"]').forEach(i=>i.addEventListener('input',sliders));
-  on('close-rating','click',closePanels);
-  on('rating-popup-overlay','click',e=>{if(e.target===$('rating-popup-overlay')) closePanels();});
-  on('rating-form','submit',e=>{
-    e.preventDefault(); if(!ratingPlace) return;
-    const r={id:crypto.randomUUID(),place:ratingPlace,createdAt:new Date().toISOString(),firstBite:Number($('first-bite').value),restaurantWeight:Number($('restaurant-weight').value),comment:$('comment').value.slice(0,2000)};
-    ratingFields.forEach(k=>{r[k]=Number($(k).value);});r.score=C.ratingScore(r);
-    if(state.ratings.length>=5000) {notify('The rating limit has been reached. Export a backup before deleting old ratings.','error');return;}
-    if(commit({...state,ratings:[...state.ratings,validateRating(r)]})) {closePanels();renderMarkers();updateStats();notify(`Rating saved: ${r.score.toFixed(1)}/10.`);}
-  });
-  function renderRatings() {
-    const q=$('rating-search-input').value.trim().toLowerCase(), sort=$('rating-sort-select').value;
-    const list=state.ratings.filter(r=>(r.place.name+' '+r.comment).toLowerCase().includes(q)).slice();
-    list.sort((a,b)=> sort.startsWith('rating')?(a.score-b.score)*(sort.endsWith('desc')?-1:1):sort.startsWith('name')?a.place.name.localeCompare(b.place.name)*(sort.endsWith('desc')?-1:1):(Date.parse(a.createdAt)-Date.parse(b.createdAt))*(sort.endsWith('desc')?-1:1));
-    const card=r=>`<article class="rating-card"><h3>${C.esc(r.place.name)} · ${r.score.toFixed(1)}/10</h3><p class="muted">First bite: ${r.firstBite}/10 · ${new Date(r.createdAt).toLocaleDateString()}</p><p>${C.esc(r.comment)}</p><div class="place-actions">${action('Map','map',r.place.placeId)}${action('Delete','delete-rating',r.id)}</div></article>`;
-    $('ratings-table').innerHTML=list.length?list.map(card).join(''):'<p class="empty-state">No matching ratings.</p>';
-    const grouped=new Map();state.ratings.forEach(r=>grouped.set(r.place.placeId,r.place));
-    const top=[...grouped.values()].sort((a,b)=>average(b.placeId)-average(a.placeId)).slice(0,5);
-    $('top-rated-table').innerHTML=top.length?top.map(p=>`<p class="place-card">${C.esc(p.name)} · <strong>${average(p.placeId).toFixed(1)}/10</strong></p>`).join(''):'<p class="empty-state">No ratings yet. Open a place and tap Rate.</p>';
-  }
-  on('rating-search-input','input',renderRatings);on('rating-search-btn','click',renderRatings);on('rating-sort-select','change',renderRatings);
-  const achievements=[
-    {name:'First slice',text:'Visit your first pizza place',points:10,test:s=>s.visited.length>=1},
-    {name:'Pizza explorer',text:'Visit 5 pizza places',points:25,test:s=>s.visited.length>=5},
-    {name:'Pizza connoisseur',text:'Visit 20 pizza places',points:50,test:s=>s.visited.length>=20},
-    {name:'First impression',text:'Save your first rating',points:15,test:s=>s.ratings.length>=1},
-    {name:'Pizza critic',text:'Save 10 ratings',points:30,test:s=>s.ratings.length>=10},
-    {name:'Wish list',text:'Save 5 places to visit',points:15,test:s=>s.want.length>=5}
-  ];
-  function updateStats() {
-    const unlocked=achievements.filter(a=>a.test(state)),points=unlocked.reduce((n,a)=>n+a.points,0);
-    text('total-visited-count',state.visited.length);text('total-ratings-count',state.ratings.length);text('achievement-points',points);
-    text('profile-visited',state.visited.length);text('profile-ratings',state.ratings.length);text('profile-achievements',unlocked.length);
-    text('profile-username',state.profile.name);text('profile-join-date','Local profile since '+new Date(state.profile.joinDate).toLocaleDateString());
-    text('profile-rank',state.visited.length>=20?'Pizza Connoisseur':state.visited.length>=5?'Pizza Explorer':'Pizza Newbie');
-    $('profile-avatar').textContent='🍕';
-    $('achievements-list').innerHTML=achievements.map(a=>`<article class="achievement-card ${a.test(state)?'':'locked'}"><strong>${a.test(state)?'🏆':'🔒'} ${C.esc(a.name)}</strong><p>${C.esc(a.text)} · ${a.points} points</p></article>`).join('');
-    $('leaderboard-container').innerHTML=`<div class="stats-grid"><div class="stat-card"><strong>${state.visited.length}</strong><p>Visits</p></div><div class="stat-card"><strong>${state.ratings.length}</strong><p>Ratings</p></div><div class="stat-card"><strong>${points}</strong><p>Points</p></div></div>`;
-    $('favorite-style').value=state.profile.favoriteStyle;
-    [...$('favorite-toppings').options].forEach(o=>{o.selected=state.profile.favoriteToppings.includes(o.value);});
-  }
-  on('save-preferences','click',()=>{if(commit({...state,profile:{...state.profile,favoriteStyle:$('favorite-style').value,favoriteToppings:[...$('favorite-toppings').selectedOptions].map(o=>o.value)}})) notify('Preferences saved on this device.');});
-  on('generate-recommendations','click',()=>{
-    const origin=userLocation||map.getCenter(),max=Number($('distance-preference').value);
-    const list=places.filter(p=>C.distance(origin,p)<=max).sort((a,b)=>C.distance(origin,a)-C.distance(origin,b)).slice(0,10);
-    $('recommendations-results').innerHTML=cards(list,'No loaded places within this distance. Move or refresh the map.');
-  });
-  on('generate-crawl','click',()=>{
-    const origin=userLocation||map.getCenter(),stops=Number($('crawl-stops').value),mode=$('crawl-transport').value;
-    const focus=$('crawl-focus').value;
-    let available=places.filter(p=>C.distance(origin,p)<=10);
-    if(focus==='ratings') available=available.filter(p=>average(p.placeId)!==null).sort((a,b)=>average(b.placeId)-average(a.placeId)).slice(0,stops);
-    if(available.length<stops) {notify(focus==='ratings'?'Not enough personally rated places within 10 km. Choose Nearby stops.':'Not enough loaded places within 10 km. Refresh the map or choose fewer stops.','error');return;}
-    if(mode==='transit') {notify('For public transit, open Directions for each stop. Multi-stop transit links are not supported.');return;}
-    const selected=C.crawl(origin,available,stops);
-    currentCrawl={id:crypto.randomUUID(),name:'Pizza crawl · '+new Date().toLocaleDateString(),stops:selected,mode,origin:{lat:origin.lat,lng:origin.lng}};
-    if(routeLine) map.removeLayer(routeLine);
-    routeLine=L.polyline([origin,...selected].map(p=>[p.lat,p.lng]),{color:'#ff4b2b',weight:4,dashArray:'8 8'}).addTo(map);
-    $('crawl-results').innerHTML='<p class="feature-description">Dashed lines show the stop order only. Open Navigation for actual roads and travel times.</p>'+selected.map((p,i)=>`<div class="place-card"><h3>${i+1}. ${C.esc(p.name)}</h3><p>${C.distance(origin,p).toFixed(2)} km straight line from start</p>${placeActions(p)}</div>`).join('');
-    $('crawl-actions').style.display='flex';
-  });
-  on('save-crawl','click',()=>{if(!currentCrawl)return;const name=prompt('Name your pizza crawl:',currentCrawl.name);if(!name?.trim())return;
-    if(state.crawls.length>=200) {notify('Up to 200 crawls can be saved. Export or delete an older crawl.','error');return;}
-    if(commit({...state,crawls:[...state.crawls.filter(c=>c.id!==currentCrawl.id),{...currentCrawl,name:name.trim().slice(0,100)}]})) notify('Crawl saved. Find it under Saved Crawls.');
-  });
-  on('share-crawl','click',()=>{if(currentCrawl)openExternal(C.directions(currentCrawl.stops,currentCrawl.mode,currentCrawl.origin));});
-  function renderCrawls() {
-    $('saved-spots-list').innerHTML=state.crawls.length?state.crawls.map(c=>`<article class="crawl-card"><h3>${C.esc(c.name)}</h3><p>${c.stops.map(p=>C.esc(p.name)).join(' → ')}</p><div class="place-actions">${action('Navigate','crawl-go',c.id)}${action('Export JSON','crawl-export',c.id)}${action('Delete','crawl-delete',c.id)}</div></article>`).join(''):'<p class="empty-state">No saved crawls. Create one in the Pizza Crawl Planner.</p>';
-  }
-  async function importList(input,list) {
-    const file=input.files?.[0];if(!file)return;
-    try {
-      if(file.size>2*1024*1024)throw new Error('Choose a JSON file smaller than 2 MB.');
-      const imported=C.importPlaces(JSON.parse(await file.text()));
-      const merged=C.importPlaces([...state[list],...imported]);
-      if(commit({...state,[list]:merged})) {renderList(list);renderMarkers();updateStats();notify(`${imported.length} places imported. Existing places were retained.`);}
-    } catch(e) {notify('Import failed: '+e.message,'error');} finally {input.value='';}
-  }
-  for(const [list,exportId,importId,inputId,sortId] of [
-    ['want','export-json-button','import-json-button','import-json-input','sort-distance-button'],
-    ['visited','export-visited-json-button','import-visited-json-button','import-visited-json-input','sort-visited-distance-button']]) {
-    on(exportId,'click',()=>exportJSON(state[list],`pizzascan-${list}.json`));
-    on(importId,'click',()=>$(inputId).click());on(inputId,'change',()=>importList($(inputId),list));
-    on(sortId,'click',()=>{const origin=userLocation||map.getCenter();if(commit({...state,[list]:[...state[list]].sort((a,b)=>C.distance(origin,a)-C.distance(origin,b))}))renderList(list);});
-  }
-  on('backup-all','click',()=>exportJSON(state,'pizzascan-backup.json'));
-  on('restore-all','click',()=>$('backup-input').click());
-  on('backup-input','change',async()=>{
-    const input=$('backup-input'),file=input.files?.[0];if(!file)return;
-    try {
-      if(file.size>3*1024*1024)throw new Error('Backup must be smaller than 3 MB.');
-      const restored=validateState(JSON.parse(await file.text()));
-      if(confirm('Replace this device’s saved places, ratings, crawls and preferences with this backup?')&&commit(restored)) {
-        applyTheme();renderMarkers();renderRatings();updateStats();$('navigation-mode').value=state.navigation;
-        notify('Backup restored.');
-      }
-    }catch(e){notify('Restore failed: '+e.message,'error');}finally{input.value='';}
-  });
-  function showPhoto(file) {
-    if(!file)return;
-    if(!file.type.startsWith('image/')||file.size>20*1024*1024){notify('Choose an image smaller than 20 MB.','error');return;}
-    if(photoUrl)URL.revokeObjectURL(photoUrl);
-    photoUrl=URL.createObjectURL(file);$('preview-image').src=photoUrl;$('photo-preview').style.display='block';
-    $('analysis-results').style.display='block';text('analysis-results','Photo preview only. AI image analysis is not connected. No photo has been uploaded.');
-  }
-  on('drop-zone','click',()=>{$('photo-upload').removeAttribute('capture');$('photo-upload').click();});
-  on('take-photo','click',()=>{$('photo-upload').setAttribute('capture','environment');$('photo-upload').click();});
-  on('photo-upload','change',()=>showPhoto($('photo-upload').files?.[0]));
-  on('drop-zone','dragover',e=>e.preventDefault());on('drop-zone','drop',e=>{e.preventDefault();showPhoto(e.dataTransfer.files?.[0]);});
-  function finishWelcome(useLocation) {
-    if(!commit({...state,welcomed:true}))return;
-    $('settings-popup-overlay').style.display='none';
-    if(useLocation) location();else scheduleFetch();
-  }
-  on('allow-location','click',()=>finishWelcome(true));on('deny-location','click',()=>finishWelcome(false));on('close-settings','click',()=>finishWelcome(false));
-  on('privacy-button','click',()=>alert('PizzaScan 1.0.0\n\nSaved places, ratings, preferences and crawls are stored on this device. Exported files go to a location you choose. Photos are displayed locally and are not uploaded.\n\nOpenStreetMap receives map tile requests. Overpass receives the visible map bounds. Nominatim receives submitted address searches (no remote autocomplete). These services also receive your IP address. GPS is optional and used only after you tap Allow Location or Location.\n\nDirections open Google Maps/the installed navigation app. Websites, sharing and navigation use the selected external service. There is no WebSim login, analytics, advertisement SDK, connected AI service or community backend in this version.\n\nOpenStreetMap data: © OpenStreetMap contributors, ODbL. https://osmfoundation.org/wiki/Privacy_Policy'));
-  function back() {
-    if($('settings-popup-overlay').style.display==='flex'){finishWelcome(false);return true;}
-    if($('rating-popup-overlay').style.display==='flex'||[...document.querySelectorAll('.panel-modal')].some(p=>p.style.display==='flex')||!$('control-panel').classList.contains('minimized')){closePanels();return true;}
-    if($('searchbar-suggestions').style.display==='block'){$('searchbar-suggestions').style.display='none';return true;}
-    if(!$('filter-controls').classList.contains('collapsed')){$('filter-controls').classList.add('collapsed');return true;}
-    if(map._popup?.isOpen()){map.closePopup();return true;}
-    if(routeLine){map.removeLayer(routeLine);routeLine=null;return true;}
-    return false;
-  }
-  document.addEventListener('keydown',e=>{if(e.key==='Escape')back();});
-  window.addEventListener('offline',()=>notify('Offline. Saved places and ratings remain available.','info',0));
-  window.addEventListener('online',()=>{notify('Connection restored.');fetchPlaces(true);});
-  window.addEventListener('resize',()=>map.invalidateSize());
-  // Small public interface for Android back handling and diagnostics.
-  window.PizzaScan={back,ready:true,version:'1.0.0',diagnostics:()=>({places:places.length,saved:state.want.length,visited:state.visited.length,ratings:state.ratings.length,native:!!window.PizzaScanNative}),refresh:()=>fetchPlaces(true)};
-  closePanels();renderMarkers();renderList('want');renderList('visited');renderRatings();updateStats();renderCrawls();sliders();
-  $('loading-overlay').style.display='none';
-  $('settings-popup-overlay').style.display=state.welcomed?'none':'flex';
-  if(state.welcomed)scheduleFetch();
-});
+/* PizzaScan 2 — packaged UI; photos and inference stay on device. */
+'use strict';
+const C=PizzaCore,A=PizzaAnalysis,$=id=>document.getElementById(id),esc=C.esc;
+const SETTINGS='pizzascan-settings-v2';
+function read(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}}
+const legacy=read('pizzascan-state-v1',{});
+let settings={model:'clip32',dark:!!legacy.dark,welcomed:!!legacy.welcomed,name:'Pizza-Fan',blocked:[],...read(SETTINGS,{})};
+if(!A.models.some(m=>m.id===settings.model))settings.model='clip32';
+let saved=read('pizzascan-saved-v2',legacy.want||[]),reports=[],places=[],selectedPlace=null,photo=null,view='map',onlySaved=false,map,markers,position,db,worker,busy=false,sheetKind='',currentReport=null,communityItems=[],communityKey='',mapAbort,searchAbort,queryTimer,lastSearch=0;
+const nativePending=new Map();
+function saveSettings(){localStorage.setItem(SETTINGS,JSON.stringify(settings));document.body.classList.toggle('dark',settings.dark);$('active-model').textContent=A.models.find(m=>m.id===settings.model).name;}
+function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').hidden=true,6500);}
+function actionError(error){console.error(error);toast(error.message||'Das hat nicht geklappt. Bitte erneut versuchen.');}
+async function guarded(fn){try{return await fn();}catch(e){actionError(e);}}
+function bridge(type,data={}){if(window.PizzaScanNative){const id=crypto.randomUUID();return new Promise((resolve,reject)=>{const timer=setTimeout(()=>{nativePending.delete(id);reject(Error('Android hat nicht geantwortet'));},15000);nativePending.set(id,{resolve,reject,timer});window.PizzaScanNative.postMessage(JSON.stringify({type,id,...data}));});}
+ if(type==='secretGet')return Promise.resolve(sessionStorage.getItem('pizzascan-session-identity')||'');
+ if(type==='secretPut'){sessionStorage.setItem('pizzascan-session-identity',data.text);return Promise.resolve('ok');}
+ if(type==='copy')return navigator.clipboard.writeText(data.text);
+ if(type==='open'){window.open(data.url,'_blank','noopener');return Promise.resolve('ok');}
+ if(type==='sharePhoto'&&navigator.share){return fetch(data.photo).then(r=>r.blob()).then(b=>navigator.share({text:data.text,files:[new File([b],'pizzascan.jpg',{type:'image/jpeg'})]}));}
+ if(type==='save'){const blob=new Blob([data.text],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=data.name;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);return Promise.resolve('ok');}
+ return Promise.reject(Error('Diese Aktion benötigt die Android-App.'));}
+window.PizzaScanBridge={reply(payload){const p=nativePending.get(payload.id);if(!p)return;clearTimeout(p.timer);nativePending.delete(payload.id);payload.error?p.reject(Error(payload.error)):p.resolve(payload.value);}};
+function database(){return new Promise((resolve,reject)=>{const req=indexedDB.open('pizzascan-photos-v2',1);req.onupgradeneeded=()=>req.result.createObjectStore('reports',{keyPath:'id'});req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(Error('Fotospeicher konnte nicht geöffnet werden'));});}
+function transaction(mode,run){return new Promise((resolve,reject)=>{const tx=db.transaction('reports',mode);let result;const req=run(tx.objectStore('reports'));if(req)req.onsuccess=()=>result=req.result;tx.oncomplete=()=>resolve(result);tx.onerror=()=>reject(Error('Speichern fehlgeschlagen. Bitte freien Gerätespeicher prüfen.'));tx.onabort=()=>reject(Error('Speichervorgang abgebrochen'));});}
+async function persist(r){await transaction('readwrite',s=>s.put(r));reports=reports.filter(x=>x.id!==r.id);reports.unshift(r);renderHistory();}
+function openSheet(kind,title,html){sheetKind=kind;$('sheet-kicker').textContent=title;$('sheet-body').innerHTML=html;if(!$('sheet').open)$('sheet').showModal();$('sheet').scrollTop=0;}
+function closeSheet(){$('sheet').close();sheetKind='';}
+function navigate(next){closeSheet();view=next;document.querySelectorAll('.view').forEach(e=>e.classList.toggle('active',e.id===next+'-view'));$('nav-map').classList.toggle('selected',next==='map');$('nav-photo').classList.toggle('selected',next==='photo');if(next==='map')setTimeout(()=>map.invalidateSize(),20);window.scrollTo(0,0);}
+function empty(text){return '<div class="empty">'+esc(text)+'</div>';}
+function placeById(id){return [...places,...saved,...reports.map(r=>r.place).filter(Boolean)].find(p=>p.placeId===id);}
+function placeCards(list){return list.slice(0,40).map(p=>`<article class="card"><div class="card-line"><div><h3>${esc(p.name)}</h3><small>${esc(p.address||'Adresse in OSM nicht hinterlegt')}</small></div><span class="chip">${position?(C.distance(position,p).toFixed(1)+' km'):'Pizza'}</span></div><div class="card-actions"><button class="secondary" data-action="place" data-id="${esc(p.placeId)}">Ansehen ↗</button><button class="text-button" data-action="save" data-id="${esc(p.placeId)}">${saved.some(x=>x.placeId===p.placeId)?'♥ Gemerkt':'♡ Merken'}</button><button class="text-button" data-action="choose" data-id="${esc(p.placeId)}">Foto zuordnen</button></div></article>`).join('');}
+function renderPlaces(){const list=onlySaved?saved:places;$('saved-toggle').textContent=onlySaved?'Alle anzeigen':'♡ Gemerkt';$('places').innerHTML=placeCards(list)||empty(onlySaved?'Noch keine Pizzeria gemerkt.':'Keine Pizzeria geladen. Suche eine Stadt und tippe auf „Hier suchen“.');}
+function showPlace(id){const p=placeById(id);if(!p)return;selectedPlace=p;openSheet('place','PIZZERIA',`<h1>${esc(p.name)}</h1><p>${esc(p.address||'Adresse nicht hinterlegt')}</p><p class="hint">Öffnungszeiten aus OpenStreetMap: ${esc(p.openingHours||'nicht hinterlegt')}. Angaben können unvollständig sein.</p><div class="row"><button class="primary" data-action="choose" data-id="${esc(id)}">Pizza bewerten</button><button class="secondary" data-action="directions" data-id="${esc(id)}">Route ↗</button></div><div class="card-actions"><button class="secondary" data-action="maps" data-id="${esc(id)}">Google Maps öffnen</button><button class="secondary" data-action="save" data-id="${esc(id)}">${saved.some(x=>x.placeId===id)?'♥ Gemerkt':'♡ Merken'}</button></div>`);}
+function drawMarkers(){markers.clearLayers();for(const p of places){const content=document.createElement('div'),title=document.createElement('strong'),button=document.createElement('button');title.textContent=p.name;button.textContent='Pizzeria ansehen';button.onclick=()=>showPlace(p.placeId);content.append(title,document.createElement('br'),button);L.marker([p.lat,p.lng],{icon:L.divIcon({className:'pin',iconSize:[17,17]})}).addTo(markers).bindPopup(content);}}
+async function loadPlaces(){if(map.getZoom()<12){$('map-status').textContent='Für Pizzerien näher hineinzoomen';return;}mapAbort?.abort();const ctl=mapAbort=new AbortController(),timeout=setTimeout(()=>ctl.abort(),25000);$('map-status').textContent='Pizzerien werden gesucht …';const b=map.getBounds(),area=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].join(',');const query=`[out:json][timeout:20];(nwr["cuisine"~"pizza"](${area});nwr["amenity"]["name"~"pizza|pizzeria",i](${area});nwr["vending"~"pizza"](${area}););out center tags;`;
+ try{const res=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:new URLSearchParams({data:query}),signal:ctl.signal});if(!res.ok)throw Error('Kartendienst antwortet mit '+res.status);const data=await res.json();if(mapAbort!==ctl)return;places=C.fromOverpass(data.elements).slice(0,3000);if(position)places.sort((a,b)=>C.distance(position,a)-C.distance(position,b));localStorage.setItem('pizzascan-map-cache-v2',JSON.stringify(places));drawMarkers();renderPlaces();$('map-status').textContent=places.length+' Pizzerien · OpenStreetMap';}
+ catch(e){if(mapAbort===ctl)$('map-status').textContent='Kartendienst nicht erreichbar · gespeicherte Daten bleiben verfügbar';}finally{clearTimeout(timeout);}}
+async function searchCity(event){event.preventDefault();const q=$('search').value.trim();if(!q)return;if(Date.now()-lastSearch<1100)return;lastSearch=Date.now();searchAbort?.abort();searchAbort=new AbortController();const timeout=setTimeout(()=>searchAbort.abort(),15000);$('map-status').textContent='Ort wird gesucht …';try{const u=new URL('https://nominatim.openstreetmap.org/search');u.search=new URLSearchParams({q,format:'jsonv2',limit:'1'});const r=await fetch(u,{signal:searchAbort.signal});if(!r.ok)throw Error('Ortssuche momentan nicht erreichbar');const found=await r.json();if(!found.length)throw Error('Kein Ort gefunden');const lat=Number(found[0].lat),lng=Number(found[0].lon);if(!C.coords(lat,lng))throw Error('Ungültige Ortsdaten');map.setView([lat,lng],14);$('search').blur();}catch(e){toast(e.message);$('map-status').textContent='Bitte Ortssuche erneut versuchen';}finally{clearTimeout(timeout);}}
+function gps(){if(!navigator.geolocation)return toast('Standort wird auf diesem Gerät nicht unterstützt');$('map-status').textContent='Standort wird bestimmt …';navigator.geolocation.getCurrentPosition(p=>{position={lat:p.coords.latitude,lng:p.coords.longitude};map.setView([position.lat,position.lng],15);if(window.gpsMarker)map.removeLayer(window.gpsMarker);window.gpsMarker=L.circleMarker([position.lat,position.lng],{radius:8,color:'#fff',fillColor:'#3478df',fillOpacity:1}).addTo(map).bindTooltip('Dein Standort · Genauigkeit etwa '+Math.round(p.coords.accuracy)+' m');},()=>{toast('Standort nicht verfügbar. Du kannst eine Stadt suchen oder die Android-Standortfreigabe aktivieren.');$('map-status').textContent='Standort nicht verfügbar';},{enableHighAccuracy:true,timeout:18000,maximumAge:60000});}
+async function resizePhoto(input,size=1200,quality=.82){const img=await createImageBitmap(input);if(img.width<32||img.height<32){img.close();throw Error('Bitte ein Foto mit mindestens 32 × 32 Pixeln wählen.');}const factor=Math.min(1,size/Math.max(img.width,img.height)),canvas=document.createElement('canvas');canvas.width=Math.round(img.width*factor);canvas.height=Math.round(img.height*factor);canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);img.close();return canvas.toDataURL('image/jpeg',quality);}
+async function choosePhoto(){const file=$('photo-input').files[0];if(!file)return;if(busy)return toast('Bitte laufende Analyse zuerst abbrechen');if(file.size>30*1024*1024)throw Error('Bitte ein Foto unter 30 MB wählen');photo=await resizePhoto(file);$('preview').src=photo;$('preview').hidden=false;$('photo-placeholder').hidden=true;$('analyze').disabled=false;$('photo-input').value='';}
+function renderHistory(){reports.sort((a,b)=>b.createdAt.localeCompare(a.createdAt));$('history-count').textContent=reports.length;$('history').innerHTML=reports.map(r=>`<article class="card"><button class="history-row" data-action="report" data-id="${esc(r.id)}"><img class="history-photo" src="${esc(r.photo)}" alt="Pizzafoto"><span><strong>${esc(r.place?.name||'Deine Pizza')}</strong><small>${new Date(r.createdAt).toLocaleDateString('de-DE')} · ${esc(A.models.find(m=>m.id===r.model)?.name||r.model)}</small></span><span class="score">${r.overall.toFixed(1)}<small>/10</small></span></button></article>`).join('')||empty('Deine erste Fotoanalyse wartet auf dich.');}
+function setBusy(state){busy=state;$('analyze').disabled=state||!photo;$('photo-input').disabled=state;$('analysis-progress').hidden=!state;}
+function stopWorker(){worker?.terminate();worker=null;setBusy(false);toast('Vorgang abgebrochen. Vollständig geladene Modelldateien bleiben gespeichert.');}
+function runModel(loadOnly=false){if(busy)return toast('Es läuft bereits ein Modellvorgang');if(!loadOnly&&!photo)return;setBusy(true);$('progress-label').textContent='KI wird vorbereitet …';$('progress').removeAttribute('value');if(!worker)worker=new Worker('vendor/ai-worker.js',{type:'module'});const usedPhoto=photo,usedPlace=selectedPlace,model=settings.model;
+ worker.onerror=e=>{console.error(e);worker?.terminate();worker=null;setBusy(false);toast('KI konnte nicht starten. Bitte Android System WebView aktualisieren und erneut versuchen.');};worker.onmessage=e=>guarded(async()=>{const d=e.data;if(d.type==='progress'){
+ if(d.stage==='download'){$('progress-label').textContent=d.status==='progress'?`Modell-Download · ${Math.round((d.loaded||0)/1048576)} / ${Math.round((d.total||0)/1048576)} MB`:'Modell wird geladen …';if(Number.isFinite(d.progress))$('progress').value=d.progress;}
+ else {$('progress-label').textContent=`Fotoanalyse auf deinem Gerät · ${d.done} / 25 Kriterien`;$('progress').value=d.done*4;}}
+ if(d.type==='loaded'){settings.cached={...settings.cached,[d.id]:new Date().toISOString()};saveSettings();navigator.storage?.persist?.().catch(()=>{});}
+ if(d.type==='ready'){setBusy(false);toast('Modell einsatzbereit. Das Foto kann jetzt offline analysiert werden.');}
+ if(d.type==='error'){setBusy(false);toast('Analyse nicht abgeschlossen: '+d.message);}
+ if(d.type==='result'){setBusy(false);const r={...d,id:crypto.randomUUID(),model,photo:usedPhoto,place:usedPlace,own:null,notes:'',visited:false};delete r.type;await persist(r);showReport(r.id);}
+ });worker.postMessage({type:loadOnly?'load':'analyze',id:model,photo:loadOnly?undefined:usedPhoto});}
+function categoryRows(scores){return scores.map((s,i)=>`<div class="metric"><div class="metric-line"><span>${String(i+1).padStart(2,'0')} · ${esc(A.categories[i].name)}</span><strong>${s.score.toFixed(1)}</strong></div><div class="bar"><span style="width:${s.score*10}%"></span></div><small>${esc(A.categories[i].group)} · Textvergleich ${s.match>=.65?'deutlich':s.match>=.42?'moderat':'uneindeutig'} · Referenz ${s.anchor+1}/4</small></div>`).join('');}
+function showReport(id,publicItem=false){const r=publicItem?communityItems.find(x=>x.id===id):reports.find(x=>x.id===id);if(!r)return;currentReport=r;const model=A.models.find(m=>m.id===r.model);const ownPart=r.community?`<p><strong>${esc(r.name)}</strong> · persönliche Bewertung ${r.own.toFixed(1)}/10</p><p>${esc(r.notes)}</p><div class="card-actions"><button class="secondary" data-action="comments" data-id="${esc(id)}">Kommentare laden</button><button class="text-button danger" data-action="block" data-id="${esc(r.pubkey)}">Autor ausblenden</button></div><div id="comments"></div>`:`<div class="field"><label for="report-place">Pizzeria zuordnen</label><select id="report-place"><option value="">Ohne Ortszuordnung</option>${[...new Map([r.place,...places,...saved].filter(Boolean).map(p=>[p.placeId,p])).values()].map(p=>`<option value="${esc(p.placeId)}" ${r.place?.placeId===p.placeId?'selected':''}>${esc(p.name)}</option>`).join('')}</select></div><p class="hint">Ort fehlt? Schließe die Details, suche ihn auf der Karte und öffne diese Analyse erneut.</p><div class="field"><label for="own-rating">Deine persönliche Bewertung</label><div class="rating-value"><span id="own-value">${(r.own??5).toFixed(1)}</span><small> / 10</small></div><input id="own-rating" type="range" min="0.1" max="10" step="0.1" value="${r.own??5}"></div><div class="field"><label for="own-notes">Was hast du selbst erlebt?</label><textarea id="own-notes" maxlength="1500" placeholder="Zum Beispiel Geschmack, Service oder was dir gefallen hat …">${esc(r.notes)}</textarea></div><label class="check"><input id="visited" type="checkbox" ${r.visited?'checked':''}><span>Ich habe diese Pizza selbst probiert. Bewertung und Angaben entsprechen meiner Erfahrung.</span></label><button id="save-own" class="primary full">Eigene Bewertung speichern</button><div class="card-actions"><button id="review-draft" class="secondary" ${r.own===null||!r.visited||!r.place?'disabled':''}>Google-Maps-Entwurf ↗</button><button id="publish-review" class="secondary" ${r.own===null||!r.visited||!r.place?'disabled':''}>Mit Community teilen</button><button id="export-review" class="text-button">JSON exportieren</button><button id="delete-review" class="text-button danger">Lokal löschen</button></div><p class="hint">Zuerst Pizzeria, eigene Bewertung und Besuchsbestätigung speichern. Es wird nichts automatisch veröffentlicht.</p>`;
+ openSheet('detail',r.community?'COMMUNITY · FOTOBEWERTUNG':'DEINE FOTOBEWERTUNG',`<h1>${esc(r.place?.name||'Deine Pizza im Detail')}</h1>${r.photo?`<img class="detail-photo" src="${esc(r.photo)}" alt="Analysiertes Pizzafoto">`:''}<div class="score-hero"><span class="score">${r.overall.toFixed(1)}</span><span><strong>KI-Fotoindex / 10</strong><small>${esc(model?.name)} · ${new Date(r.createdAt).toLocaleDateString('de-DE')}</small><small>25 Kriterien · 100 simulierte Profile</small></span></div><p class="notice">Experimenteller Bild-Text-Vergleich. Keine Geschmacksprobe und keine 100 unabhängigen Gutachten. Stil und Fotoqualität beeinflussen die Werte.</p><div class="tabs"><button class="active" id="criteria-tab">25 Kriterien</button><button id="experts-tab">100 Perspektiven</button></div><div id="criteria-panel">${categoryRows(r.scores)}</div><div id="experts-panel" hidden><p class="hint">Jedes Profil gewichtet dieselben 25 KI-Fotowerte anders. „Streng“ verschiebt Werte um −0,6, „großzügig“ um +0,4. Dies sind simulierte Bewertungsraster, keine echten Experten.</p><label for="expert-select">Bewertungsprofil auswählen</label><select id="expert-select">${A.profiles(r.scores).map(p=>`<option value="${p.id}">${String(p.id).padStart(3,'0')} · ${esc(p.name)} · ${p.score.toFixed(1)}</option>`).join('')}</select><div id="expert-detail"></div></div><details><summary>So entsteht die Bewertung</summary><p>Das gewählte lokale Modell vergleicht dein Foto mit vier englischen Bildbeschreibungen je Kategorie. Die relativen Ähnlichkeiten ergeben einen unkalibrierten Index von 0,1 bis 10,0. Nachkommastellen bedeuten keine wissenschaftliche Genauigkeit. „Textvergleich“ beschreibt nur die Trennung dieser Referenzen.</p><p>100 Profile kombinieren zehn Fachperspektiven mit zehn Schwerpunkten. Du siehst jeden Einzelwert und sein Gewicht. Der Gesamtindex ist ihr Mittelwert. Geschmack, Geruch, Temperatur und Lebensmittelsicherheit sind aus einem Foto nicht zuverlässig messbar.</p><p>Bei Käse- oder Saucen-freien Pizzen passen manche Kriterien nicht. Niedrige Werte können auch am Pizzastil oder fehlender Sicht liegen; sie sind kein Qualitätsnachweis.</p><p>Modell: ${esc(model?.repo)} · Methode ${A.method}. <a href="https://huggingface.co/${esc(model?.repo)}" target="_blank" rel="noopener">Modellkarte ↗</a></p></details><hr>${ownPart}`);renderExpert();
+ $('criteria-tab').onclick=()=>switchDetails(false);$('experts-tab').onclick=()=>switchDetails(true);$('expert-select').onchange=renderExpert;
+ if(!r.community){$('own-rating').oninput=()=>$('own-value').textContent=Number($('own-rating').value).toFixed(1);$('save-own').onclick=()=>guarded(async()=>{const own=Number($('own-rating').value);A.stars(own);r.own=own;r.notes=$('own-notes').value.trim();r.visited=$('visited').checked;r.place=placeById($('report-place').value)||null;await persist(r);showReport(r.id);toast('Deine Bewertung ist gespeichert');});$('review-draft').onclick=()=>showDraft(r);$('publish-review').onclick=()=>publishDialog(r);$('export-review').onclick=()=>guarded(()=>bridge('save',{name:'PizzaScan-'+r.id+'.json',text:JSON.stringify({...r,profiles:A.profiles(r.scores)},null,2)}));$('delete-review').onclick=()=>guarded(async()=>{if(!confirm('Diese Fotoanalyse auf dem Gerät löschen? Veröffentlichte Beiträge bleiben online.'))return;await transaction('readwrite',s=>s.delete(r.id));reports=reports.filter(x=>x.id!==r.id);renderHistory();closeSheet();});}}
+function switchDetails(expert){$('criteria-panel').hidden=expert;$('experts-panel').hidden=!expert;$('criteria-tab').classList.toggle('active',!expert);$('experts-tab').classList.toggle('active',expert);}
+function renderExpert(){const p=A.profiles(currentReport.scores)[Number($('expert-select').value||1)-1];$('expert-detail').innerHTML=`<div class="score-hero"><span class="score">${p.score.toFixed(1)}</span><span><strong>${esc(p.name)}</strong><small>Schwerpunkt ${esc(p.focus)} · Verschiebung ${p.adjustment>0?'+':''}${p.adjustment.toFixed(1)}</small></span></div><div class="table-wrap"><table><thead><tr><th>Kriterium</th><th>Index</th><th>Gewicht</th></tr></thead><tbody>${p.cells.map((v,i)=>`<tr><td>${esc(A.categories[i].name)}</td><td>${v.score.toFixed(1)}</td><td>${v.weight.toFixed(2)}×</td></tr>`).join('')}</tbody></table></div>`;}
+function showDraft(r){if(r.own===null||!r.visited||!r.place)return toast('Bitte zuerst deine persönliche Bewertung mit Besuchsbestätigung speichern');openSheet('draft','GOOGLE MAPS · DEIN ENTWURF',`<h1>Deine Meinung zählt.</h1><p>${esc(r.place.name)}</p><div class="notice">${r.own.toFixed(1)}/10 entsprechen gerundet <strong>${A.stars(r.own)} von 5 Sternen</strong>. Google Maps verwendet ganze Sterne; du entscheidest dort selbst.</div><label for="draft-text">Rezension prüfen & bearbeiten</label><textarea id="draft-text" maxlength="3000">${esc(r.draft||A.draft(r))}</textarea><p class="hint">Der Entwurf enthält nur deine Bewertung, deine Angaben und vorsichtige Hinweise zum Foto. Bitte prüfe jede Aussage.</p><button id="maps-draft" class="primary full">Text kopieren & Google Maps öffnen ↗</button><div class="card-actions"><button id="copy-draft" class="secondary">Nur Text kopieren</button><button id="share-photo" class="secondary">Foto & Text teilen</button></div><p class="hint">In Google Maps die richtige Pizzeria auswählen, „Rezension schreiben“ öffnen, Text einfügen und Foto hinzufügen. Veröffentlichen und Sterneauswahl erfolgen durch dich. Google Maps übernimmt Texte oder Fotos nicht automatisch.</p>`);
+ async function saveDraft(){r.draft=$('draft-text').value;await persist(r);return r.draft;}
+ $('copy-draft').onclick=()=>guarded(async()=>{await bridge('copy',{text:await saveDraft()});toast('Rezension kopiert');});$('maps-draft').onclick=()=>guarded(async()=>{await bridge('copy',{text:await saveDraft()});await bridge('open',{url:A.maps(r.place)});});$('share-photo').onclick=()=>guarded(async()=>bridge('sharePhoto',{text:await saveDraft(),photo:r.photo}));}
+function showSettings(){openSheet('settings','EINSTELLUNGEN',`<h1>Deine KI. Auf deinem Gerät.</h1><p class="lead">Drei kostenlose Bildmodelle. Kein API-Schlüssel, kein KI-Abo, keine Fotoübertragung zur Analyse.</p>${A.models.map(m=>`<label class="model-option"><input type="radio" name="model" value="${m.id}" ${settings.model===m.id?'checked':''}><span><strong>${m.name}</strong><small>${esc(m.note)}</small><small>${settings.cached?.[m.id]?'Bereits geladen · Cache kann vom System bereinigt werden':'Download beim ersten Einsatz'}</small></span></label>`).join('')}<p class="hint">Modelle werden von Hugging Face heruntergeladen. Einmal geladen funktioniert die Analyse offline, solange der Cache vorhanden ist. Keine Modellnutzungsgebühren; eventuelle Mobilfunkkosten bleiben. Die Modelle vergleichen Bild und Text und sind keine spezialisierten Pizza-Gutachter.</p><button id="download-model" class="primary full">Gewähltes Modell herunterladen</button><button id="clear-models" class="text-button">Heruntergeladene Modelle entfernen</button><hr><div class="field"><label for="community-name">Community-Anzeigename</label><input id="community-name" maxlength="40" value="${esc(settings.name)}"></div><label class="check"><input id="dark-mode" type="checkbox" ${settings.dark?'checked':''}><span>Dunkles Design</span></label><button id="settings-save" class="secondary full">Einstellungen speichern</button><hr><details><summary>Daten & Community</summary><p>Fotos, Bewertungen und frühere PizzaScan-Daten bleiben lokal. Die Karte nutzt OpenStreetMap, Overpass und Nominatim. Standort wird nur nach Tippen auf GPS abgefragt. Kartenabfragen übertragen den Kartenausschnitt an den Anbieter.</p><p>Community ist freiwillig: „Laden“ verbindet mit relay.damus.io und nos.lol. Teilen veröffentlicht Name, Foto-Vorschau, ausgewählte Pizzeria, Zeitpunkt, eigene Bewertung und KI-Kriterien öffentlich. Dein GPS-Standort wird dabei nicht geteilt. Dezentrale Relays können ausfallen oder Beiträge ablehnen. Löschanfragen entfernen nicht zuverlässig alle Kopien.</p><p>Die Android-Community-Identität ist auf diesem Gerät verschlüsselt gespeichert. Bei Deinstallation geht sie verloren; frühere Beiträge lassen sich dann nicht mehr dieser Identität zuordnen oder löschen.</p><button id="unblock-all" class="text-button">Ausgeblendete Autoren wieder anzeigen (${settings.blocked.length})</button></details><details><summary>Version & offene Komponenten</summary><p>PizzaScan 2.0.0 · Android 8 oder neuer. <a href="https://github.com/chekento/Pizzascan">Quellcode und Lizenzen ↗</a></p><p>Leaflet / OpenStreetMap · Transformers.js / ONNX Runtime · CLIP (OpenAI), SigLIP (Google), ONNX-Konvertierungen (Xenova) · nostr-tools.</p></details>`);
+ for(const el of document.querySelectorAll('input[name=model]'))el.onchange=()=>{if(busy){toast('Bitte den laufenden Modellvorgang zuerst beenden');el.checked=false;document.querySelector(`input[value="${settings.model}"]`).checked=true;return;}settings.model=el.value;saveSettings();};$('download-model').onclick=()=>{navigate('photo');runModel(true);};$('clear-models').onclick=()=>guarded(async()=>{if(busy)throw Error('Bitte laufenden Vorgang zuerst abbrechen');if(!confirm('Alle heruntergeladenen KI-Modelle entfernen? Fotos bleiben gespeichert.'))return;worker?.terminate();worker=null;const keys=await caches.keys();for(const k of keys)if(k.startsWith('transformers'))await caches.delete(k);settings.cached={};saveSettings();showSettings();toast('Modellcache entfernt');});$('settings-save').onclick=()=>{settings.name=$('community-name').value.trim()||'Pizza-Fan';settings.dark=$('dark-mode').checked;saveSettings();toast('Einstellungen gespeichert');closeSheet();};$('dark-mode').onchange=()=>{settings.dark=$('dark-mode').checked;saveSettings();};$('unblock-all').onclick=()=>{settings.blocked=[];saveSettings();showSettings();};}
+function communityCard(r){return `<article class="card"><div class="card-line"><span><strong>${esc(r.name)}</strong><small>${new Date(r.createdAt).toLocaleDateString('de-DE')} · ${esc(r.pubkey.slice(0,8))}</small></span><span class="chip">Persönlich ${r.own.toFixed(1)}/10</span></div>${r.photo?`<img class="public-photo" src="${r.photo}" alt="Öffentlich geteiltes Pizzafoto">`:''}<h3>${esc(r.place.name)}</h3><p>${esc(r.notes)}</p><small>KI-Fotoindex ${r.overall.toFixed(1)}/10 · Nutzerangabe</small><div class="card-actions"><button class="secondary" data-action="public-detail" data-id="${esc(r.id)}">25 Kriterien & Details</button><button class="text-button" data-action="block" data-id="${esc(r.pubkey)}">Ausblenden</button>${r.pubkey===communityKey?`<button class="text-button danger" data-action="public-delete" data-id="${r.id}">Löschanfrage senden</button>`:''}</div></article>`;}
+function communityHome(){openSheet('community','COMMUNITY',`<h1>Gute Pizza verbindet.</h1><p class="lead">Entdecke Fotos und persönliche Bewertungen anderer Pizza-Fans.</p><p class="hint">Community über kostenlose öffentliche Nostr-Relays. Erst „Laden“ verbindet dich. Fotos werden nur nach deiner Bestätigung geteilt; die KI selbst läuft lokal.</p><button id="load-community" class="primary full">Community laden ↗</button><p id="community-status" class="hint" role="status"></p><div id="community-feed" class="cards">${communityItems.filter(r=>!settings.blocked.includes(r.pubkey)).map(communityCard).join('')||empty('Noch keine Community-Beiträge geladen.')}</div>`);$('load-community').onclick=()=>guarded(async()=>{const button=$('load-community');button.disabled=true;$('community-status').textContent='Öffentliche Relays werden abgefragt …';try{const result=await PizzaCommunity.feed();communityItems=result.items;if(sheetKind!=='community')return;$('community-feed').innerHTML=communityItems.filter(r=>!settings.blocked.includes(r.pubkey)).map(communityCard).join('')||empty('Noch keine Beiträge auf den erreichbaren Relays. Teile die erste Pizza!');$('community-status').textContent=result.connected+' von 2 Relays erreichbar · '+communityItems.length+' verifizierte Beiträge';}catch(e){if(sheetKind==='community')$('community-status').textContent=e.message;}finally{button.disabled=false;}});}
+function publishDialog(r){if(!r.visited||r.own===null||!r.place)return;openSheet('publish','COMMUNITY · VORSCHAU',`<h1>Deine Pizza teilen</h1><img class="detail-photo" src="${r.photo}" alt="Foto zur Veröffentlichung"><h2>${esc(r.place.name)}</h2><p><strong>${esc(settings.name)}</strong> · persönliche Bewertung ${r.own.toFixed(1)}/10 · KI-Fotoindex ${r.overall.toFixed(1)}/10</p><p>${esc(r.notes)}</p><label class="check"><input id="public-consent" type="checkbox"><span>Ich möchte diese Foto-Vorschau, meinen Anzeigenamen, die Pizzeria, meine Bewertung und 25 KI-Kriterien öffentlich teilen. Ich habe die Rechte am Foto. Kopien können trotz Löschanfrage bestehen bleiben.</span></label><button id="confirm-publish" class="primary full" disabled>Jetzt öffentlich teilen</button><p id="publish-status" class="hint" role="status"></p>`);$('public-consent').onchange=()=>$('confirm-publish').disabled=!$('public-consent').checked;$('confirm-publish').onclick=()=>guarded(async()=>{const button=$('confirm-publish');button.disabled=true;try{communityKey=await PizzaCommunity.identity(bridge);const blob=await fetch(r.photo).then(x=>x.blob());let thumb=await resizePhoto(blob,240,.55);if(thumb.length>=34000)thumb=await resizePhoto(blob,160,.45);const published=await PizzaCommunity.post(r,settings.name,thumb);r.publicId=published.event.id;await persist(r);const item=PizzaCommunity.decode(published.event);if(item)communityItems=[item,...communityItems.filter(x=>x.sourceId!==r.id)];toast('Beitrag von '+published.confirmed+' Relay(s) bestätigt');communityHome();}catch(e){if(sheetKind==='publish')$('publish-status').textContent=e.message;button.disabled=false;}});}
+async function showComments(id){const el=$('comments');el.textContent='Kommentare werden geladen …';try{const comments=await PizzaCommunity.comments(id);if(!el.isConnected)return;el.innerHTML=comments.filter(c=>!settings.blocked.includes(c.pubkey)).map(c=>`<div class="card"><small>${esc(c.pubkey.slice(0,8))}</small><p>${esc(c.text)}</p><button class="text-button" data-action="block" data-id="${esc(c.pubkey)}">Autor ausblenden</button></div>`).join('')||empty('Noch keine Kommentare.');el.insertAdjacentHTML('beforeend','<div class="field"><label for="comment-text">Dein öffentlicher Kommentar</label><textarea id="comment-text" maxlength="1500"></textarea></div><button id="send-comment" class="primary full">Kommentar öffentlich senden</button>');$('send-comment').onclick=()=>guarded(async()=>{const text=$('comment-text').value.trim();if(!text)throw Error('Bitte einen Kommentar schreiben');if(!confirm('Diesen Kommentar öffentlich auf den Community-Relays veröffentlichen?'))return;const button=$('send-comment');button.disabled=true;try{communityKey=await PizzaCommunity.identity(bridge);await PizzaCommunity.comment(id,text);toast('Kommentar bestätigt');await showComments(id);}finally{button.disabled=false;}});}catch(e){el.textContent=e.message;}}
+async function handleAction(event){const b=event.target.closest('[data-action]');if(!b)return;const id=b.dataset.id;switch(b.dataset.action){case'place':showPlace(id);break;case'save':{const p=placeById(id);if(!p)return;saved=saved.some(x=>x.placeId===id)?saved.filter(x=>x.placeId!==id):[...saved,p];localStorage.setItem('pizzascan-saved-v2',JSON.stringify(saved));renderPlaces();b.textContent=saved.some(x=>x.placeId===id)?'♥ Gemerkt':'♡ Merken';break;}case'choose':selectedPlace=placeById(id);navigate('photo');toast('Foto wird '+selectedPlace.name+' zugeordnet');break;case'directions':await bridge('open',{url:C.directions([placeById(id)],'walking',position)});break;case'maps':await bridge('open',{url:A.maps(placeById(id))});break;case'report':showReport(id);break;case'public-detail':showReport(id,true);break;case'comments':await showComments(id);break;case'block':if(confirm('Beiträge und Kommentare dieses Autors auf diesem Gerät ausblenden?')){settings.blocked=[...new Set([...settings.blocked,id])];saveSettings();communityHome();}break;case'public-delete':{const r=communityItems.find(x=>x.id===id);if(!r||!confirm('Öffentliche Löschanfrage senden? Kopien auf anderen Geräten können bestehen bleiben.'))return;communityKey=await PizzaCommunity.identity(bridge);if(communityKey!==r.pubkey)throw Error('Dieser Beitrag gehört nicht zu deiner Geräte-Identität');await PizzaCommunity.remove(id,r.sourceId);communityItems=communityItems.filter(x=>x.id!==id);communityHome();toast('Löschanfrage bestätigt. Entfernen aller Kopien nicht garantiert.');break;}}}
+async function init(){saveSettings();db=await database();reports=await transaction('readonly',s=>s.getAll());try{saved=C.importPlaces(saved);}catch{saved=[];}renderHistory();map=L.map('map',{zoomControl:false,attributionControl:true}).setView([53.5511,9.9937],14);L.control.zoom({position:'bottomright'}).addTo(map);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);markers=L.layerGroup().addTo(map);try{places=C.importPlaces(read('pizzascan-map-cache-v2',[]));}catch{places=[];}drawMarkers();renderPlaces();map.on('moveend',()=>{clearTimeout(queryTimer);queryTimer=setTimeout(loadPlaces,850);});
+ $('nav-map').onclick=()=>navigate('map');$('nav-photo').onclick=()=>navigate('photo');$('settings-open').onclick=showSettings;$('change-model').onclick=showSettings;$('sheet-close').onclick=closeSheet;$('sheet').addEventListener('close',()=>sheetKind='');$('search-form').onsubmit=searchCity;$('gps').onclick=gps;$('map-refresh').onclick=loadPlaces;$('saved-toggle').onclick=()=>{onlySaved=!onlySaved;renderPlaces();};$('photo-input').onchange=()=>guarded(choosePhoto);$('analyze').onclick=()=>runModel();$('cancel-analysis').onclick=stopWorker;$('community-open').onclick=communityHome;document.addEventListener('click',e=>guarded(()=>handleAction(e)));document.querySelector('.brand').onclick=e=>{e.preventDefault();navigate('map');};$('welcome-start').onclick=()=>{settings.welcomed=true;saveSettings();$('welcome').close();loadPlaces();};$('welcome').addEventListener('cancel',()=>{settings.welcomed=true;saveSettings();loadPlaces();});
+ if(!settings.welcomed)$('welcome').showModal();else loadPlaces();window.PizzaScan.ready=true;}
+window.PizzaScan={ready:false,back(){if($('sheet').open){closeSheet();return true;}if($('welcome').open){$('welcome-start').click();return true;}if(view!=='map'){navigate('map');return true;}return false;},diagnostics:()=>({native:!!window.PizzaScanNative,places:places.length,saved:saved.length,reports:reports.length,model:settings.model,busy,view})};
+init().catch(e=>{console.error(e);$('places').innerHTML=empty('App konnte den lokalen Speicher nicht öffnen. Bitte App neu starten.');toast(e.message);});

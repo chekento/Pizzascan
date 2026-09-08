@@ -4,6 +4,17 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.util.Base64;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
+import java.security.KeyStore;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import java.io.FileOutputStream;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -82,6 +93,11 @@ public class MainActivity extends Activity {
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 WebResourceResponse result = loader.shouldInterceptRequest(request.getUrl());
+                if (result != null) {
+                    String path = request.getUrl().getPath();
+                    if (path != null && path.endsWith(".mjs")) result.setMimeType("application/javascript");
+                    if (path != null && path.endsWith(".wasm")) result.setMimeType("application/wasm");
+                }
                 if (result == null && isLocal(request.getUrl())) {
                     return new WebResourceResponse("text/plain", "UTF-8", 404, "Not Found",
                             Collections.emptyMap(), new ByteArrayInputStream(new byte[0]));
@@ -122,7 +138,7 @@ public class MainActivity extends Activity {
                 for (String type : params.getAcceptTypes()) if (type.startsWith("image/")) image = true;
                 pick.setType(image ? "image/*" : "application/json");
                 pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                Intent chooser = Intent.createChooser(pick, image ? "Choose a pizza photo" : "Import PizzaScan JSON");
+                Intent chooser = Intent.createChooser(pick, image ? "Pizzafoto auswählen" : "PizzaScan JSON importieren");
                 if (image) {
                     try {
                         File dir = new File(getCacheDir(), "photos");
@@ -181,27 +197,86 @@ public class MainActivity extends Activity {
             geoOrigin = null;
         }
     }
-    private void handleMessage(JSONObject request) {
-        switch (request.optString("type")) {
-            case "save":
-                if (pendingExport != null) { toast("Finish the current export first."); return; }
-                pendingExport = request.optString("text");
-                Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                create.addCategory(Intent.CATEGORY_OPENABLE);
-                create.setType("application/json");
-                create.putExtra(Intent.EXTRA_TITLE, request.optString("name", "pizzascan-backup.json")
-                        .replaceAll("[^a-zA-Z0-9._-]", "_"));
-                try { startActivityForResult(create, SAVE_FILE); }
-                catch (Exception e) { pendingExport = null; toast("File export is unavailable."); }
-                break;
-            case "share":
-                Intent share = new Intent(Intent.ACTION_SEND).setType("text/plain");
-                share.putExtra(Intent.EXTRA_TEXT, request.optString("text"));
-                try { startActivity(Intent.createChooser(share, "Share PizzaScan")); }
-                catch (Exception e) { toast("No sharing app available."); }
-                break;
-            case "open": openExternal(Uri.parse(request.optString("url"))); break;
+    private void reply(JSONObject request, String value, String error) {
+        try {
+            JSONObject payload = new JSONObject();
+            payload.put("id", request.optString("id"));
+            payload.put("value", value);
+            if (error != null) payload.put("error", error);
+            web.evaluateJavascript("window.PizzaScanBridge?.reply(" + payload + ")", null);
+        } catch (Exception e) { toast("Android-Antwort fehlgeschlagen"); }
+    }
+    private SecretKey identityKey() throws Exception {
+        KeyStore store = KeyStore.getInstance("AndroidKeyStore"); store.load(null);
+        String alias = "pizzascan-community-v2";
+        if (!store.containsAlias(alias)) {
+            KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+            generator.init(new KeyGenParameterSpec.Builder(alias,
+                    KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build());
+            generator.generateKey();
         }
+        return (SecretKey) store.getKey(alias, null);
+    }
+    private void handleMessage(JSONObject request) {
+        try {
+            switch (request.optString("type")) {
+                case "secretGet": {
+                    android.content.SharedPreferences preferences = getSharedPreferences("community", MODE_PRIVATE);
+                    String encrypted = preferences.getString("identity", "");
+                    if (encrypted.isEmpty()) { reply(request, "", null); return; }
+                    String iv = preferences.getString("iv", "");
+                    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+                    cipher.init(Cipher.DECRYPT_MODE, identityKey(), new GCMParameterSpec(128, Base64.decode(iv, Base64.NO_WRAP)));
+                    reply(request, new String(cipher.doFinal(Base64.decode(encrypted, Base64.NO_WRAP)), StandardCharsets.UTF_8), null);
+                    return;
+                }
+                case "secretPut": {
+                    String text = request.optString("text");
+                    if (!text.matches("[0-9a-f]{64}")) throw new IllegalArgumentException("Ungültige Community-Identität");
+                    android.content.SharedPreferences preferences = getSharedPreferences("community", MODE_PRIVATE);
+                    if (preferences.contains("identity")) throw new IllegalStateException("Identität bereits vorhanden");
+                    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.ENCRYPT_MODE, identityKey());
+                    String encrypted = Base64.encodeToString(cipher.doFinal(text.getBytes(StandardCharsets.UTF_8)), Base64.NO_WRAP);
+                    if (!preferences.edit().putString("identity", encrypted).putString("iv", Base64.encodeToString(cipher.getIV(), Base64.NO_WRAP)).commit())
+                        throw new java.io.IOException("Identität konnte nicht gespeichert werden");
+                    break;
+                }
+                case "copy": {
+                    ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                    clipboard.setPrimaryClip(ClipData.newPlainText("PizzaScan Rezension", request.optString("text")));
+                    break;
+                }
+                case "save": {
+                    if (pendingExport != null) throw new IllegalStateException("Bitte laufenden Export abschließen");
+                    pendingExport = request.optString("text");
+                    Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    create.addCategory(Intent.CATEGORY_OPENABLE); create.setType("application/json");
+                    create.putExtra(Intent.EXTRA_TITLE, request.optString("name", "pizzascan-backup.json").replaceAll("[^a-zA-Z0-9._-]", "_"));
+                    try { startActivityForResult(create, SAVE_FILE); } catch (Exception e) { pendingExport = null; throw e; }
+                    break;
+                }
+                case "sharePhoto": {
+                    String photo = request.optString("photo");
+                    if (!photo.startsWith("data:image/jpeg;base64,")) throw new IllegalArgumentException("Ungültiges Foto");
+                    File dir = new File(getCacheDir(), "photos");
+                    if (!dir.exists() && !dir.mkdirs()) throw new java.io.IOException("Fotospeicher nicht verfügbar");
+                    File file = File.createTempFile("pizza-share-", ".jpg", dir);
+                    try (FileOutputStream stream = new FileOutputStream(file)) { stream.write(Base64.decode(photo.substring(23), Base64.DEFAULT)); }
+                    Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".files", file);
+                    Intent share = new Intent(Intent.ACTION_SEND).setType("image/jpeg");
+                    share.putExtra(Intent.EXTRA_STREAM, uri); share.putExtra(Intent.EXTRA_TEXT, request.optString("text"));
+                    share.setClipData(ClipData.newUri(getContentResolver(), "Pizzafoto", uri));
+                    share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivity(Intent.createChooser(share, "Pizzafoto und Rezension teilen"));
+                    break;
+                }
+                case "open": openExternal(Uri.parse(request.optString("url"))); break;
+                default: throw new IllegalArgumentException("Unbekannte Android-Aktion");
+            }
+            reply(request, "ok", null);
+        } catch (Exception e) { reply(request, "", "Android-Aktion fehlgeschlagen: " + e.getClass().getSimpleName()); }
     }
     private void openExternal(Uri uri) {
         String scheme = uri.getScheme();
@@ -231,7 +306,7 @@ public class MainActivity extends Activity {
                     try (OutputStream output = getContentResolver().openOutputStream(uri, "wt")) {
                         if (output == null) throw new java.io.IOException("No output stream");
                         output.write(text.getBytes(StandardCharsets.UTF_8));
-                        toast("JSON export saved.");
+                        toast("JSON-Export gespeichert.");
                     } catch (Exception e) { toast("Could not save the export."); }
                 }, "pizzascan-export").start();
             }
@@ -240,8 +315,8 @@ public class MainActivity extends Activity {
     private void handleBack() {
         web.evaluateJavascript("window.PizzaScan ? window.PizzaScan.back() : false", consumed -> {
             if (!"true".equals(consumed)) new AlertDialog.Builder(this)
-                    .setTitle("Close PizzaScan?").setMessage("Your saved places and ratings stay on this device.")
-                    .setPositiveButton("Close", (d, w) -> finish()).setNegativeButton("Stay", null).show();
+                    .setTitle("PizzaScan schließen?").setMessage("Deine Fotos und Bewertungen bleiben auf diesem Gerät.")
+                    .setPositiveButton("Schließen", (d, w) -> finish()).setNegativeButton("Bleiben", null).show();
         });
     }
     @SuppressWarnings("deprecation") @Override public void onBackPressed() { handleBack(); }

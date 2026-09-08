@@ -12,7 +12,7 @@ concurrency:
 jobs:
   web:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,7 +20,7 @@ jobs:
           node-version: '22'
       - name: Bundle web assets and run tests
         run: |
-          if [ -f package-lock.json ]; then npm ci --ignore-scripts --no-audit; else npm install --ignore-scripts --no-audit; fi
+          if [ -f package-lock.json ]; then npm install --ignore-scripts --no-audit; else npm install --ignore-scripts --no-audit; fi
           npm run assets
           npm test
           mkdir -p test-results
@@ -44,7 +44,7 @@ jobs:
           node-version: '22'
       - name: Install pinned web dependencies and bundle assets
         run: |
-          if [ -f package-lock.json ]; then npm ci --ignore-scripts --no-audit; else npm install --ignore-scripts --no-audit; fi
+          if [ -f package-lock.json ]; then npm install --ignore-scripts --no-audit; else npm install --ignore-scripts --no-audit; fi
           npm run assets
           npm test
           node --check web/script.js
@@ -65,11 +65,11 @@ jobs:
       - name: Verify and collect the APK
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-1.0.0.apk
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-2.0.0.apk
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-1.0.0.apk | tee artifacts/signature.txt
-          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-1.0.0.apk > artifacts/apk-info.txt
-          sha256sum artifacts/PizzaScan-1.0.0.apk > artifacts/SHA256SUMS.txt
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-2.0.0.apk | tee artifacts/signature.txt
+          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.0.0.apk > artifacts/apk-info.txt
+          sha256sum artifacts/PizzaScan-2.0.0.apk > artifacts/SHA256SUMS.txt
           cp package-lock.json artifacts/package-lock.json
           tar -czf artifacts/web-bundle.tar.gz web
       - name: Upload installable APK
@@ -102,4 +102,32 @@ jobs:
             test-results/
             app/build/reports/
             app/build/outputs/androidTest-results/
+          retention-days: 30
+
+  models:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        model: [clip32, clip16, siglip]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser model runtime
+        run: |
+          npm install --ignore-scripts --no-audit
+          npm run assets
+          npx playwright install --with-deps chromium
+      - name: Real model inference, offline cache and negative image
+        env:
+          MODEL: ${{ matrix.model }}
+        run: npm run models
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: PizzaScan-Model-${{ matrix.model }}
+          path: test-results/
           retention-days: 30

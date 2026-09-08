@@ -37,16 +37,22 @@ public class AppSmokeTest {
                 assertFalse(a.webViewForTest().getSettings().getAllowFileAccess());
                 assertEquals(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW, a.webViewForTest().getSettings().getMixedContentMode());
             });
-            assertEquals("true", js(scenario, "document.getElementById('settings-popup-overlay').style.display === 'flex'"));
-            js(scenario, "document.getElementById('deny-location').click(); document.getElementById('dock-menu').click(); document.getElementById('ratings-database-button').click();");
-            assertEquals("true", js(scenario, "document.getElementById('ratings-database-area').style.display === 'flex'"));
+            js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click(); document.getElementById('nav-photo').click();");
+            assertEquals("true", js(scenario, "document.getElementById('photo-view').classList.contains('active')"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
-            js(scenario, "document.getElementById('theme-toggle').click()");
-            String dark = js(scenario,"document.body.classList.contains('dark-mode')");
+            js(scenario, "document.getElementById('settings-open').click(); document.querySelector('input[value=clip16]').click(); document.getElementById('dark-mode').click(); document.getElementById('settings-save').click();");
+            String dark = js(scenario,"document.body.classList.contains('dark')");
+            assertEquals("true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));
+            js(scenario, "window.nativeCheck='pending';bridge('copy',{text:'PizzaScan Android Test'}).then(()=>window.nativeCheck='ok');");
+            long replyDeadline = SystemClock.elapsedRealtime() + 10000;
+            while (!"\"ok\"".equals(js(scenario,"window.nativeCheck")) && SystemClock.elapsedRealtime()<replyDeadline) SystemClock.sleep(200);
+            assertEquals("\"ok\"", js(scenario,"window.nativeCheck"));
             scenario.recreate();
             ready(scenario);
-            assertEquals(dark, js(scenario,"document.body.classList.contains('dark-mode')"));
-            assertEquals("true",js(scenario,"document.getElementById('settings-popup-overlay').style.display === 'none'"));
+            assertEquals(dark, js(scenario,"document.body.classList.contains('dark')"));
+            assertEquals("true", js(scenario,"!document.getElementById('welcome').open"));
+            assertEquals("true", js(scenario,"PizzaScan.diagnostics().model === 'clip16'"));
+
         }
     }
 }

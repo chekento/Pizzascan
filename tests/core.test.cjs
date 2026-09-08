@@ -51,3 +51,18 @@ test('Navigation preserves travel mode and multi-stop waypoints', () => {
   }
   assert.throws(()=>C.directions([{lat:100,lng:0}]));
 });
+const A = require('../web/analysis.js');
+test('Real model logits map monotonically to bounded category values, never fabricated random scores',()=>{
+ const high=Array.from({length:100},(_,i)=>i%4===3?20:0),low=Array.from({length:100},(_,i)=>i%4===0?20:0);
+ assert.equal(A.categories.length,25);assert.equal(A.models.length,3);assert.ok(A.results(high).every(x=>x.score===10));assert.ok(A.results(low).every(x=>x.score===.1));assert.throws(()=>A.results([NaN]));
+ const scores=A.results(Array(100).fill(0));assert.ok(scores.every(x=>x.match===.25));
+ const profiles=A.profiles(scores);assert.equal(profiles.length,100);assert.equal(new Set(profiles.map(x=>x.name)).size,100);assert.ok(profiles.every(p=>p.cells.length===25&&p.score>=.1&&p.score<=10));
+ assert.notEqual(profiles[0].score,profiles[1].score);assert.notEqual(profiles[0].cells[15].weight,profiles[6].cells[15].weight);
+});
+test('Review uses actual own rating and notes, only confident visible positives, and whole Google stars',()=>{
+ for(const [n,s] of [[.1,1],[2,1],[3,2],[7.8,4],[10,5]])assert.equal(A.stars(n),s);
+ assert.throws(()=>A.stars(null));assert.throws(()=>A.stars(10.1));assert.throws(()=>A.validateScores([]));
+ const r={own:7.8,notes:'Meine eigene Erfahrung.',scores:A.results(Array(100).fill(0))};
+ assert.equal(A.draft(r),'Meine persönliche Bewertung: 7,8 von 10 Punkten. Meine eigene Erfahrung.');
+ const u=new URL(A.maps({name:'Pizza & Pasta',lat:53,lng:10,address:'Hauptstraße 2'}));assert.equal(u.searchParams.get('api'),'1');assert.match(u.searchParams.get('query'),/Pizza & Pasta/);assert.throws(()=>A.maps(null));
+});
