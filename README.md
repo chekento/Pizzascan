@@ -1,66 +1,83 @@
-# PizzaScan für Android
+# PizzaScan 2.0 — Android APK
 
-Installierbare Android-App auf Grundlage der bereitgestellten PizzaScan-Dateien. Paketname: `cloud.kosch.pizzascan`, Version **1.0.0**, Android **8.0 oder neuer**. Das ursprüngliche orange Design und die Hauptbereiche wurden übernommen; die JavaScript-Laufzeit wurde für den eigenständigen Betrieb ersetzt. Die unbearbeiteten Eingaben liegen unter `source-original/`.
+Eine deutsche Android-App für **Pizzakarte mit GPS** und **lokale Fotobewertung**. Drei kostenlose Bildmodelle stehen in den Einstellungen zur Auswahl. Es wird kein KI-API-Schlüssel benötigt, kein Inferenzdienst aufgerufen und kein Foto für die Analyse hochgeladen.
 
-## APK herunterladen
+## Installation
 
-Unter **Actions → Build and verify PizzaScan APK → letzter erfolgreicher Lauf → PizzaScan-APK** das Artefakt herunterladen und entpacken. `PizzaScan-1.0.0.apk` ist mit einem Android-Entwicklungszertifikat signiert und direkt installierbar. Android kann beim Öffnen einmalig die Erlaubnis „Unbekannte Apps installieren“ für den verwendeten Browser oder Dateimanager verlangen.
+Die installierbare Datei heißt `PizzaScan-2.0.0.apk`. Sie wird als Download im Chat bereitgestellt und liegt zusätzlich im Artifact `PizzaScan-APK` eines erfolgreichen [GitHub-Actions-Laufs](https://github.com/chekento/Pizzascan/actions).
 
-Dies ist ein Testbuild zum Installieren außerhalb des Play Store. Es wurde kein privater Produktionsschlüssel erstellt oder ins Repository geschrieben. Der Workflow bewahrt den Entwicklungsschlüssel im GitHub-Actions-Cache auf. Falls dieser Cache später gelöscht wird, entsteht ein neuer Schlüssel; dann vor einer Neuinstallation die lokalen Daten als JSON exportieren. Eine Play-Store-Veröffentlichung gehört nicht zu diesem Build.
+Android 8 oder neuer; auf dem Gerät die Installation aus der verwendeten Download-App erlauben. Die APK verwendet für direkte Installation die beibehaltene Entwicklungssignatur von Version 1.0.0 und dieselbe App-ID `cloud.kosch.pizzascan`. Die App ist kein Play-Store-Release. Für eine Store-Veröffentlichung ist ein eigener dauerhaft gesicherter Release-Schlüssel erforderlich.
 
-## Funktionen
+## Bedienung
 
-- OpenStreetMap-Karte, Orts-/Adresssuche und echte Pizza-Einträge aus Overpass; Gebäude und Relationen werden über ihre Mittelpunkte erfasst.
-- Optionale Android-Standortfreigabe einschließlich ungefährem Standort; kein Standortabruf vor der ersten Zustimmung oder einem bewussten Tippen auf „Location“.
-- Merklisten, besuchte Orte, persönliche Bewertungen, Profil und Erfolge lokal auf dem Gerät.
-- Gewichtete Bewertung auf einer Skala bis 10; „First bite“ wird getrennt gespeichert. Kein erfundener Community-Durchschnitt.
-- JSON-Import und Export über die Android-Dateiauswahl sowie vollständige Sicherung und Wiederherstellung. Listenimporte ergänzen vorhandene Einträge; eine vollständige Wiederherstellung fragt vor dem Ersetzen nach.
-- Pizza-Crawls mit zwei oder drei echten Orten, gespeicherter Reihenfolge und Export. Gestrichelte Linien zeigen die Reihenfolge und Luftlinie; Google Maps/eine passende externe App übernimmt Straßenführung und Fahrtzeiten.
-- Fuß-, Rad-, Auto- und ÖPNV-Modus für einzelne Ziele. Mehrere ÖPNV-Zwischenstopps werden ausdrücklich abgelehnt, weil der verwendete Navigationslink sie nicht unterstützt.
-- Android-Teilen, Website-/Telefonaufruf, Fotoauswahl oder Fotoaufnahme mit der installierten Kamera-App.
-- Helles/dunkles Design, einklappbare Filter, mobile Navigation und Android-Zurück-Verhalten.
+1. Eine Stadt auf der Karte suchen oder mit dem GPS-Knopf den eigenen Standort verwenden. Pizzerien stammen aus OpenStreetMap. Orte lassen sich merken und einer Fotoanalyse zuordnen.
+2. Unter **Einstellungen** CLIP B/32, CLIP B/16 oder SigLIP B/16 wählen. „Modell herunterladen“ bereitet die spätere Offline-Nutzung vor. Der erste Download umfasst grob 160–210 MB je Modell; WLAN und mindestens einige hundert MB freier Speicher sind sinnvoll. Ladezeit und Analysegeschwindigkeit hängen vom Gerät ab.
+3. Unter **Fotobewertung** ein Foto aufnehmen oder auswählen. Die App verkleinert es auf maximal 1200 Pixel und entfernt durch erneutes JPEG-Kodieren Metadaten. Analyse im Web Worker mit ONNX/WASM auf der CPU; weder Cloud-Inferenz noch API-Schlüssel.
+4. Die Detailseite zeigt 25 Kriterien mit Werten von 0,1 bis 10,0 und alle 100 simulierten Bewertungsprofile mit Einzelwerten und Gewichten. Eigene Bewertung auf der Zehn-Punkte-Skala, Besuchsbestätigung und Erlebnistext separat speichern.
+5. **Google-Maps-Entwurf** erzeugt einen bearbeitbaren Rezensionstext. „Text kopieren & Google Maps öffnen“ übergibt die ausgewählte Pizzeria an die Ortssuche. Dort richtigen Ort prüfen, Rezension öffnen, Text einfügen, Sterne und Foto selbst hinzufügen und veröffentlichen. Ein zweiter Knopf teilt Foto und Text über Androids Freigabedialog. Ziel-Apps entscheiden, welche Anhänge sie übernehmen.
+6. Community optional über die Karte öffnen. „Laden“ liest öffentliche Beiträge; erst eine Vorschau mit ausdrücklicher Bestätigung veröffentlicht einen Beitrag. Kommentare und das lokale Ausblenden von Autoren sind möglich.
 
-## Klar abgegrenzte Funktionen
+## Was die Fotozahlen bedeuten
 
-Die Vorlage enthielt WebSim-Aufrufe, Zufallsbewertungen, simulierte Fotoanalyse, fiktive Ranglisten und teilweise unverdrahtete Schaltflächen. Die Android-Version benötigt keinen WebSim-Account und zeigt keine generierten Orte, Quellen oder Match-Prozente als Tatsachen an.
+Die App verwendet echte Bild-Sprach-Modelle, aber **keine wissenschaftlich validierte Pizza-Bewertung**. Je Kriterium werden vier sichtbare Ausprägungen als englische Bildbeschreibungen verglichen. Die gruppenweise Softmax-Normierung der Modell-Logits liefert einen gewichteten Index zwischen 0,1 und 10,0. Eine Nachkommastelle bedeutet keine entsprechende Messgenauigkeit. Der angezeigte Textvergleich bezeichnet lediglich die relative Trennung der vier Referenzen, keine kalibrierte Wahrscheinlichkeit für gute Pizza.
 
-Empfehlungen werden anhand der Luftlinienentfernung sortiert. Fotoanalyse durch KI und eine Online-Community sind **nicht angebunden**. Die Fotoansicht weist darauf hin. Die Gebietsübersicht zählt reale geladene Einträge; sie behauptet keine Live-Markttrends. Öffnungszeiten werden unverändert aus der Datenquelle angezeigt; komplexe Kalenderregeln werden nicht als sichere Live-Öffnungsprognose interpretiert.
+Die 25 Kriterien betreffen Rand, Backbild, Belag, Komposition und Fotoqualität. Käse- oder saucenfreie Pizzen, atypische Stile, schlechte Sicht und Beleuchtung können unpassende Ergebnisse verursachen. Die App kann weder Geschmack, Geruch, Temperatur, Lebensmittelsicherheit noch nicht sichtbare Details bestimmen. Ein vorgeschalteter Pizza/Text-Vergleich lehnt uneindeutige Bilder ab; auch diese Erkennung kann Fehler machen.
 
-Die Oberfläche und alle Programmbibliotheken sind in der APK enthalten. Neue Kartenausschnitte, Adresssuche und aktuelle Lokale benötigen Internet. Bereits gespeicherte Orte und Bewertungen sowie der letzte begrenzte Suchcache bleiben lokal verfügbar; die App ist keine vollständige Offline-Kartenlösung. Öffentliche OSM-Dienste können langsam sein oder Anfragen begrenzen.
+**100 Profile sind 100 simulierte Perspektiven auf dieselben 25 Modellwerte, keine 100 Menschen und keine 100 unabhängigen KI-Gutachten.** Zehn Fachperspektiven werden mit zehn Gewichtungsvarianten kombiniert. Strenge bzw. großzügige Profile verschieben Werte transparent um −0,6 bzw. +0,4 und begrenzen sie auf die Skala. Der KI-Fotoindex ist das Mittel ihrer 100 gewichteten Gesamtergebnisse. Vollständige Berechnung: `web/analysis.js`; die Oberfläche legt Werte, Gewichte und Grenzen offen.
 
-## Lokal bauen
+Der Rezensionsentwurf erfindet keine Geschmackserfahrungen. Er verwendet die eigene Bewertung, den eigenen Erlebnistext und höchstens zwei sichtbare positive Kriterien mit ausreichend getrennter Textreferenz. Nutzer sollen den Text prüfen. Google Maps arbeitet mit 1–5 ganzen Sternen; die App schlägt `max(1, min(5, round(eigeneWertung / 2)))` vor und veröffentlicht nichts automatisch.
 
-Benötigt: JDK 17, Android SDK 35, Gradle 8.11.1 und Node.js 22.
+## Lokale KI-Modelle
+
+| Einstellung | ONNX-Modell | Ausführung |
+|---|---|---|
+| CLIP B/32 | [Xenova/clip-vit-base-patch32](https://huggingface.co/Xenova/clip-vit-base-patch32) | q8 / WASM / CPU |
+| CLIP B/16 | [Xenova/clip-vit-base-patch16](https://huggingface.co/Xenova/clip-vit-base-patch16) | q8 / WASM / CPU |
+| SigLIP B/16 | [Xenova/siglip-base-patch16-224](https://huggingface.co/Xenova/siglip-base-patch16-224) | q8 / WASM / CPU |
+
+Die Modellgewichte werden beim ersten Einsatz von Hugging Face heruntergeladen; kein Account und kein API-Schlüssel erforderlich. Das Foto bleibt lokal. Die Laufzeit ist in der APK enthalten. Transformers.js speichert Gewichte im Web-Cache. Android kann diesen Cache bei Speicherdruck löschen; dann ist ein neuer Download nötig. Die Modellgewichte sind separate Downloads und nicht in der APK enthalten. Kein Cloud-Ersatz bei Fehlern, keine eingebauten Zugangsdaten, keine inoffiziellen Login- oder Web-Scraping-Umgehungen.
+
+## Community ohne eigenen Server
+
+Die App verwendet öffentliche, unabhängige Nostr-Relays `wss://relay.damus.io` und `wss://nos.lol` mit einem spezifischen `pizzascan`-Tag. Das ist ein echtes dezentrales Austauschformat, keine simulierte Nutzerliste. Relays sind nicht Teil dieses Projekts; Erreichbarkeit, Annahme großer Events und Aufbewahrung sind nicht garantiert. Das UI unterscheidet Fehler von leerem Feed und wartet beim Senden auf mindestens eine Relay-Bestätigung.
+
+- NIP-78 / Kind 30078 für Foto-Rezensionen, NIP-01-signierte Events; Kind 1 für Kommentare, NIP-09/Kind 5 für Löschanfragen.
+- Öffentlich: Anzeigename, kleiner JPEG-Vorschaubild-Anhang (maximal 240 Pixel), bewusst gewählte Pizzeria, Ereigniszeitpunkt, eigener Text/Score, Modell und 25 KI-Werte. Kein Live-GPS-Standort.
+- Identität ohne Serverkonto: Nostr-Schlüssel auf dem Gerät erzeugt; in Android mit AES/GCM und Android Keystore verschlüsselt gespeichert. Keine Schlüssel im Quellcode oder Backup. Beim Deinstallieren geht die Identität verloren. Der Browser-Testmodus verwendet nur eine sitzungsgebundene Identität.
+- Empfangene Events werden kryptografisch sowie nach Schema, Größe, Koordinaten und Scorebereich geprüft. Fremder Text wird escaped; Vorschaubilder sind ausschließlich begrenzte JPEG-data-URLs.
+- Keine automatisch veröffentlichten Inhalte. Nutzer sehen und bestätigen die Vorschau. Kommentare benötigen eine ausdrückliche Sendeaktion. Ausblenden blockiert einen Autor lokal. Eine dezentrale Löschanfrage kann bereits verteilte Kopien nicht entfernen.
+- Öffentliche Tests schreiben keine Events: der Browsertest ersetzt die Relay-Verbindungen durch isolierte Test-Relays.
+
+## Speicher und Android
+
+Fotoanalysen liegen in IndexedDB, Einstellungen und gemerkte Orte lokal. Einzelfotos können mit allen Kriterien und Profilen als JSON exportiert werden. Frühere Daten von Version 1 bleiben erhalten; gemerkte Orte werden übernommen. Frühere manuelle Ratings und Crawls bleiben im vorhandenen lokalen Datensatz, haben aber keine eigene Ansicht im auf Karte und Foto konzentrierten V2-UI. Keine Datenlöschung bei einem normalen APK-Update.
+
+Die WebView lädt ausschließlich gepackte App-Dateien über `WebViewAssetLoader` auf einer HTTPS-Origin. Nativer Message-Kanal nur für diese Origin und das Hauptfenster; kein allgemeines JavaScript-Interface. Dateizugriff aus der WebView ist deaktiviert, Dateiauswahl über Android. Externe Links öffnen sich außerhalb der WebView. Kamera über Androids Aufnahme-Intent und `FileProvider`, GPS erst nach Nutzeraktion. Mixed Content und Drittanbieter-Cookies sind deaktiviert. CSP erlaubt WASM, jedoch kein JavaScript-`unsafe-eval`.
+
+## Bauen und prüfen
+
+JDK 17, Android SDK 35, Gradle 8.11.1, Node 22:
 
 ```sh
-npm install --ignore-scripts
+npm install --ignore-scripts --no-audit
 npm run assets
 npm test
-gradle assembleDebug lintDebug
-```
-
-APK: `app/build/outputs/apk/debug/app-debug.apk`.
-
-```sh
-npx playwright install chromium
+npx playwright install --with-deps chromium
 npm run smoke
-gradle connectedDebugAndroidTest
+gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug
 ```
 
-Der GitHub-Workflow führt Tests für Koordinaten, Datenimport, HTML-Escaping, Bewertung und Navigation aus. Browser-Smoke-Tests verwenden klar benannte Fixture-Orte und prüfen Speichern, Besuchen, Bewerten, Neustart, Crawl, Fotoauswahl, JSON, Fehlerzustände und Layout. Ein Android-15-Emulatortest prüft den Start der gebündelten App, den nativen Nachrichtenkanal, die Bedienung ohne GPS und Datenpersistenz über die Activity-Neuerstellung. Echte GPS-Hardware, Kamera-Apps und herstellerspezifische Dateiauswahl müssen zusätzlich auf dem Zielgerät geprüft werden.
+Echte Modelle separat prüfen, etwa `MODEL=clip32 npm run models`. Der Actions-Workflow prüft alle drei Modelle mit einem realen Pizzafoto, 25 Bildwerten, Offline-Cache mit frischem Worker und einem Negativbild. Zusätzlich: UI, Speicherung nach Neustart, 100 Profile, eigene Wertung, Rezensionskopie, signierte Community-Ereignisse gegen isolierte Test-Relays, Bestätigungsfluss, Kommentare und Android-15-Emulator-Smoke-Test. Die CI prüft die APK-Signatur mit `apksigner` und erzeugt SHA-256-Prüfsummen. Bei Fehlern gibt es Screenshots und Logs als Artifacts.
 
-## Daten und Dienste
+Die ursprünglichen Uploads sind unverändert in `source-original/` archiviert.
 
-Keine Analytics, Werbe-SDKs, API-Schlüssel oder automatische Foto-Uploads. Lokale Daten werden nicht automatisch in ein Cloud-Konto gesichert. Kartendienste erhalten IP-Adresse und Kartenanfragen; Overpass die sichtbaren Kartengrenzen, Nominatim nur ausdrücklich abgesendete Suchtexte. Navigation/Teilen übergeben die gewählten Ziele an die ausgewählte externe Anwendung.
+## Komponenten, Referenzen und Lizenzen
 
-- [OpenStreetMap-Daten und Lizenz](https://www.openstreetmap.org/copyright)
-- [OSM Foundation: Datenschutz](https://osmfoundation.org/wiki/Privacy_Policy)
-- [OpenStreetMap-Kachelrichtlinie](https://operations.osmfoundation.org/policies/tiles/)
-- [Nominatim-Nutzungsrichtlinie](https://operations.osmfoundation.org/policies/nominatim/)
-- [Android: lokale Inhalte mit WebViewAssetLoader](https://developer.android.com/develop/ui/views/layout/webapps/load-local-content)
+- [Transformers.js 3.8.1](https://huggingface.co/docs/transformers.js/v3.8.1/en/index) — Apache-2.0; [ONNX Runtime](https://github.com/microsoft/onnxruntime) — MIT.
+- [OpenAI CLIP](https://github.com/openai/CLIP) — MIT; [Google SigLIP](https://huggingface.co/google/siglip-base-patch16-224) — Apache-2.0. Die verlinkten Xenova-Modellkarten dokumentieren die ONNX-Konvertierungen.
+- [Leaflet 1.9.4](https://leafletjs.com/) — BSD-2-Clause. [OpenStreetMap-Daten](https://www.openstreetmap.org/copyright) — ODbL, Attribution in der Karte.
+- [nostr-tools](https://github.com/nbd-wtf/nostr-tools) — Unlicense; [Nostr-Protokoll](https://github.com/nostr-protocol/nips).
+- [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started) für Ortssuche und Navigation, keine automatische Veröffentlichung von Rezensionen.
+- Testfoto: Valerio Capello, Farbrevision Rainer Zenz, [Pizza Margherita, Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Eq_it-na_pizza-margherita_sep2005_sml.jpg), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Ausschließlich CI-Test, Vorschau verkleinert/neu kodiert; keine Community-Veröffentlichung. Nicht in der APK gebündelt.
 
-JavaScript läuft ausschließlich aus den gebündelten App-Dateien. Der native Nachrichtenkanal ist auf `https://appassets.androidplatform.net` und den Hauptframe begrenzt. Externe Websites öffnen außerhalb der WebView; unsichere Dateizugriffe und Mixed Content sind deaktiviert.
-
-## Fremdbibliotheken
-
-Leaflet **1.9.4** (BSD-2-Clause) und Font Awesome Free **6.4.0** (siehe die mitgelieferte Lizenz für Fonts/CSS/Icons). Die jeweiligen Lizenzdateien werden zusammen mit den Assets in die APK kopiert. AndroidX Core **1.15.0**, AndroidX WebKit **1.12.1** (Apache-2.0).
+Kopien der Lizenzen gepackter Abhängigkeiten liegen nach `npm run assets` in `web/vendor`. Die Nutzungsbedingungen externer Kartenanbieter und Community-Relays gelten für deren Dienste.

@@ -1,6 +1,5 @@
 import {env, AutoTokenizer, AutoProcessor, AutoModel, RawImage} from '@huggingface/transformers';
-import '../web/analysis.js';
-const A=globalThis.PizzaAnalysis;
+import A from '../web/analysis.js';
 env.allowLocalModels=false;
 env.useBrowserCache=true;
 env.backends.onnx.wasm.numThreads=1;
