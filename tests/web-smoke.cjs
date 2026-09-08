@@ -17,6 +17,11 @@ const server=http.createServer((req,res)=>{
   const browser=await chromium.launch({headless:true});
   const ctx=await browser.newContext({viewport:{width:393,height:760},deviceScaleFactor:1});
   const page=await ctx.newPage(), errors=[], missing=[];
+  async function until(fn) {
+    const deadline=Date.now()+15000;
+    while(Date.now()<deadline) { if(await page.evaluate(fn)) return; await new Promise(resolve=>setTimeout(resolve,100)); }
+    throw new Error('Condition did not become true: '+fn.toString());
+  }
   page.on('pageerror',e=>{errors.push(e.message);console.error('PAGE ERROR:',e.message);});
   page.on('response',r=>{if(r.url().startsWith(base)&&r.status()>=400)missing.push(r.url());});
   const tile=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z1SIAAAAASUVORK5CYII=','base64');
@@ -29,9 +34,9 @@ const server=http.createServer((req,res)=>{
   ]}}));
   page.on('dialog',d=>d.accept(d.type()==='prompt'?'Test crawl':undefined));
   try {
-    await page.goto(base); await page.waitForFunction(()=>window.PizzaScan?.ready);
+    await page.goto(base); await until(()=>window.PizzaScan?.ready);
     await page.locator('#deny-location').click();
-    await page.waitForFunction(()=>window.PizzaScan.diagnostics().places===3);
+    await until(()=>window.PizzaScan.diagnostics().places===3);
     await page.locator('#dock-menu').click(); await page.locator('#ai-search-button').click();
     assert.equal(await page.locator('#discovery-results .place-card').count(),3);
     assert.equal(await page.locator('#discovery-results img').count(),0,'Untrusted venue name must stay text');
@@ -41,7 +46,7 @@ const server=http.createServer((req,res)=>{
     await page.locator('#discovery-results [data-action=rate]').first().click();
     await page.locator('#comment').fill('Smoke test rating'); await page.locator('#submit-rating').click();
     assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().ratings),1);
-    await page.reload();await page.waitForFunction(()=>window.PizzaScan?.ready);
+    await page.reload();await until(()=>window.PizzaScan?.ready);
     assert.deepEqual(await page.evaluate(()=>{const d=PizzaScan.diagnostics();return [d.saved,d.visited,d.ratings];}),[1,1,1]);
     await page.locator('#dock-menu').click();await page.locator('#ratings-database-button').click();
     assert.match(await page.locator('#ratings-table').innerText(),/Smoke test rating/);
@@ -52,12 +57,12 @@ const server=http.createServer((req,res)=>{
     assert.match(await page.locator('#saved-spots-list').innerText(),/Test crawl/);
     await page.evaluate(()=>PizzaScan.back());await page.locator('#dock-menu').click();await page.locator('#photo-analyzer-button').click();
     await page.locator('#photo-upload').setInputFiles({name:'pizza.png',mimeType:'image/png',buffer:tile});
-    await page.waitForFunction(()=>document.getElementById('preview-image').src.startsWith('blob:'));
+    await until(()=>document.getElementById('preview-image').src.startsWith('blob:'));
     assert.equal(await page.locator('#analyze-photo').isDisabled(),true);
     await page.evaluate(()=>PizzaScan.back());await page.locator('#dock-saved').click();
     const invalid=Buffer.from(JSON.stringify([{name:'Bad',lat:1000,lng:2}]));
     await page.locator('#import-json-input').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:invalid});
-    await page.waitForFunction(()=>document.getElementById('map-message-area').textContent.includes('Import failed'));
+    await until(()=>document.getElementById('map-message-area').textContent.includes('Import failed'));
     assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().saved),1);
     const download=page.waitForEvent('download');await page.locator('#export-json-button').click();
     const file=await download;await file.saveAs('test-results/export.json');
@@ -67,7 +72,7 @@ const server=http.createServer((req,res)=>{
     await page.evaluate(()=>PizzaScan.back());await page.locator('#theme-toggle').click();
     assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('dark-mode')),true);
     await page.unroute('**/overpass-api.de/**');await page.route('**/overpass-api.de/**',r=>r.abort());
-    await page.goto(base);await page.waitForFunction(()=>window.PizzaScan?.ready);
+    await page.goto(base);await until(()=>window.PizzaScan?.ready);
     assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().saved),1);
     await page.locator('#dock-saved').click();
     assert.match(await page.locator('#want-to-visit-list').innerText(),/Fixture Pizza One/);

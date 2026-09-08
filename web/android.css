@@ -33,13 +33,13 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .modal-header h2 { font-size: 20px; line-height: 1.3; }
 .modal-content { min-height: 0; overflow: auto; overscroll-behavior: contain; padding-bottom: 30px; }
 .close-button { min-width: 44px; min-height: 44px; }
-#settings-popup-overlay, #rating-popup-overlay, #social-share-overlay { position: fixed; inset: 0; width: auto; height: auto; z-index: 1100; padding: 12px; overflow-y: auto; background: #15101f99; }
-#settings-popup-content, #rating-popup-content { max-height: calc(100dvh - 24px); width: min(700px, 100%); overflow: auto; margin: auto; }
+#settings-popup-overlay, #rating-popup-overlay, #social-share-overlay { display: none; position: fixed; inset: 0; width: auto; height: auto; z-index: 1100; padding: 12px; overflow-y: auto; background: #15101f99; }
+#settings-popup-content, #rating-popup-content { position: relative; background: var(--bg-light); color: var(--text-dark); border-radius: 20px; box-shadow: 0 8px 40px #0003; max-height: calc(100dvh - 24px); width: min(700px, 100%); overflow: auto; margin: auto; }
 #settings-popup-content { padding: 48px 22px 22px; }
 #settings-popup-content p { margin-bottom: 14px; }
-#settings-popup-content .close-button { top: 8px; right: 8px; }
-#rating-popup-content { padding-top: 48px; }
-#rating-popup-content .close-button { position: sticky; float: right; top: 0; margin-top: -40px; }
+#settings-popup-content .close-button { position: absolute; top: 8px; right: 8px; }
+#rating-popup-content { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+#rating-popup-content .close-button { flex-shrink: 0; }
 #rating-form input[type="range"] { height: 44px; accent-color: var(--primary-color); }
 #map-message-area { position: fixed; top: 8px; bottom: auto; left: 8px; right: 8px; transform: none; width: auto; max-width: none; z-index: 3000; padding: 14px 40px 14px 16px; pointer-events: auto; border-radius: 12px; font-size: 14px; box-shadow: 0 4px 20px #0003; cursor: pointer; }
 #map-message-area::after { content: '×'; position: absolute; right: 14px; top: 9px; font-size: 24px; }
