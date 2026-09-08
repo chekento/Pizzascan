@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastTileNotice=0;
   tile.on('tileerror',()=>{ if(Date.now()-lastTileNotice>60000) { lastTileNotice=Date.now(); notify('Some map tiles could not load. Check your connection; saved places remain available.','error'); } });
   let places=[], markers=new Map(), userLocation=null, userMarker=null, routeLine=null, currentCrawl=null;
-  let requestController=null, requestSerial=0, fetchTimer, lastQuery='', lastQueryAt=0, searchBusy=false;
+  let requestController=null, requestSerial=0, fetchTimer, lastQuery='', lastQueryAt=0, searchBusy=false, lastSearchAt=0;
   try {
     const cache=JSON.parse(localStorage.getItem(CACHE));
     if(cache && Array.isArray(cache.places)) places=C.importPlaces(cache.places);
@@ -230,6 +230,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const query=$('map-search-input').value.trim();
     if(!query) { notify('Enter a place, city or address to search.','error'); $('map-search-input').focus(); return; }
     if(searchBusy) return;
+    if(Date.now()-lastSearchAt<1100) { notify('Wait a moment before searching again.'); return; }
+    lastSearchAt=Date.now();
     searchBusy=true; $('map-search-btn').disabled=true;
     const controller=new AbortController(), timeout=setTimeout(()=>controller.abort(),15000);
     notify(`Searching for “${query}”…`,'loading',0);
@@ -442,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if($('rating-popup-overlay').style.display==='flex'||[...document.querySelectorAll('.panel-modal')].some(p=>p.style.display==='flex')||!$('control-panel').classList.contains('minimized')){closePanels();return true;}
     if($('searchbar-suggestions').style.display==='block'){$('searchbar-suggestions').style.display='none';return true;}
     if(!$('filter-controls').classList.contains('collapsed')){$('filter-controls').classList.add('collapsed');return true;}
-    if(map._popup){map.closePopup();return true;}
+    if(map._popup?.isOpen()){map.closePopup();return true;}
     if(routeLine){map.removeLayer(routeLine);routeLine=null;return true;}
     return false;
   }

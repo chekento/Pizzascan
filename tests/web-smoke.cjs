@@ -17,7 +17,7 @@ const server=http.createServer((req,res)=>{
   const browser=await chromium.launch({headless:true});
   const ctx=await browser.newContext({viewport:{width:393,height:760},deviceScaleFactor:1});
   const page=await ctx.newPage(), errors=[], missing=[];
-  page.on('pageerror',e=>errors.push(e.message));
+  page.on('pageerror',e=>{errors.push(e.message);console.error('PAGE ERROR:',e.message);});
   page.on('response',r=>{if(r.url().startsWith(base)&&r.status()>=400)missing.push(r.url());});
   const tile=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z1SIAAAAASUVORK5CYII=','base64');
   await page.route('**/tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:tile}));
@@ -66,12 +66,6 @@ const server=http.createServer((req,res)=>{
     await page.screenshot({path:'test-results/saved-places-mobile.png'});
     await page.evaluate(()=>PizzaScan.back());await page.locator('#theme-toggle').click();
     assert.equal(await page.locator('body').evaluate(e=>e.classList.contains('dark-mode')),true);
-    await ctx.setOffline(true);await page.reload();
-    // A browser HTTP reload needs network; restore transport and abort remote APIs only.
-  } catch(e) {
-    if(!String(e.message).includes('ERR_INTERNET_DISCONNECTED')) throw e;
-  } finally {
-    await ctx.setOffline(false);
     await page.unroute('**/overpass-api.de/**');await page.route('**/overpass-api.de/**',r=>r.abort());
     await page.goto(base);await page.waitForFunction(()=>window.PizzaScan?.ready);
     assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().saved),1);
@@ -81,7 +75,11 @@ const server=http.createServer((req,res)=>{
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Landscape must not overflow horizontally');
     await page.screenshot({path:'test-results/saved-places-landscape.png'});
     assert.deepEqual(errors,[],'No JavaScript runtime errors');assert.deepEqual(missing,[],'All packaged resources exist');
-    await browser.close();server.close();
-  }
+  } catch (e) {
+    console.error('SMOKE FAILURE:', e);
+    console.error('Page errors:', errors);
+    await page.screenshot({path:'test-results/failure.png'}).catch(()=>{});
+    throw e;
+  } finally { await browser.close();server.close(); }
   console.log('PASS: startup, source data, injection safety, save/visit/rate, restart persistence, crawl, photo preview, invalid import, export, theme, remote outage, landscape.');
 })().catch(e=>{console.error(e);server.close();process.exit(1);});
