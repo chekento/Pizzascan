@@ -20,7 +20,7 @@ jobs:
           node-version: '22'
       - name: Bundle web assets and run tests
         run: |
-          npm install --ignore-scripts --no-audit
+          npm ci --ignore-scripts --no-audit
           npm run assets
           npm test
           mkdir -p test-results
@@ -47,7 +47,7 @@ jobs:
           node-version: '22'
       - name: Install pinned web dependencies and bundle assets
         run: |
-          npm install --ignore-scripts --no-audit
+          npm ci --ignore-scripts --no-audit
           npm run assets
           npm test
           node --check web/script.js
@@ -119,7 +119,7 @@ jobs:
           node-version: '22'
       - name: Install browser model runtime
         run: |
-          npm install --ignore-scripts --no-audit
+          npm ci --ignore-scripts --no-audit
           npm run assets
           npx playwright install --with-deps chromium
       - name: Real model inference, offline cache and negative image

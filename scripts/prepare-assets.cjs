@@ -8,7 +8,9 @@ fs.copyFileSync(path.join(root,'node_modules/leaflet/LICENSE'),path.join(out,'le
  await esbuild.build({entryPoints:['src/community.js'],bundle:true,format:'iife',globalName:'PizzaCommunity',platform:'browser',outfile:'web/vendor/community.js',minify:true});
  const ort=path.dirname(path.dirname(require.resolve('onnxruntime-web')));fs.mkdirSync(path.join(out,'ort'),{recursive:true});
  for(const f of fs.readdirSync(path.join(ort,'dist')))if(/\.wasm$|\.mjs$/.test(f))fs.copyFileSync(path.join(ort,'dist',f),path.join(out,'ort',f));
- // Legal notices for bundled libraries; model cards are linked in settings.
- for(const [name,file] of [['@huggingface/transformers','LICENSE'],['onnxruntime-web','LICENSE'],['nostr-tools','LICENSE'],['opening_hours','LICENSE'],['tz-lookup','LICENSE']]){const p=path.join(root,'node_modules',name,file);if(fs.existsSync(p))fs.copyFileSync(p,path.join(out,name.replaceAll('/','-')+'-LICENSE.txt'));}
+ // Preserve actual license filenames, including SPDX LICENSES directories.
+ for(const name of ['@huggingface/transformers','onnxruntime-web','onnxruntime-common','nostr-tools','opening_hours','tz-lookup','i18next','suncalc']){const dir=path.join(root,'node_modules',name),target=path.join(out,'licenses',name.replaceAll('/','-'));fs.mkdirSync(target,{recursive:true});for(const file of fs.readdirSync(dir))if(/^(licen[sc]e|copying|notice)/i.test(file))fs.cpSync(path.join(dir,file),path.join(target,file),{recursive:true});}
+ // Distribute the unmodified LGPL module, unminified code and its license texts.
+ fs.cpSync(path.join(root,'node_modules/opening_hours'),path.join(out,'opening-hours-source'),{recursive:true});
  console.log('Local model runtime, Nostr signature verification and map assets bundled.');
 })().catch(e=>{console.error(e);process.exit(1)});
