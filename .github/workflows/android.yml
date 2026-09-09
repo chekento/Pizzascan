@@ -56,29 +56,25 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
-      - name: Retain the development signing certificate across builds
-        uses: actions/cache@v4
-        with:
-          path: ~/.android/debug.keystore
-          key: pizzascan-development-signing-v1
       - name: Build APK, instrumented tests and Android lint
         run: |
           node scripts/download-test-photo.cjs
-          gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug
+          gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug assembleRelease lintRelease
       - name: Verify and collect the APK
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-2.0.0.apk
+          cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/PizzaScan-2.0.0-unsigned.apk
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-2.0.0.apk | tee artifacts/signature.txt
-          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.0.0.apk > artifacts/apk-info.txt
-          sha256sum artifacts/PizzaScan-2.0.0.apk > artifacts/SHA256SUMS.txt
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk > artifacts/test-signature.txt
+          cp "$BUILD_TOOLS/lib/apksigner.jar" artifacts/apksigner.jar
+          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.0.0-unsigned.apk > artifacts/apk-info.txt
+          sha256sum artifacts/PizzaScan-2.0.0-unsigned.apk > artifacts/SHA256SUMS.txt
           cp package-lock.json artifacts/package-lock.json
           tar -czf artifacts/web-bundle.tar.gz web
-      - name: Upload installable APK
+      - name: Upload APK for private final signing
         uses: actions/upload-artifact@v4
         with:
-          name: PizzaScan-APK
+          name: PizzaScan-Build
           path: artifacts/
           retention-days: 90
           if-no-files-found: error

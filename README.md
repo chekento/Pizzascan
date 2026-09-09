@@ -4,9 +4,11 @@ Eine deutsche Android-App für **Pizzakarte mit GPS** und **lokale Fotobewertung
 
 ## Installation
 
-Die installierbare Datei heißt `PizzaScan-2.0.0.apk`. Sie wird als Download im Chat bereitgestellt und liegt zusätzlich im Artifact `PizzaScan-APK` eines erfolgreichen [GitHub-Actions-Laufs](https://github.com/chekento/Pizzascan/actions).
+Die installierbare Datei heißt `PizzaScan-2.0.0.apk`. Sie wird als Download im Chat bereitgestellt Der [GitHub-Actions-Lauf](https://github.com/chekento/Pizzascan/actions) stellt im Artifact `PizzaScan-Build` die unsignierte Release-APK für die abschließende private Signierung bereit. Die im Chat ausgelieferte Datei ist bereits signiert und installierbar.
 
-Android 8 oder neuer; auf dem Gerät die Installation aus der verwendeten Download-App erlauben. Die APK verwendet für direkte Installation die beibehaltene Entwicklungssignatur von Version 1.0.0 und dieselbe App-ID `cloud.kosch.pizzascan`. Die App ist kein Play-Store-Release. Für eine Store-Veröffentlichung ist ein eigener dauerhaft gesicherter Release-Schlüssel erforderlich.
+Android 8 oder neuer; auf dem Gerät die Installation aus der verwendeten Download-App erlauben. Die APK ist ein Release-Build mit ausgeschaltetem WebView-Debugging und einem separat gesicherten privaten Signierschlüssel. App-ID: `cloud.kosch.pizzascan`. Die App ist kein Play-Store-Release.
+
+**Wechsel von Version 1:** Der damalige kurzlebige CI-Debug-Schlüssel wurde nicht dauerhaft gesichert. Deshalb kann Android Version 2 nicht über die alte Version installieren. Vor Deinstallation der alten App vorhandene Daten exportieren; eine Deinstallation entfernt deren lokalen Speicher. Ab der hier gelieferten Version 2 muss für Updates der neue gesicherte private Signierschlüssel verwendet werden.
 
 ## Bedienung
 
@@ -50,7 +52,7 @@ Die App verwendet öffentliche, unabhängige Nostr-Relays `wss://relay.damus.io`
 
 ## Speicher und Android
 
-Fotoanalysen liegen in IndexedDB, Einstellungen und gemerkte Orte lokal. Einzelfotos können mit allen Kriterien und Profilen als JSON exportiert werden. Frühere Daten von Version 1 bleiben erhalten; gemerkte Orte werden übernommen. Frühere manuelle Ratings und Crawls bleiben im vorhandenen lokalen Datensatz, haben aber keine eigene Ansicht im auf Karte und Foto konzentrierten V2-UI. Keine Datenlöschung bei einem normalen APK-Update.
+Fotoanalysen liegen in IndexedDB, Einstellungen und gemerkte Orte lokal. Einzelfotos können mit allen Kriterien und Profilen als JSON exportiert werden. Frühere Daten von Version 1 bleiben erhalten; gemerkte Orte werden übernommen. Frühere manuelle Ratings und Crawls bleiben im vorhandenen lokalen Datensatz, haben aber keine eigene Ansicht im auf Karte und Foto konzentrierten V2-UI. Normale, mit demselben Release-Schlüssel signierte Updates behalten lokale Daten. Für den Schlüsselwechsel von Version 1 gelten die Hinweise oben.
 
 Die WebView lädt ausschließlich gepackte App-Dateien über `WebViewAssetLoader` auf einer HTTPS-Origin. Nativer Message-Kanal nur für diese Origin und das Hauptfenster; kein allgemeines JavaScript-Interface. Dateizugriff aus der WebView ist deaktiviert, Dateiauswahl über Android. Externe Links öffnen sich außerhalb der WebView. Kamera über Androids Aufnahme-Intent und `FileProvider`, GPS erst nach Nutzeraktion. Mixed Content und Drittanbieter-Cookies sind deaktiviert. CSP erlaubt WASM, jedoch kein JavaScript-`unsafe-eval`.
 
@@ -65,10 +67,10 @@ npm test
 npx playwright install --with-deps chromium
 npm run smoke
 node scripts/download-test-photo.cjs
-gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug
+gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug assembleRelease lintRelease
 ```
 
-Echte Modelle separat prüfen, etwa `MODEL=clip32 npm run models`. Der Actions-Workflow prüft alle drei Modelle mit einem realen Pizzafoto, 25 Bildwerten, Offline-Cache mit frischem Worker und einem Negativbild. Zusätzlich: UI, Speicherung nach Neustart, 100 Profile, eigene Wertung, Rezensionskopie, signierte Community-Ereignisse gegen isolierte Test-Relays, Bestätigungsfluss, Kommentare und Android-15-Emulator-Smoke-Test inklusive echter CLIP-Fotoanalyse in der gepackten WebView und verschlüsselter Identität nach Neustart. Die CI prüft die APK-Signatur mit `apksigner` und erzeugt SHA-256-Prüfsummen. Bei Fehlern gibt es Screenshots und Logs als Artifacts.
+Echte Modelle separat prüfen, etwa `MODEL=clip32 npm run models`. Der Actions-Workflow prüft alle drei Modelle mit einem realen Pizzafoto, 25 Bildwerten, Offline-Cache mit frischem Worker und einem Negativbild. Zusätzlich: UI, Speicherung nach Neustart, 100 Profile, eigene Wertung, Rezensionskopie, signierte Community-Ereignisse gegen isolierte Test-Relays, Bestätigungsfluss, Kommentare und Android-15-Emulator-Smoke-Test inklusive echter CLIP-Fotoanalyse in der gepackten WebView und verschlüsselter Identität nach Neustart. Die CI prüft die Test-APK-Signatur mit `apksigner` und erzeugt die Release-APK ohne privaten Schlüssel. Abschließend wird diese lokal mit dem gesicherten Release-Schlüssel signiert und ihre Signatur sowie SHA-256-Prüfsumme geprüft. Private Schlüssel dürfen weder in Git noch in öffentlichen Actions-Artifacts liegen. Bei Fehlern gibt es Screenshots und Logs als Artifacts.
 
 Die ursprünglichen Uploads sind unverändert in `source-original/` archiviert.
 
