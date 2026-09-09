@@ -1,14 +1,29 @@
-# PizzaScan 2.0 — Android APK
+# PizzaScan 2.1 — Android APK
 
 Eine deutsche Android-App für **Pizzakarte mit GPS** und **lokale Fotobewertung**. Drei kostenlose Bildmodelle stehen in den Einstellungen zur Auswahl. Es wird kein KI-API-Schlüssel benötigt, kein Inferenzdienst aufgerufen und kein Foto für die Analyse hochgeladen.
 
 ## Installation
 
-Die installierbare Datei heißt `PizzaScan-2.0.0.apk`. Sie wird als Download im Chat bereitgestellt Der [GitHub-Actions-Lauf](https://github.com/chekento/Pizzascan/actions) stellt im Artifact `PizzaScan-Build` die unsignierte Release-APK für die abschließende private Signierung bereit. Die im Chat ausgelieferte Datei ist bereits signiert und installierbar.
+Die installierbare Datei heißt `PizzaScan-2.1.0.apk`. Sie wird als Download im Chat bereitgestellt. Der [GitHub-Actions-Lauf](https://github.com/chekento/Pizzascan/actions) stellt im Artifact `PizzaScan-Build` die unsignierte Release-APK für die abschließende private Signierung bereit. Die im Chat ausgelieferte Datei ist bereits signiert und installierbar.
 
 Android 8 oder neuer; auf dem Gerät die Installation aus der verwendeten Download-App erlauben. Die APK ist ein Release-Build mit ausgeschaltetem WebView-Debugging und einem separat gesicherten privaten Signierschlüssel. App-ID: `cloud.kosch.pizzascan`. Die App ist kein Play-Store-Release.
 
 **Wechsel von Version 1:** Der damalige kurzlebige CI-Debug-Schlüssel wurde nicht dauerhaft gesichert. Deshalb kann Android Version 2 nicht über die alte Version installieren. Vor Deinstallation der alten App vorhandene Daten exportieren; eine Deinstallation entfernt deren lokalen Speicher. Ab der hier gelieferten Version 2 muss für Updates der neue gesicherte private Signierschlüssel verwendet werden.
+
+**Update von 2.0:** Version 2.1 verwendet denselben gesicherten Release-Schlüssel und eine höhere Versionsnummer. Über die vorhandene 2.0 installieren; App-ID und lokale Daten bleiben erhalten.
+
+## Karte und Suche in 2.1
+
+- Sichtbare Emoji-Marker für Pizzerien 🍕, Cafés ☕, Imbisse 🍔, Foodtrucks 🚚, Pizzaautomaten 🤖 und weitere Orte 🍽️; Markierung für gemerkte/besuchte Orte.
+- GPS beim ersten Start wählbar, später auf Wunsch automatisch; Suchposition bleibt gespeichert. Name, Stadt und Adresse suchen. Vorschläge während der Eingabe kommen lokal aus geladenen Restaurants; abgesendete Suchbegriffe liefern auswählbare Photon-Treffer mit Adresse und Entfernung. Keine Online-Autovervollständigung.
+- Wie im ursprünglichen HTML berücksichtigt die Karte auch italienische Gastronomie. Wenn Pizza nicht ausdrücklich in OSM hinterlegt ist, wird das transparent gekennzeichnet und lässt sich ausschließen. Keine erfundenen Restaurants oder Google-Bewertungen.
+- Zwei Overpass-Anbieter mit begrenzten Abfragen, Timeout, Ausweichdienst, Abbruch veralteter Anfragen und räumlichem Cache. „Hier suchen“ lädt auch ohne Kartenbewegung neu. Speicherfehler werden nicht als Netzwerkfehler ausgegeben.
+- Einstellungen: 1/3/5/10 km oder Kartenausschnitt, alle sechs Ortstypen, nur geöffnet, unbekannte Zeiten gesondert einschließen, automatische Kartensuche, Sortierung, besuchte Orte ausblenden und Routenmodus. Filter wirken auf Karte und Liste und bleiben gespeichert.
+- Detailseite mit abgeglichener Adresse, Telefon, Website, Speisekarte, Öffnungsstatus samt nächstem Wechsel und Sieben-Tage-Übersicht sowie vorhandenen Informationen zu Lieferung, Mitnehmen, Ernährung, Rollstuhl, Sitzplätzen und Bezahlung. Ergänzung aus Overpass und Photon ausschließlich über dieselbe OSM-Identität; gleichnamige Filialen werden nicht vermischt. Originalquelle und Koordinaten sind einsehbar.
+- Öffnungsstatus mit `opening_hours` und Ortszeitzone. Fehlende, nicht auswertbare oder ohne Region nicht prüfbare Feiertagsregeln gelten als unbekannt, niemals als geöffnet. Sonnenzeit-Regeln werden als unbekannt behandelt. Kurzfristige Abweichungen lassen sich aus diesen Daten nicht erkennen. Öffnungszeiten, Fotos und Bewertungen werden nicht von Google kopiert.
+- Community ohne Eingabe oder Veröffentlichung eines Community-Namens. Bereits vorhandene Beiträge bleiben lesbar.
+
+Die Kartendaten werden mit [Overpass Private.coffee](https://overpass.private.coffee/) bzw. [overpass-api.de](https://overpass-api.de/) geladen. [Photon](https://github.com/komoot/photon) übernimmt abgesendete Ortssuchen und den Adressabgleich geöffneter Details. Keine Zugangsdaten nötig; öffentliche Dienste können ausfallen und Datensätze können unvollständig sein.
 
 ## Bedienung
 
@@ -44,7 +59,7 @@ Die Modellgewichte werden beim ersten Einsatz von Hugging Face heruntergeladen; 
 Die App verwendet öffentliche, unabhängige Nostr-Relays `wss://relay.damus.io` und `wss://nos.lol` mit einem spezifischen `pizzascan`-Tag. Das ist ein echtes dezentrales Austauschformat, keine simulierte Nutzerliste. Relays sind nicht Teil dieses Projekts; Erreichbarkeit, Annahme großer Events und Aufbewahrung sind nicht garantiert. Das UI unterscheidet Fehler von leerem Feed und wartet beim Senden auf mindestens eine Relay-Bestätigung.
 
 - NIP-78 / Kind 30078 für Foto-Rezensionen, NIP-01-signierte Events; Kind 1 für Kommentare, NIP-09/Kind 5 für Löschanfragen.
-- Öffentlich: Anzeigename, kleiner JPEG-Vorschaubild-Anhang (maximal 240 Pixel), bewusst gewählte Pizzeria, Ereigniszeitpunkt, eigener Text/Score, Modell und 25 KI-Werte. Kein Live-GPS-Standort.
+- Öffentlich: kleiner JPEG-Vorschaubild-Anhang (maximal 240 Pixel), bewusst gewählte Pizzeria, Ereigniszeitpunkt, eigener Text/Score, Modell und 25 KI-Werte. Kein Live-GPS-Standort.
 - Identität ohne Serverkonto: Nostr-Schlüssel auf dem Gerät erzeugt; in Android mit AES/GCM und Android Keystore verschlüsselt gespeichert. Keine Schlüssel im Quellcode oder Backup. Beim Deinstallieren geht die Identität verloren. Der Browser-Testmodus verwendet nur eine sitzungsgebundene Identität.
 - Empfangene Events werden kryptografisch sowie nach Schema, Größe, Koordinaten und Scorebereich geprüft. Fremder Text wird escaped; Vorschaubilder sind ausschließlich begrenzte JPEG-data-URLs.
 - Keine automatisch veröffentlichten Inhalte. Nutzer sehen und bestätigen die Vorschau. Kommentare benötigen eine ausdrückliche Sendeaktion. Ausblenden blockiert einen Autor lokal. Eine dezentrale Löschanfrage kann bereits verteilte Kopien nicht entfernen.
@@ -54,7 +69,7 @@ Die App verwendet öffentliche, unabhängige Nostr-Relays `wss://relay.damus.io`
 
 Fotoanalysen liegen in IndexedDB, Einstellungen und gemerkte Orte lokal. Einzelfotos können mit allen Kriterien und Profilen als JSON exportiert werden. Frühere Daten von Version 1 bleiben erhalten; gemerkte Orte werden übernommen. Frühere manuelle Ratings und Crawls bleiben im vorhandenen lokalen Datensatz, haben aber keine eigene Ansicht im auf Karte und Foto konzentrierten V2-UI. Normale, mit demselben Release-Schlüssel signierte Updates behalten lokale Daten. Für den Schlüsselwechsel von Version 1 gelten die Hinweise oben.
 
-Die WebView lädt ausschließlich gepackte App-Dateien über `WebViewAssetLoader` auf einer HTTPS-Origin. Nativer Message-Kanal nur für diese Origin und das Hauptfenster; kein allgemeines JavaScript-Interface. Dateizugriff aus der WebView ist deaktiviert, Dateiauswahl über Android. Externe Links öffnen sich außerhalb der WebView. Kamera über Androids Aufnahme-Intent und `FileProvider`, GPS erst nach Nutzeraktion. Mixed Content und Drittanbieter-Cookies sind deaktiviert. CSP erlaubt WASM, jedoch kein JavaScript-`unsafe-eval`.
+Die WebView lädt ausschließlich gepackte App-Dateien über `WebViewAssetLoader` auf einer HTTPS-Origin. Nativer Message-Kanal nur für diese Origin und das Hauptfenster; kein allgemeines JavaScript-Interface. Dateizugriff aus der WebView ist deaktiviert, Dateiauswahl über Android. Externe Links öffnen sich außerhalb der WebView. Kamera über Androids Aufnahme-Intent und `FileProvider`, GPS nach Nutzeraktion oder bei zuvor aktiviertem Standortstart. Mixed Content und Drittanbieter-Cookies sind deaktiviert. CSP erlaubt WASM, jedoch kein JavaScript-`unsafe-eval`.
 
 ## Bauen und prüfen
 
@@ -66,6 +81,8 @@ npm run assets
 npm test
 npx playwright install --with-deps chromium
 npm run smoke
+npm run map-smoke
+npm run live-map
 node scripts/download-test-photo.cjs
 gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug assembleRelease lintRelease
 ```
@@ -79,6 +96,7 @@ Die ursprünglichen Uploads sind unverändert in `source-original/` archiviert.
 - [Transformers.js 3.8.1](https://huggingface.co/docs/transformers.js/v3.8.1/en/index) — Apache-2.0; [ONNX Runtime](https://github.com/microsoft/onnxruntime) — MIT.
 - [OpenAI CLIP](https://github.com/openai/CLIP) — MIT; [Google SigLIP](https://huggingface.co/google/siglip-base-patch16-224) — Apache-2.0. Die verlinkten Xenova-Modellkarten dokumentieren die ONNX-Konvertierungen.
 - [Leaflet 1.9.4](https://leafletjs.com/) — BSD-2-Clause. [OpenStreetMap-Daten](https://www.openstreetmap.org/copyright) — ODbL, Attribution in der Karte.
+- [opening_hours](https://github.com/opening-hours/opening_hours.js) — LGPL-3.0, unverändert gebündelt; [tz-lookup](https://github.com/darkskyapp/tz-lookup) — CC0. Quellpakete und exakte Versionen stehen in package-lock.json.
 - [nostr-tools](https://github.com/nbd-wtf/nostr-tools) — Unlicense; [Nostr-Protokoll](https://github.com/nostr-protocol/nips).
 - [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started) für Ortssuche und Navigation, keine automatische Veröffentlichung von Rezensionen.
 - Testfoto: Valerio Capello, Farbrevision Rainer Zenz, [Pizza Margherita, Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Eq_it-na_pizza-margherita_sep2005_sml.jpg), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Ausschließlich CI-Test, Vorschau verkleinert/neu kodiert; keine Community-Veröffentlichung. Nicht in der APK gebündelt.

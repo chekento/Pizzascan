@@ -24,6 +24,13 @@
       lat: value.lat, lng: value.lng, type: clip(value.type || 'other', 60),
       openingHours: clip(value.openingHours), website: website(value.website || ''), phone: clip(value.phone, 80),
       address: clip(value.address), cuisine: clip(value.cuisine),
+      tags: Object.fromEntries(Object.entries(value.tags || {}).filter(([k,v]) => /^[a-zA-Z0-9_:.-]{1,60}$/.test(k) && typeof v === 'string').slice(0,90).map(([k,v])=>[k,clip(v,1000)])),
+      country: /^[a-z]{2}$/i.test(value.country||'') ? value.country.toLowerCase() : '', state: clip(value.state,100),
+      description: clip(value.description,1000), menu: website(value.menu||''),
+      pizzaEvidence: ['confirmed','possible','search'].includes(value.pizzaEvidence) ? value.pizzaEvidence : 'confirmed',
+      updatedAt: typeof value.updatedAt === 'string' && Number.isFinite(Date.parse(value.updatedAt)) ? value.updatedAt : '',
+      detailsAt: typeof value.detailsAt === 'string' && Number.isFinite(Date.parse(value.detailsAt)) ? value.detailsAt : '',
+      dataSource: clip(value.dataSource||'OpenStreetMap',100),
       addedAt: validDate(value.addedAt), visitedAt: validDate(value.visitedAt)
     };
   }

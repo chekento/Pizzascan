@@ -1,17 +1,21 @@
 {
   "name": "pizzascan-android",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "scripts": {
     "assets": "node scripts/prepare-assets.cjs",
-    "test": "node --test tests/core.test.cjs",
+    "test": "node --test tests/core.test.cjs tests/places.test.cjs",
     "smoke": "node tests/web-smoke.cjs",
-    "models": "node tests/model-integration.cjs"
+    "models": "node tests/model-integration.cjs",
+    "map-smoke": "node tests/map-smoke.cjs",
+    "live-map": "node tests/live-map.cjs"
   },
   "dependencies": {
     "leaflet": "1.9.4",
     "@huggingface/transformers": "3.8.1",
-    "nostr-tools": "2.15.2"
+    "nostr-tools": "2.15.2",
+    "opening_hours": "3.11.0",
+    "tz-lookup": "6.1.25"
   },
   "devDependencies": {
     "playwright": "1.51.1",
