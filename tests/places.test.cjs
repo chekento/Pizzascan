@@ -9,7 +9,7 @@ test('Original food categories and Italian candidates return with explicit pizza
  const list=P.fromOverpass([element(1),element(2,{amenity:'cafe'}),element(3,{amenity:'fast_food'}),element(4,{amenity:'food_truck'}),element(5,{amenity:'vending_machine','vending:pizza':'yes'}),element(6,{amenity:'pub'}),element(7,{name:'Trattoria Roma',cuisine:'italian'}),element(8,{name:'Sushi Bar',cuisine:'japanese'}),element(9,{disused:'yes'}),element(10,{amenity:'construction'})]);
  assert.deepEqual(list.map(p=>p.type),['pizzeria','cafe','fast_food','food_truck','vending_pizza','other','pizzeria']);
  assert.equal(list[6].pizzaEvidence,'possible');assert.equal(list[0].pizzaEvidence,'confirmed');assert.equal(new Set(Object.values(P.TYPES).map(x=>x.emoji)).size,6);
- assert.match(P.query(center,3),/italian/);assert.match(P.query(center,3),/around:3000/);assert.match(P.query(center,3),/vending:pizza/);
+ assert.match(P.query(center,3),/italian/);assert.match(P.query(center,3),/around:3000/);assert.match(P.query(center,3),/vending:pizza/);assert.match(P.query(center,3),/out body center;/,'Node coordinates and way centers must both be requested');
 });
 test('Contact, address, dietary, accessibility and menu fields survive refresh and storage',()=>{
  const full=P.normalize(element(1,{'addr:street':'Straße','addr:housenumber':'12','addr:postcode':'22926','addr:city':'Ahrensburg','contact:phone':'+49 123','contact:website':'example.org','website:menu':'https://example.org/menu',opening_hours:'24/7',wheelchair:'yes','diet:vegan':'yes',delivery:'yes','payment:cash':'yes'}));
@@ -28,7 +28,7 @@ test('Radius bounds and viewport handle zero coordinates and international date 
  assert.equal(P.within({lat:0,lng:0},{lat:0,lng:0},1),true);assert.equal(P.within({lat:0,lng:.1},{lat:0,lng:0},1),false);assert.equal(P.within({lat:0,lng:-179},{},0,{south:-1,north:1,west:178,east:-178}),true);assert.throws(()=>P.detailQuery('node-2;out;'));assert.equal(P.detailQuery('way-12').includes('way(12)'),true);
 });
 test('A clean first request falls back on failure and remembers the working provider',async()=>{
- const called=[],service=new P.Service(async url=>{called.push(url);return url.includes('private.coffee')?bad:good({elements:[element(1)]});},memory());const result=await service.overpass(P.query(center,3));assert.equal(result.source,'overpass-api.de');assert.equal(result.data.elements.length,1);assert.equal(called.length,2);await service.overpass(P.query(center,3));assert.equal(called.length,3);assert.ok(called[2].includes('overpass-api.de'));
+ const called=[],service=new P.Service(async url=>{called.push(url);return url===P.providers[0]?bad:good({elements:[element(1)]});},memory());const result=await service.overpass(P.query(center,3));assert.equal(result.source,new URL(P.providers[1]).hostname);assert.equal(result.data.elements.length,1);assert.equal(called.length,2);await service.overpass(P.query(center,3));assert.equal(called.length,3);assert.equal(called[2],P.providers[1]);
 });
 test('Partial server results and total outages do not become zero-match successes',async()=>{
  let calls=0;const service=new P.Service(async()=>{calls++;return calls===1?good({remark:'runtime error: timed out',elements:[]}):bad;},memory());await assert.rejects(service.overpass('query'),/Beide Kartenquellen/);assert.equal(calls,2);

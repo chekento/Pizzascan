@@ -14,6 +14,8 @@ Android 8 oder neuer; auf dem Gerät die Installation aus der verwendeten Downlo
 
 ## Karte und Suche in 2.1
 
+- Vollbildkarte mit Zurückknopf, einblendbarer Restaurantsuche, GPS, Filtern und „Hier suchen“. Android-Zurück schließt zuerst eine geöffnete Detailseite und danach den Vollbildmodus.
+
 - Sichtbare Emoji-Marker für Pizzerien 🍕, Cafés ☕, Imbisse 🍔, Foodtrucks 🚚, Pizzaautomaten 🤖 und weitere Orte 🍽️; Markierung für gemerkte/besuchte Orte.
 - GPS beim ersten Start wählbar, später auf Wunsch automatisch; Suchposition bleibt gespeichert. Name, Stadt und Adresse suchen. Vorschläge während der Eingabe kommen lokal aus geladenen Restaurants; abgesendete Suchbegriffe liefern auswählbare Photon-Treffer mit Adresse und Entfernung. Keine Online-Autovervollständigung.
 - Wie im ursprünglichen HTML berücksichtigt die Karte auch italienische Gastronomie. Wenn Pizza nicht ausdrücklich in OSM hinterlegt ist, wird das transparent gekennzeichnet und lässt sich ausschließen. Keine erfundenen Restaurants oder Google-Bewertungen.

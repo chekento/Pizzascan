@@ -40,6 +40,11 @@ public class AppSmokeTest {
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click(); document.getElementById('nav-photo').click();");
             assertEquals("true", js(scenario, "document.getElementById('photo-view').classList.contains('active')"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
+            js(scenario, "document.getElementById('map-fullscreen').click();");
+            SystemClock.sleep(300);
+            assertEquals("true", js(scenario, "PizzaScan.diagnostics().mapFullscreen && document.getElementById('map').getBoundingClientRect().height === innerHeight"));
+            assertEquals("true", js(scenario, "PizzaScan.back()"));
+            assertEquals("false", js(scenario, "PizzaScan.diagnostics().mapFullscreen"));
             js(scenario, "document.getElementById('settings-open').click(); document.querySelector('input[value=clip16]').click(); document.getElementById('dark-mode').click(); document.getElementById('settings-save').click();");
             String dark = js(scenario,"document.body.classList.contains('dark')");
             assertEquals("true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));
