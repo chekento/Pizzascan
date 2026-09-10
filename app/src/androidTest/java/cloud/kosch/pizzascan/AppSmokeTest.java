@@ -42,7 +42,10 @@ public class AppSmokeTest {
             assertEquals("true", js(scenario, "PizzaScan.back()"));
             js(scenario, "document.getElementById('map-fullscreen').click();");
             SystemClock.sleep(300);
-            assertEquals("true", js(scenario, "PizzaScan.diagnostics().mapFullscreen && document.getElementById('map').getBoundingClientRect().height === innerHeight"));
+            String fullscreenBounds = js(scenario, "JSON.stringify({active:PizzaScan.diagnostics().mapFullscreen,rect:document.getElementById('map').getBoundingClientRect().toJSON(),width:innerWidth,height:innerHeight,dpr:devicePixelRatio})");
+            System.out.println("PizzaScan fullscreen bounds: " + fullscreenBounds);
+            // Android CSS pixels can be fractional at non-integer screen densities.
+            assertEquals(fullscreenBounds, "true", js(scenario, "(()=>{const r=document.getElementById('map').getBoundingClientRect();return PizzaScan.diagnostics().mapFullscreen&&Math.abs(r.x)<1&&Math.abs(r.y)<1&&Math.abs(r.width-innerWidth)<1&&Math.abs(r.height-innerHeight)<1;})()"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
             assertEquals("false", js(scenario, "PizzaScan.diagnostics().mapFullscreen"));
             js(scenario, "document.getElementById('settings-open').click(); document.querySelector('input[value=clip16]').click(); document.getElementById('dark-mode').click(); document.getElementById('settings-save').click();");
