@@ -56,6 +56,9 @@ public class AppSmokeTest {
             assertEquals("false", js(scenario, "PizzaScan.diagnostics().mapFullscreen"));
             js(scenario, "document.getElementById('settings-open').click(); document.querySelector('input[value=clip16]').click(); document.getElementById('dark-mode').click(); document.getElementById('settings-save').click();");
             String dark = js(scenario,"document.body.classList.contains('dark')");
+            js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});document.getElementById('review-rating').value='7.8';document.getElementById('review-rating').dispatchEvent(new Event('input'));document.querySelector('[data-aspect=service][data-choice=friendly]').click();document.getElementById('review-visited').click();");
+            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes('freundlich') && !document.getElementById('copy-draft').disabled"));
+            js(scenario, "PizzaScan.back();");
             assertEquals("true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));
             js(scenario, "window.nativeCheck='pending';bridge('copy',{text:'PizzaScan Android Test'}).then(()=>window.nativeCheck='ok');");
             long replyDeadline = SystemClock.elapsedRealtime() + 10000;
@@ -66,6 +69,9 @@ public class AppSmokeTest {
             assertEquals(dark, js(scenario,"document.body.classList.contains('dark')"));
             assertEquals("true", js(scenario,"!document.getElementById('welcome').open"));
             assertEquals("true", js(scenario,"PizzaScan.diagnostics().model === 'clip16'"));
+            js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});");
+            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes('freundlich') && document.getElementById('review-rating').value === '7.8'"));
+            js(scenario, "PizzaScan.back();");
 
         }
     }
@@ -90,16 +96,7 @@ public class AppSmokeTest {
             do { SystemClock.sleep(500); result = js(scenario, "window.nativeModelResult"); }
             while ("\"pending\"".equals(result) && SystemClock.elapsedRealtime()<deadline);
             assertEquals("Real local model must run in the packaged HTTPS WebView", "\"ok\"", result);
-            js(scenario, "window.identityCheck='pending';PizzaCommunity.identity(bridge).then(k=>{localStorage.setItem('pizzascan-test-pubkey',k);window.identityCheck='ok';}).catch(()=>window.identityCheck='error');");
-            long keyDeadline = SystemClock.elapsedRealtime() + 10000;
-            while (!"\"ok\"".equals(js(scenario,"window.identityCheck")) && SystemClock.elapsedRealtime()<keyDeadline) SystemClock.sleep(200);
-            assertEquals("\"ok\"", js(scenario,"window.identityCheck"));
-            scenario.recreate(); ready(scenario);
-            js(scenario, "window.identityCheck='pending';PizzaCommunity.identity(bridge).then(k=>window.identityCheck=k===localStorage.getItem('pizzascan-test-pubkey')?'ok':'changed').catch(()=>window.identityCheck='error');");
-            keyDeadline = SystemClock.elapsedRealtime() + 10000;
-            while (!"\"ok\"".equals(js(scenario,"window.identityCheck")) && SystemClock.elapsedRealtime()<keyDeadline) SystemClock.sleep(200);
-            assertEquals("Encrypted community identity must survive activity recreation", "\"ok\"", js(scenario,"window.identityCheck"));
+            assertEquals("true", js(scenario, "typeof PizzaCommunity === 'undefined'"));
         }
     }
-
 }

@@ -7,13 +7,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.util.Base64;
-import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyProperties;
-import java.security.KeyStore;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.Cipher;
-import javax.crypto.spec.GCMParameterSpec;
 import java.io.FileOutputStream;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -206,43 +199,9 @@ public class MainActivity extends Activity {
             web.evaluateJavascript("window.PizzaScanBridge?.reply(" + payload + ")", null);
         } catch (Exception e) { toast("Android-Antwort fehlgeschlagen"); }
     }
-    private SecretKey identityKey() throws Exception {
-        KeyStore store = KeyStore.getInstance("AndroidKeyStore"); store.load(null);
-        String alias = "pizzascan-community-v2";
-        if (!store.containsAlias(alias)) {
-            KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
-            generator.init(new KeyGenParameterSpec.Builder(alias,
-                    KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).build());
-            generator.generateKey();
-        }
-        return (SecretKey) store.getKey(alias, null);
-    }
     private void handleMessage(JSONObject request) {
         try {
             switch (request.optString("type")) {
-                case "secretGet": {
-                    android.content.SharedPreferences preferences = getSharedPreferences("community", MODE_PRIVATE);
-                    String encrypted = preferences.getString("identity", "");
-                    if (encrypted.isEmpty()) { reply(request, "", null); return; }
-                    String iv = preferences.getString("iv", "");
-                    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-                    cipher.init(Cipher.DECRYPT_MODE, identityKey(), new GCMParameterSpec(128, Base64.decode(iv, Base64.NO_WRAP)));
-                    reply(request, new String(cipher.doFinal(Base64.decode(encrypted, Base64.NO_WRAP)), StandardCharsets.UTF_8), null);
-                    return;
-                }
-                case "secretPut": {
-                    String text = request.optString("text");
-                    if (!text.matches("[0-9a-f]{64}")) throw new IllegalArgumentException("Ungültige Community-Identität");
-                    android.content.SharedPreferences preferences = getSharedPreferences("community", MODE_PRIVATE);
-                    if (preferences.contains("identity")) throw new IllegalStateException("Identität bereits vorhanden");
-                    Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding"); cipher.init(Cipher.ENCRYPT_MODE, identityKey());
-                    String encrypted = Base64.encodeToString(cipher.doFinal(text.getBytes(StandardCharsets.UTF_8)), Base64.NO_WRAP);
-                    if (!preferences.edit().putString("identity", encrypted).putString("iv", Base64.encodeToString(cipher.getIV(), Base64.NO_WRAP)).commit())
-                        throw new java.io.IOException("Identität konnte nicht gespeichert werden");
-                    break;
-                }
                 case "copy": {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
                     clipboard.setPrimaryClip(ClipData.newPlainText("PizzaScan Rezension", request.optString("text")));

@@ -1,0 +1,24 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
+const {server,until,mapFixtures}=require('./helpers.cjs');
+(async()=>{const {server:s,url}=await server(),browser=await chromium.launch();const ctx=await browser.newContext({viewport:{width:393,height:820},permissions:['clipboard-read','clipboard-write']});const page=await ctx.newPage(),errors=[],network=[];await mapFixtures(page);page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>network.push(r.url()));page.on('dialog',d=>d.accept());
+ try{
+  await page.goto(url);await until(page,()=>PizzaScan.ready);await page.locator('#welcome-start').click();await until(page,()=>PizzaScan.diagnostics().places===2);
+  assert.equal(await page.locator('#community-open').count(),0);
+  await page.locator('#places [data-action=place]').first().click();await until(page,()=>!document.querySelector('.detail-loading'));
+  await page.locator('[data-action=review-builder]').click();assert.equal(await page.locator('#copy-draft').isDisabled(),true);assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().reports),0);
+  await page.locator('#review-rating').fill('7.8');await page.locator('[data-aspect=service][data-choice=friendly]').click();await page.locator('[data-aspect=value][data-choice=expensive]').click();await page.locator('[data-aspect=wait][data-choice=long]').click();await page.locator('[data-aspect=wait][data-detail="40"]').click();
+  let draft=await page.locator('#draft-text').inputValue();assert.match(draft,/freundlich/);assert.match(draft,/zu teuer/);assert.match(draft,/40 Minuten/);assert.doesNotMatch(draft,/Foto|KI|Ambiente/);
+  await page.locator('[data-aspect=value][data-choice=expensive]').click();assert.doesNotMatch(await page.locator('#draft-text').inputValue(),/zu teuer/);
+  await page.locator('[data-visit-mode=delivery]').click();assert.equal(await page.locator('[data-aspect=service]').count(),0);assert.doesNotMatch(await page.locator('#draft-text').inputValue(),/freundlich|40 Minuten/);
+  await page.locator('[data-aspect=delivery][data-choice=late]').click();await page.locator('[data-aspect=delivery][data-detail="30"]').click();assert.match(await page.locator('#draft-text').inputValue(),/30 Minuten/);
+  await page.locator('#draft-text').fill('Mein eigener Text, bitte erhalten.');await page.locator('[data-aspect=packaging][data-choice=damaged]').click();assert.equal(await page.locator('#draft-text').inputValue(),'Mein eigener Text, bitte erhalten.');assert.equal(await page.locator('#draft-manual-note').isVisible(),true);
+  await page.locator('#review-visited').check();await page.locator('#copy-draft').click();await until(page,()=>document.getElementById('toast').textContent==='Rezension kopiert');assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'Mein eigener Text, bitte erhalten.');
+  await page.reload();await until(page,()=>PizzaScan.ready);await until(page,()=>PizzaScan.diagnostics().places===2);await page.locator('#places [data-action=place]').first().click();await until(page,()=>!document.querySelector('.detail-loading'));await page.locator('[data-action=review-builder]').click();assert.equal(await page.locator('#draft-text').inputValue(),'Mein eigener Text, bitte erhalten.');assert.equal(await page.locator('#review-visited').isChecked(),true);
+  await page.locator('#draft-apply').click();assert.match(await page.locator('#draft-text').inputValue(),/Verpackung war beschädigt/);assert.match(await page.locator('#draft-text').inputValue(),/30 Minuten/);
+  await page.setViewportSize({width:360,height:800});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));fs.mkdirSync('test-results',{recursive:true});await page.screenshot({path:'test-results/review-builder-mobile.png'});
+  await page.locator('#draft-delete').click();assert.equal(await page.evaluate(()=>Object.keys(JSON.parse(localStorage.getItem('pizzascan-drafts-v1'))).length),0);
+  await page.locator('#settings-open').click();await page.getByText('Datenschutz & lokale Daten',{exact:true}).click();await page.locator('#privacy-open').click();await until(page,()=>document.getElementById('privacy-close'));assert.match(await page.locator('#sheet-body').innerText(),/Verantwortlicher und Kontakt/);assert.match(await page.locator('#sheet-body').innerText(),/Modelle/);await page.locator('#privacy-close').click();
+  assert.equal(network.some(u=>/relay\.damus|nos\.lol|huggingface|\.hf\.co|community\.js/.test(u)),false,'Builder requires no model or community connection');assert.deepEqual(errors,[]);
+  console.log('PASS independent restaurant builder, modes, toggles, adaptive details, manual edit protection, copy, reload, deletion and local privacy');
+ }catch(e){await page.screenshot({path:'test-results/review-builder-failure.png'}).catch(()=>{});throw e;}finally{await browser.close();s.close();}
+})().catch(e=>{console.error(e);process.exit(1)});

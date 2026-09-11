@@ -1,0 +1,23 @@
+Finde Pizza in deiner Nähe und halte fest, wie dein Besuch wirklich war.
+
+PIZZAKARTE MIT GPS
+Entdecke Pizzerien auf einer Vollbildkarte mit Emoji-Markern. Suche nach Restaurants, Städten oder Adressen, merke dir Orte und starte eine Route. Filtere nach Entfernung, Ortstyp oder aktuell geöffneten Restaurants. Detailseiten zeigen die in OpenStreetMap verfügbaren Adressen, Öffnungszeiten, Kontakte und Ausstattungsmerkmale. Fehlende oder unklare Angaben werden gekennzeichnet.
+
+FOTOANALYSE AUF DEINEM GERÄT
+Wähle in den Einstellungen zwischen CLIP ViT-B/32, CLIP ViT-B/16 und SigLIP Base Patch16-224. Die Analyse läuft lokal, ohne KI-API-Schlüssel oder KI-Abonnement. Dein Pizzafoto wird dafür nicht hochgeladen.
+
+Die Detailseite zeigt 25 Fotokriterien auf einer Skala von 0,1 bis 10,0 sowie 100 simulierte Gewichtungsprofile. Du kannst die einzelnen Werte und ihre Gewichtung einsehen und deine persönliche Bewertung separat speichern.
+
+DEIN REZENSIONSBAUKASTEN
+Öffne den Baukasten direkt beim Restaurant – eine Fotoanalyse ist dafür nicht nötig. Wähle „Vor Ort“, „Abholung“ oder „Lieferung“ und füge passende Aussagen per Button hinzu. 14 Aspekte stehen je nach Besuchsart bereit: etwa Geschmack, Service, Wartezeit, Ambiente, Sauberkeit, Preis-Leistung oder Verpackung. Manche Antworten öffnen eine passende Nachfrage.
+
+Du entscheidest, was erwähnt wird. Der Text verwendet ausschließlich deine eigenen Angaben und übernimmt keine KI-Fotowerte. Wähle deine Gesamtbewertung von 0,1 bis 10,0, ergänze eigene Sätze und passe Schreibstil und Textform an. Entwürfe bleiben pro Restaurant auf deinem Gerät gespeichert. Eigene Textänderungen werden beim Wechsel der Bausteine geschützt.
+
+Kopiere den geprüften Text und öffne das Restaurant in Google Maps. Dort wählst du die Sterne, fügst den Text ein und veröffentlichst selbst. PizzaScan veröffentlicht nichts automatisch und ist unabhängig von Google.
+
+WAS DU VORHER WISSEN SOLLTEST
+Die Modellgewichte sind nicht im App-Download enthalten. Das gewählte Offline-Modell wird erst nach deiner Bestätigung separat heruntergeladen: ungefähr 160 MB für CLIP oder 210 MB für SigLIP. WLAN und ausreichend freier Speicher sind sinnvoll. Danach funktioniert die Fotoanalyse offline, solange Android den Modell-Cache nicht entfernt. Kartendienste und der erste Modelldownload benötigen Internet und erhalten die dafür nötigen Such- und Verbindungsdaten.
+
+Die Fotowerte sind experimentelle Bild-Text-Vergleiche, keine wissenschaftlich validierte Qualitätsprüfung. Die 100 Profile sind keine echten Experten und keine unabhängigen Gutachten. Geschmack, Temperatur, Allergene und Lebensmittelsicherheit lassen sich aus einem Foto nicht zuverlässig beurteilen. Karten- und Öffnungsdaten können unvollständig oder veraltet sein.
+
+Kein Konto, keine Community, keine Werbung. Fotos und Rezensionsentwürfe werden lokal gespeichert und lassen sich in der App löschen. Android 8 oder neuer; die Geschwindigkeit der lokalen KI hängt von deinem Gerät ab.

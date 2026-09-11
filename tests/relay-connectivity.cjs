@@ -1,4 +1,0 @@
-const WebSocket=require('ws');
-const relays=['wss://relay.damus.io','wss://nos.lol'];
-function read(url){return new Promise((resolve,reject)=>{const ws=new WebSocket(url),id='pizzascan-readonly-ci';let done=false;const timer=setTimeout(()=>finish(Error('timeout')),12000);function finish(error){if(done)return;done=true;clearTimeout(timer);if(ws.readyState===1)ws.send(JSON.stringify(['CLOSE',id]));ws.close();error?reject(error):resolve(url);}ws.on('open',()=>ws.send(JSON.stringify(['REQ',id,{kinds:[30078],'#t':['pizzascan'],limit:1}])));ws.on('error',()=>finish(Error('connection failed')));ws.on('message',raw=>{try{const m=JSON.parse(raw);if(m[0]==='EOSE')finish();if(m[0]==='CLOSED')finish(Error('query refused'));}catch{}});});}
-Promise.allSettled(relays.map(read)).then(results=>{results.forEach((r,i)=>console.log(relays[i],r.status==='fulfilled'?'READ OK':String(r.reason)));if(!results.some(r=>r.status==='fulfilled'))process.exitCode=1;});
