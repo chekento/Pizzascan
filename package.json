@@ -1,11 +1,11 @@
 {
   "name": "pizzascan-android",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.1.1",
   "scripts": {
     "assets": "node scripts/prepare-assets.cjs",
     "test": "node --test tests/core.test.cjs tests/places.test.cjs",
-    "smoke": "node tests/web-smoke.cjs",
+    "smoke": "node tests/model-consent.cjs && node tests/web-smoke.cjs",
     "models": "node tests/model-integration.cjs",
     "map-smoke": "node tests/map-smoke.cjs",
     "live-map": "node tests/live-map.cjs"

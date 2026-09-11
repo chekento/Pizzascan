@@ -65,12 +65,12 @@ jobs:
       - name: Verify and collect the APK
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/PizzaScan-2.1.0-unsigned.apk
+          cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/PizzaScan-2.1.1-unsigned.apk
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
           "$BUILD_TOOLS/apksigner" verify --verbose --print-certs app/build/outputs/apk/debug/app-debug.apk > artifacts/test-signature.txt
           cp "$BUILD_TOOLS/lib/apksigner.jar" artifacts/apksigner.jar
-          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.1.0-unsigned.apk > artifacts/apk-info.txt
-          sha256sum artifacts/PizzaScan-2.1.0-unsigned.apk > artifacts/SHA256SUMS.txt
+          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.1.1-unsigned.apk > artifacts/apk-info.txt
+          sha256sum artifacts/PizzaScan-2.1.1-unsigned.apk > artifacts/SHA256SUMS.txt
           cp package-lock.json artifacts/package-lock.json
           tar -czf artifacts/web-bundle.tar.gz web
       - name: Upload APK for private final signing

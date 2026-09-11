@@ -1,9 +1,9 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.PizzaAnalysis=api;})(globalThis,function(){
 'use strict';
 const models=[
- {id:'clip32',name:'CLIP B/32',repo:'Xenova/clip-vit-base-patch32',note:'Schneller Einstieg · etwa 160 MB',family:'clip'},
- {id:'clip16',name:'CLIP B/16',repo:'Xenova/clip-vit-base-patch16',note:'Feinere Bildaufteilung · etwa 160 MB',family:'clip'},
- {id:'siglip',name:'SigLIP B/16',repo:'Xenova/siglip-base-patch16-224',note:'Anderes Bild-Sprach-Modell · etwa 210 MB',family:'siglip'}
+ {id:'clip32',name:'CLIP B/32',fullName:'CLIP ViT-B/32',developer:'OpenAI',downloadMB:160,repo:'Xenova/clip-vit-base-patch32',note:'Standard · schneller Einstieg · ca. 160 MB',family:'clip'},
+ {id:'clip16',name:'CLIP B/16',fullName:'CLIP ViT-B/16',developer:'OpenAI',downloadMB:160,repo:'Xenova/clip-vit-base-patch16',note:'Feinere Bildaufteilung · ca. 160 MB',family:'clip'},
+ {id:'siglip',name:'SigLIP B/16',fullName:'SigLIP Base Patch16-224',developer:'Google',downloadMB:210,repo:'Xenova/siglip-base-patch16-224',note:'Anderes Bild-Sprach-Modell · ca. 210 MB',family:'siglip'}
 ];
 // These are visible attributes, never sensory or food-safety judgments.
 const rows=[

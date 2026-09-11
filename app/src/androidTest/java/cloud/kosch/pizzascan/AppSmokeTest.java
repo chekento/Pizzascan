@@ -39,6 +39,11 @@ public class AppSmokeTest {
             });
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click(); document.getElementById('nav-photo').click();");
             assertEquals("true", js(scenario, "document.getElementById('photo-view').classList.contains('active')"));
+            js(scenario, "runModel(true);");
+            assertEquals("true", js(scenario, "!!document.getElementById('confirm-model-download') && worker === null && !PizzaScan.diagnostics().busy"));
+            assertEquals("true", js(scenario, "document.getElementById('sheet-body').textContent.includes('Disclaimer zur Fotobewertung')"));
+            assertEquals("true", js(scenario, "PizzaScan.back()"));
+            assertEquals("true", js(scenario, "worker === null && !document.getElementById('sheet').open"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
             js(scenario, "document.getElementById('map-fullscreen').click();");
             SystemClock.sleep(300);

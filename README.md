@@ -4,7 +4,7 @@ Eine deutsche Android-App für **Pizzakarte mit GPS** und **lokale Fotobewertung
 
 ## Installation
 
-Die installierbare Datei heißt `PizzaScan-2.1.0.apk`. Sie wird als Download im Chat bereitgestellt. Der [GitHub-Actions-Lauf](https://github.com/chekento/Pizzascan/actions) stellt im Artifact `PizzaScan-Build` die unsignierte Release-APK für die abschließende private Signierung bereit. Die im Chat ausgelieferte Datei ist bereits signiert und installierbar.
+Die installierbare Datei heißt `PizzaScan-2.1.1.apk`. Sie wird als Download im Chat bereitgestellt. Der [GitHub-Actions-Lauf](https://github.com/chekento/Pizzascan/actions) stellt im Artifact `PizzaScan-Build` die unsignierte Release-APK für die abschließende private Signierung bereit. Die im Chat ausgelieferte Datei ist bereits signiert und installierbar.
 
 Android 8 oder neuer; auf dem Gerät die Installation aus der verwendeten Download-App erlauben. Die APK ist ein Release-Build mit ausgeschaltetem WebView-Debugging und einem separat gesicherten privaten Signierschlüssel. App-ID: `cloud.kosch.pizzascan`. Die App ist kein Play-Store-Release.
 
@@ -30,7 +30,7 @@ Die Kartendaten werden mit [Overpass Private.coffee](https://overpass.private.co
 ## Bedienung
 
 1. Eine Stadt auf der Karte suchen oder mit dem GPS-Knopf den eigenen Standort verwenden. Pizzerien stammen aus OpenStreetMap. Orte lassen sich merken und einer Fotoanalyse zuordnen.
-2. Unter **Einstellungen** CLIP B/32, CLIP B/16 oder SigLIP B/16 wählen. „Modell herunterladen“ bereitet die spätere Offline-Nutzung vor. Der erste Download umfasst grob 160–210 MB je Modell; WLAN und mindestens einige hundert MB freier Speicher sind sinnvoll. Ladezeit und Analysegeschwindigkeit hängen vom Gerät ab.
+2. Unter **Einstellungen** CLIP B/32, CLIP B/16 oder SigLIP B/16 wählen. „Gewähltes Modell vorbereiten …“ zeigt zuerst Modellname, Anbieter, Größe, Zweck und Disclaimer. Erst „Bestätigen & starten“ erlaubt den Download und bereitet die spätere Offline-Nutzung vor. Die erste Fotoanalyse zeigt denselben Hinweis, bevor ein KI-Worker gestartet wird. Die Freigabe gilt pro Modell und schließt das spätere Nachladen fehlender Cache-Dateien ein; beim Entfernen der Modelle wird sie zurückgesetzt. Der erste Download umfasst grob 160–210 MB je Modell; WLAN und mindestens einige hundert MB freier Speicher sind sinnvoll. Ladezeit und Analysegeschwindigkeit hängen vom Gerät ab.
 3. Unter **Fotobewertung** ein Foto aufnehmen oder auswählen. Die App verkleinert es auf maximal 1200 Pixel und entfernt durch erneutes JPEG-Kodieren Metadaten. Analyse im Web Worker mit ONNX/WASM auf der CPU; weder Cloud-Inferenz noch API-Schlüssel.
 4. Die Detailseite zeigt 25 Kriterien mit Werten von 0,1 bis 10,0 und alle 100 simulierten Bewertungsprofile mit Einzelwerten und Gewichten. Eigene Bewertung auf der Zehn-Punkte-Skala, Besuchsbestätigung und Erlebnistext separat speichern.
 5. **Google-Maps-Entwurf** erzeugt einen bearbeitbaren Rezensionstext. „Text kopieren & Google Maps öffnen“ übergibt die ausgewählte Pizzeria an die Ortssuche. Dort richtigen Ort prüfen, Rezension öffnen, Text einfügen, Sterne und Foto selbst hinzufügen und veröffentlichen. Ein zweiter Knopf teilt Foto und Text über Androids Freigabedialog. Ziel-Apps entscheiden, welche Anhänge sie übernehmen.
@@ -54,7 +54,9 @@ Der Rezensionsentwurf erfindet keine Geschmackserfahrungen. Er verwendet die eig
 | CLIP B/16 | [Xenova/clip-vit-base-patch16](https://huggingface.co/Xenova/clip-vit-base-patch16) | q8 / WASM / CPU |
 | SigLIP B/16 | [Xenova/siglip-base-patch16-224](https://huggingface.co/Xenova/siglip-base-patch16-224) | q8 / WASM / CPU |
 
-Die Modellgewichte werden beim ersten Einsatz von Hugging Face heruntergeladen; kein Account und kein API-Schlüssel erforderlich. Das Foto bleibt lokal. Die Laufzeit ist in der APK enthalten. Transformers.js speichert Gewichte im Web-Cache. Android kann diesen Cache bei Speicherdruck löschen; dann ist ein neuer Download nötig. Die Modellgewichte sind separate Downloads und nicht in der APK enthalten. Kein Cloud-Ersatz bei Fehlern, keine eingebauten Zugangsdaten, keine inoffiziellen Login- oder Web-Scraping-Umgehungen.
+Vor der ersten Nutzung jedes Modells wird die ausführliche Erklärung mit Disclaimer und Downloadbestätigung angezeigt. Sie bleibt außerdem im Willkommen-Dialog, auf der Fotoseite und in den KI-Einstellungen erreichbar (`web/model-info.js`). Standard ist **CLIP ViT-B/32 von OpenAI**, alternativ CLIP ViT-B/16 von OpenAI oder SigLIP Base Patch16-224 von Google, jeweils in der q8-ONNX-Konvertierung von Xenova. Der Hinweis erklärt zusätzlichen Speicher- und Datenbedarf, mögliche Mobilfunkkosten, Cache-Bereinigung, lokale Fotoverarbeitung, die Verbindung zum Downloadanbieter und die Grenzen des experimentellen Index.
+
+Die Modellgewichte werden nach Bestätigung beim ersten Einsatz von Hugging Face heruntergeladen; kein Account und kein API-Schlüssel erforderlich. Das Foto bleibt lokal. Die Laufzeit ist in der APK enthalten. Transformers.js speichert Gewichte im Web-Cache. Android kann diesen Cache bei Speicherdruck löschen; dann ist ein neuer Download nötig. Die Modellgewichte sind separate Downloads und nicht in der APK enthalten. Kein Cloud-Ersatz bei Fehlern, keine eingebauten Zugangsdaten, keine inoffiziellen Login- oder Web-Scraping-Umgehungen.
 
 ## Community ohne eigenen Server
 
