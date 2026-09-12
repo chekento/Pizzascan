@@ -53,6 +53,7 @@ jobs:
           npm test
           node --check web/script.js
           node --check web/hotfix-map.js
+          node --check web/persistent-model-ui.js
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -67,15 +68,15 @@ jobs:
       - name: Verify and collect the APK
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-2.2.0-hotfix1-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-2.2.0-persist1-debug.apk
           cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/PizzaScan-2.2.0-unsigned.apk
           cp app/build/outputs/bundle/release/app-release.aab artifacts/PizzaScan-2.2.0-unsigned.aab
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-2.2.0-hotfix1-debug.apk > artifacts/hotfix1-debug-signature.txt
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-2.2.0-persist1-debug.apk > artifacts/persist1-debug-signature.txt
           cp "$BUILD_TOOLS/lib/apksigner.jar" artifacts/apksigner.jar
-          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.2.0-hotfix1-debug.apk > artifacts/hotfix1-debug-apk-info.txt
+          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.2.0-persist1-debug.apk > artifacts/persist1-debug-apk-info.txt
           "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.2.0-unsigned.apk > artifacts/apk-info.txt
-          sha256sum artifacts/PizzaScan-2.2.0-hotfix1-debug.apk > artifacts/HOTFIX1-SHA256.txt
+          sha256sum artifacts/PizzaScan-2.2.0-persist1-debug.apk > artifacts/PERSIST1-SHA256.txt
           sha256sum artifacts/PizzaScan-2.2.0-unsigned.* > artifacts/SHA256SUMS.txt
           curl --fail --location --retry 2 --output artifacts/bundletool.jar https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar
           echo 'a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29  artifacts/bundletool.jar' | sha256sum -c -
