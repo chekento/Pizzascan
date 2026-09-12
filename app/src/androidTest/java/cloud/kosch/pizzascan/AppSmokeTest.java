@@ -42,7 +42,7 @@ public class AppSmokeTest {
             js(scenario, "runModel(true);");
             String downloadState = js(scenario, "JSON.stringify({dialog:!!document.getElementById('confirm-model-download'),worker:!!worker,busy:PizzaScan.diagnostics().busy})");
             assertEquals(downloadState, "true", js(scenario, "!!document.getElementById('confirm-model-download') && !worker && !PizzaScan.diagnostics().busy"));
-            assertEquals("true", js(scenario, "document.getElementById('sheet-body').textContent.includes('Disclaimer zur Fotobewertung')"));
+            assertEquals("Localized model notice must name the selected model", "true", js(scenario, "document.getElementById('sheet-body').textContent.includes('CLIP ViT-B/32')"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
             assertEquals("true", js(scenario, "!worker && !document.getElementById('sheet').open"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
@@ -57,20 +57,28 @@ public class AppSmokeTest {
             js(scenario, "document.getElementById('settings-open').click(); document.querySelector('input[value=clip16]').click(); document.getElementById('dark-mode').click(); document.getElementById('settings-save').click();");
             String dark = js(scenario,"document.body.classList.contains('dark')");
             js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});document.querySelector('[data-visit-mode=dinein]').click();document.getElementById('review-rating').value='7.8';document.getElementById('review-rating').dispatchEvent(new Event('input'));document.querySelector('[data-aspect=service][data-choice=friendly]').click();document.getElementById('review-visited').click();");
-            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes('freundlich') && !document.getElementById('copy-draft').disabled"));
+            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && !document.getElementById('copy-draft').disabled"));
             js(scenario, "PizzaScan.back();");
             assertEquals("true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));
             js(scenario, "window.nativeCheck='pending';bridge('copy',{text:'PizzaScan Android Test'}).then(()=>window.nativeCheck='ok');");
             long replyDeadline = SystemClock.elapsedRealtime() + 10000;
             while (!"\"ok\"".equals(js(scenario,"window.nativeCheck")) && SystemClock.elapsedRealtime()<replyDeadline) SystemClock.sleep(200);
             assertEquals("\"ok\"", js(scenario,"window.nativeCheck"));
+            String[][] nativeLanguages = {{"de", "Android-Aktion fehlgeschlagen"}, {"en", "Android action failed"}, {"it", "Azione Android non riuscita"}, {"es", "Falló la acción de Android"}, {"fr", "Échec de l’action Android"}};
+            for (String[] localized : nativeLanguages) {
+                js(scenario, "window.nativeLanguageCheck='pending';bridge('setLanguage',{language:'" + localized[0] + "'}).then(()=>bridge('unknownTestAction')).catch(e=>window.nativeLanguageCheck=e.message);");
+                long languageDeadline = SystemClock.elapsedRealtime() + 10000;
+                while ("\"pending\"".equals(js(scenario,"window.nativeLanguageCheck")) && SystemClock.elapsedRealtime()<languageDeadline) SystemClock.sleep(200);
+                assertTrue("Native resources follow app language " + localized[0], js(scenario,"window.nativeLanguageCheck").contains(localized[1]));
+            }
+            js(scenario, "bridge('setLanguage',{language:PizzaI18n.language});");
             scenario.recreate();
             ready(scenario);
             assertEquals(dark, js(scenario,"document.body.classList.contains('dark')"));
             assertEquals("true", js(scenario,"!document.getElementById('welcome').open"));
             assertEquals("true", js(scenario,"PizzaScan.diagnostics().model === 'clip16'"));
             js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});");
-            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes('freundlich') && document.getElementById('review-rating').value === '7.8'"));
+            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && document.getElementById('review-rating').value === '7.8'"));
             js(scenario, "PizzaScan.back();");
 
         }

@@ -6,6 +6,8 @@ import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.res.Configuration;
+import java.util.Locale;
 import android.util.Base64;
 import java.io.FileOutputStream;
 import android.content.Intent;
@@ -54,6 +56,7 @@ public class MainActivity extends Activity {
     private String pendingExport;
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
+    private volatile String appLanguage = Locale.getDefault().getLanguage();
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -135,7 +138,7 @@ public class MainActivity extends Activity {
                 for (String type : params.getAcceptTypes()) if (type.startsWith("image/")) image = true;
                 pick.setType(image ? "image/*" : "application/json");
                 pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                Intent chooser = Intent.createChooser(pick, image ? "Pizzafoto auswählen" : "PizzaScan JSON importieren");
+                Intent chooser = Intent.createChooser(pick, image ? ui(R.string.pick_photo) : ui(R.string.import_json));
                 if (image) {
                     try {
                         File dir = new File(getCacheDir(), "photos");
@@ -155,7 +158,7 @@ public class MainActivity extends Activity {
                     } catch (Exception e) { captureUri = null; }
                 }
                 try { startActivityForResult(chooser, PICK_FILE); }
-                catch (Exception e) { fileCallback.onReceiveValue(null); fileCallback = null; toast("No file picker available."); }
+                catch (Exception e) { fileCallback.onReceiveValue(null); fileCallback = null; toast(ui(R.string.no_picker)); }
                 return true;
             }
         });
@@ -168,7 +171,7 @@ public class MainActivity extends Activity {
                         try {
                             JSONObject request = new JSONObject(data);
                             runOnUiThread(() -> handleMessage(request));
-                        } catch (Exception e) { toast("Could not read app request."); }
+                        } catch (Exception e) { toast(ui(R.string.request_error)); }
                     });
         }
         if (Build.VERSION.SDK_INT >= 33) {
@@ -201,14 +204,20 @@ public class MainActivity extends Activity {
             payload.put("value", value);
             if (error != null) payload.put("error", error);
             web.evaluateJavascript("window.PizzaScanBridge?.reply(" + payload + ")", null);
-        } catch (Exception e) { toast("Android-Antwort fehlgeschlagen"); }
+        } catch (Exception e) { toast(ui(R.string.reply_error)); }
     }
     private void handleMessage(JSONObject request) {
         try {
             switch (request.optString("type")) {
+                case "setLanguage": {
+                    String language = request.optString("language");
+                    if (!language.matches("de|en|it|es|fr")) throw new IllegalArgumentException("Unsupported language");
+                    appLanguage = language;
+                    break;
+                }
                 case "copy": {
                     ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    clipboard.setPrimaryClip(ClipData.newPlainText("PizzaScan Rezension", request.optString("text")));
+                    clipboard.setPrimaryClip(ClipData.newPlainText(ui(R.string.review_clip), request.optString("text")));
                     break;
                 }
                 case "save": {
@@ -232,7 +241,7 @@ public class MainActivity extends Activity {
                     share.putExtra(Intent.EXTRA_STREAM, uri); share.putExtra(Intent.EXTRA_TEXT, request.optString("text"));
                     share.setClipData(ClipData.newUri(getContentResolver(), "Pizzafoto", uri));
                     share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    startActivity(Intent.createChooser(share, "Pizzafoto und Rezension teilen"));
+                    startActivity(Intent.createChooser(share, ui(R.string.share_photo)));
                     break;
                 }
                 case "modelStorageStatus": {
@@ -244,14 +253,14 @@ public class MainActivity extends Activity {
                 default: throw new IllegalArgumentException("Unbekannte Android-Aktion");
             }
             reply(request, "ok", null);
-        } catch (Exception e) { reply(request, "", "Android-Aktion fehlgeschlagen: " + e.getClass().getSimpleName()); }
+        } catch (Exception e) { reply(request, "", ui(R.string.action_error) + ": " + e.getClass().getSimpleName()); }
     }
     private void openExternal(Uri uri) {
         String scheme = uri.getScheme();
         if (!("https".equals(scheme) || "http".equals(scheme) || "tel".equals(scheme) || "geo".equals(scheme))) return;
         if (("https".equals(scheme) || "http".equals(scheme)) && (uri.getHost() == null || isLocal(uri))) return;
         try { startActivity(new Intent("tel".equals(scheme) ? Intent.ACTION_DIAL : Intent.ACTION_VIEW, uri)); }
-        catch (Exception e) { toast("No app available to open this link."); }
+        catch (Exception e) { toast(ui(R.string.no_link_app)); }
     }
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
@@ -274,8 +283,8 @@ public class MainActivity extends Activity {
                     try (OutputStream output = getContentResolver().openOutputStream(uri, "wt")) {
                         if (output == null) throw new java.io.IOException("No output stream");
                         output.write(text.getBytes(StandardCharsets.UTF_8));
-                        toast("JSON-Export gespeichert.");
-                    } catch (Exception e) { toast("Could not save the export."); }
+                        toast(ui(R.string.export_saved));
+                    } catch (Exception e) { toast(ui(R.string.export_error)); }
                 }, "pizzascan-export").start();
             }
         }
@@ -283,11 +292,16 @@ public class MainActivity extends Activity {
     private void handleBack() {
         web.evaluateJavascript("window.PizzaScan ? window.PizzaScan.back() : false", consumed -> {
             if (!"true".equals(consumed)) new AlertDialog.Builder(this)
-                    .setTitle("PizzaScan schließen?").setMessage("Deine Fotos und Bewertungen bleiben auf diesem Gerät.")
-                    .setPositiveButton("Schließen", (d, w) -> finish()).setNegativeButton("Bleiben", null).show();
+                    .setTitle(ui(R.string.exit_title)).setMessage(ui(R.string.exit_message))
+                    .setPositiveButton(ui(R.string.exit_close), (d, w) -> finish()).setNegativeButton(ui(R.string.exit_stay), null).show();
         });
     }
     @SuppressWarnings("deprecation") @Override public void onBackPressed() { handleBack(); }
+    private String ui(int resource) {
+        Configuration config = new Configuration(getResources().getConfiguration());
+        config.setLocale(Locale.forLanguageTag(appLanguage.matches("de|en|it|es|fr") ? appLanguage : "de"));
+        return createConfigurationContext(config).getString(resource);
+    }
     private void toast(String text) { runOnUiThread(() -> Toast.makeText(this, text, Toast.LENGTH_LONG).show()); }
     @Override protected void onPause() { web.onPause(); super.onPause(); }
     @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }

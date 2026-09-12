@@ -1,7 +1,7 @@
 {
   "name": "pizzascan-android",
   "private": true,
-  "version": "2.2.0",
+  "version": "2.3.0",
   "scripts": {
     "assets": "node scripts/prepare-assets.cjs",
     "test": "node --test tests/core.test.cjs tests/places.test.cjs tests/review.test.cjs",

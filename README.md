@@ -1,8 +1,17 @@
-# PizzaScan 2.2 — Android und Google Play
+# PizzaScan 2.3 — Android und Google Play
 
-Eine deutsche Android-App für **Pizzakarte mit GPS** und **lokale Fotobewertung**. Drei kostenlose Bildmodelle stehen in den Einstellungen zur Auswahl. Es wird kein KI-API-Schlüssel benötigt, kein Inferenzdienst aufgerufen und kein Foto für die Analyse hochgeladen.
+Eine Android-App auf Deutsch, Englisch, Italienisch, Spanisch und Französisch für **Pizzakarte mit GPS** und **lokale Fotobewertung**. Drei kostenlose Bildmodelle stehen in den Einstellungen zur Auswahl. Es wird kein KI-API-Schlüssel benötigt, kein Inferenzdienst aufgerufen und kein Foto für die Analyse hochgeladen.
 
-## Installation
+## Aktuelle Testfassung 2.3
+
+Die Test-APK verwendet die separate App-ID `cloud.kosch.pizzascan.lang1` (VersionCode 6). Sie wird neben früheren Testfassungen installiert; deren lokale Daten und Modelle werden nicht automatisch übernommen. Die Release-App-ID bleibt `cloud.kosch.pizzascan`.
+
+- Restaurant- und GPS-Marker bleiben beim Verschieben, Zoomen, Wechsel ins Vollbild und Drehen des Bildschirms an ihren geografischen Koordinaten.
+- Gerätesprache wird erkannt; manuelle Auswahl im Willkommen-Dialog und in den Einstellungen. Auch der Rezensionsbaukasten, Modellhinweise und native Android-Dialoge folgen der App-Sprache.
+- Das freigegebene App-Symbol wird als PNG in der APK verwendet. Store-Dateien liegen unter `store/graphics`: Icon 512 × 512, Vorstellungsgrafiken DE/EN exakt 1024 × 500.
+- Native Offline-Modelle bleiben im dauerhaften App-Speicher. In der Browser-Version kann der Browsercache entfernt werden.
+
+## Installation früherer Release-Fassungen
 
 Die installierbare Datei heißt `PizzaScan-2.2.0.apk`. Sie wird als Download im Chat bereitgestellt. Der [GitHub-Actions-Lauf](https://github.com/chekento/Pizzascan/actions) stellt im Artifact `PizzaScan-Build` die unsignierte Release-APK für die abschließende private Signierung bereit. Die im Chat ausgelieferte Datei ist bereits signiert und installierbar.
 
@@ -58,7 +67,7 @@ Der Rezensionsbaukasten verwendet ausschließlich eigene Angaben und keine Bild-
 
 Vor der ersten Nutzung jedes Modells wird die ausführliche Erklärung mit Disclaimer und Downloadbestätigung angezeigt. Sie bleibt außerdem im Willkommen-Dialog, auf der Fotoseite und in den KI-Einstellungen erreichbar (`web/model-info.js`). Standard ist **CLIP ViT-B/32 von OpenAI**, alternativ CLIP ViT-B/16 von OpenAI oder SigLIP Base Patch16-224 von Google, jeweils in der q8-ONNX-Konvertierung von Xenova. Der Hinweis erklärt zusätzlichen Speicher- und Datenbedarf, mögliche Mobilfunkkosten, Cache-Bereinigung, lokale Fotoverarbeitung, die Verbindung zum Downloadanbieter und die Grenzen des experimentellen Index.
 
-Die Modellgewichte werden nach Bestätigung beim ersten Einsatz von Hugging Face heruntergeladen; kein Account und kein API-Schlüssel erforderlich. Das Foto bleibt lokal. Die Laufzeit ist in der APK enthalten. Transformers.js speichert Gewichte im Web-Cache. Android kann diesen Cache bei Speicherdruck löschen; dann ist ein neuer Download nötig. Die Modellgewichte sind separate Downloads und nicht in der APK enthalten. Kein Cloud-Ersatz bei Fehlern, keine eingebauten Zugangsdaten, keine inoffiziellen Login- oder Web-Scraping-Umgehungen.
+Die Modellgewichte werden nach Bestätigung beim ersten Einsatz von Hugging Face heruntergeladen; kein Account und kein API-Schlüssel erforderlich. Das Foto bleibt lokal. Die Laufzeit ist in der APK enthalten. In Android speichert PizzaScan die Gewichte dauerhaft im privaten App-Speicher. Normales Leeren des App-Caches entfernt sie nicht; App-Daten löschen, Deinstallieren oder das gezielte Entfernen der Modelle schon. Die Browser-Version verwendet den vom Browser verwalteten Cache, den der Browser entfernen kann. Die Modellgewichte sind separate Downloads und nicht in der APK enthalten. Kein Cloud-Ersatz bei Fehlern, keine eingebauten Zugangsdaten, keine inoffiziellen Login- oder Web-Scraping-Umgehungen.
 
 ## Speicher und Android
 

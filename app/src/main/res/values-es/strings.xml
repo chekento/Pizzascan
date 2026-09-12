@@ -1,0 +1,17 @@
+<resources>
+    <string name="pick_photo">Elegir una foto de pizza</string>
+    <string name="import_json">Importar JSON de PizzaScan</string>
+    <string name="share_photo">Compartir foto y reseña</string>
+    <string name="exit_title">¿Cerrar PizzaScan?</string>
+    <string name="exit_message">Tus fotos y valoraciones permanecen en este dispositivo.</string>
+    <string name="exit_close">Cerrar</string>
+    <string name="exit_stay">Quedarme</string>
+    <string name="no_picker">No hay un selector de archivos disponible.</string>
+    <string name="request_error">No se pudo leer la solicitud de la aplicación.</string>
+    <string name="reply_error">Falló la respuesta de Android.</string>
+    <string name="action_error">Falló la acción de Android</string>
+    <string name="no_link_app">No hay una aplicación disponible para abrir este enlace.</string>
+    <string name="export_saved">Exportación JSON guardada.</string>
+    <string name="export_error">No se pudo guardar la exportación.</string>
+    <string name="review_clip">Reseña de PizzaScan</string>
+</resources>
