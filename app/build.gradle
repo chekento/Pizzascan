@@ -15,8 +15,8 @@ android {
     buildFeatures { buildConfig true }
     buildTypes {
         debug {
-            applicationIdSuffix '.hotfix1'
-            versionNameSuffix '-hotfix1'
+            applicationIdSuffix '.persist1'
+            versionNameSuffix '-persist1'
         }
         release { minifyEnabled false }
     }
@@ -38,7 +38,7 @@ dependencies {
 tasks.register('verifyWebAssets') {
     doLast {
         ['index.html', 'script.js', 'core.js', 'style.css',
-         'hotfix-map.js', 'hotfix-map.css',
+         'hotfix-map.js', 'hotfix-map.css', 'persistent-model-ui.js',
          'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css',
          'analysis.js', 'model-info.js', 'places.js', 'map-ui.js', 'vendor/hours.js', 'vendor/ai-worker.js', 'review-builder.js', 'draft-store.js', 'draft-list.js', 'review-ui.js', 'privacy-ui.js', 'privacy.html'].each { name ->
             if (!file("../web/$name").isFile()) {
