@@ -1,0 +1,3 @@
+PizzaScan restaurant/pizzeria search UI validation build.
+Features: compact search icon, minimizable search panel, remote autocomplete, explicit search button, restaurant/pizzeria/place suggestions.
+Debug package: cloud.kosch.pizzascan.search1

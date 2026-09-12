@@ -1,6 +1,6 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs');
 const {server,until,mapFixtures}=require('./helpers.cjs');
-(async()=>{const {server:s,url}=await server(),browser=await chromium.launch();const ctx=await browser.newContext({viewport:{width:393,height:820},permissions:['clipboard-read','clipboard-write']});const page=await ctx.newPage(),errors=[],network=[];await mapFixtures(page);page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>network.push(r.url()));let acceptDialogs=true;page.on('dialog',d=>acceptDialogs?d.accept():d.dismiss());
+(async()=>{const {server:s,url}=await server(),browser=await chromium.launch();const ctx=await browser.newContext({viewport:{width:393,height:820},permissions:['clipboard-read','clipboard-write'],locale:'de-DE'});const page=await ctx.newPage(),errors=[],network=[];await mapFixtures(page);page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>network.push(r.url()));let acceptDialogs=true;page.on('dialog',d=>acceptDialogs?d.accept():d.dismiss());
  try{
   await page.goto(url);await until(page,()=>PizzaScan.ready);await page.locator('#welcome-start').click();await until(page,()=>PizzaScan.diagnostics().places===2);
   assert.equal(await page.locator('#community-open').count(),0);
