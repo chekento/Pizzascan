@@ -9,6 +9,7 @@
     "models": "node tests/model-integration.cjs",
     "map-smoke": "node tests/map-smoke.cjs",
     "marker-i18n": "node tests/marker-i18n-smoke.cjs",
+    "i18n-content": "node tests/i18n-content-smoke.cjs",
     "live-map": "node tests/live-map.cjs"
   },
   "dependencies": {
