@@ -1,6 +1,6 @@
 # PizzaScan 2.2.0 für Google Play vorbereiten
 
-Stand: 11. September 2026. Das Paket enthält die technische Vorbereitung und Eintragstexte. Ein Console-Konto, die persönlichen Pflichtangaben und Googles Prüfung werden dadurch nicht ersetzt. Noch nichts bei Google veröffentlicht.
+Stand: 12. September 2026. Das Paket enthält die technische Vorbereitung und Eintragstexte. Ein Console-Konto, die persönlichen Pflichtangaben und Googles Prüfung werden dadurch nicht ersetzt. Noch nichts bei Google veröffentlicht.
 
 ## 1. Entwicklerkonto
 

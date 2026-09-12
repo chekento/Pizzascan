@@ -1,6 +1,6 @@
 # Datenschutzerklärung für PizzaScan
 
-Stand: 11. September 2026 · Version 2.2.0 · Android-Paket cloud.kosch.pizzascan
+Stand: 12. September 2026 · Version 2.2.0 · Android-Paket cloud.kosch.pizzascan
 
 ## Verantwortlicher und Kontakt
 
@@ -28,7 +28,7 @@ Informationen zu den Anbietern: [OpenStreetMap Foundation](https://osmfoundation
 
 Eigene Restaurantbewertungen, ausgewählte Bausteine und bearbeitete Rezensionstexte werden lokal gespeichert. Der Baukasten verarbeitet ausschließlich deine eigenen Angaben; KI-Fotowerte werden nicht übernommen. „Kopieren“ überträgt nur den angezeigten Text in die Zwischenablage deines Geräts. „Google Maps öffnen“ öffnet außerhalb der App eine Ortssuche mit Name, Adresse und Koordinaten des ausgewählten Restaurants. Den Text musst du dort selbst einfügen und veröffentlichen. Dabei gelten die [Datenschutzbestimmungen von Google](https://policies.google.com/privacy?hl=de).
 
-Beim JSON-Export entscheidest du über Androids Speicherdialog, wohin die Datei mit Foto und Bewertungsdaten gelangt. Wenn du einen Cloud-Speicher auswählst oder exportierte Daten anderweitig teilst, verarbeitet der gewählte Anbieter diese Daten. Website-, Telefon- und Routenlinks öffnen erst nach deiner Aktion die jeweilige externe Anwendung. PizzaScan hat keinen Zugriff auf dortige Konten oder veröffentlichte Rezensionen.
+Fotoanalysen können mit Foto und Bewertungsdaten als JSON exportiert werden. Einzelne Rezensionsentwürfe lassen sich mit Restaurantzuordnung, eigenen Angaben und Text als JSON sichern und in der Entwurfsübersicht wiederherstellen; dieser Export enthält kein Foto und keine KI-Werte. Beim Export entscheidest du über Androids Speicherdialog, wohin die Datei gelangt. Wenn du einen Cloud-Speicher auswählst oder exportierte Daten anderweitig teilst, verarbeitet der gewählte Anbieter diese Daten. Website-, Telefon- und Routenlinks öffnen erst nach deiner Aktion die jeweilige externe Anwendung. PizzaScan hat keinen Zugriff auf dortige Konten oder veröffentlichte Rezensionen.
 
 ## Speicher, Aufbewahrung und Löschung
 

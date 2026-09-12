@@ -21,15 +21,15 @@
  ];
  const text=(v,max)=>typeof v==='string'?v.slice(0,max):'';
  function normalize(input={}){
-  const mode=Object.hasOwn(modes,input.mode)?input.mode:'dinein',selected={},details={};
+  const mode=typeof input.mode==='string'&&Object.hasOwn(modes,input.mode)?input.mode:'',selected={},details={};
   for(const a of aspects){if(a.choices.some(c=>c.id===input.selected?.[a.id]))selected[a.id]=input.selected[a.id];if(a.followup?.choices.some(c=>c.id===input.details?.[a.id]))details[a.id]=input.details[a.id];}
-  return {version:1,mode,selected,details,own:Number.isFinite(input.own)&&input.own>=.1&&input.own<=10?Math.round(input.own*10)/10:null,visited:input.visited===true,notes:text(input.notes,1200),dish:text(input.dish,100),returnVisit:['yes','maybe','no'].includes(input.returnVisit)?input.returnVisit:'',length:['short','standard','detailed'].includes(input.length)?input.length:'standard',tone:input.tone==='factual'?'factual':'personal',variant:Number.isInteger(input.variant)?Math.abs(input.variant)%3:0};
+  return {version:1,mode,selected,details,own:Number.isFinite(input.own)&&input.own>=.1&&input.own<=10?Math.round(input.own*10)/10:null,visited:input.visited===true,notes:text(input.notes,1500),dish:text(input.dish,100),returnVisit:['yes','maybe','no'].includes(input.returnVisit)?input.returnVisit:'',length:['short','standard','detailed'].includes(input.length)?input.length:'standard',tone:input.tone==='factual'?'factual':'personal',variant:Number.isInteger(input.variant)?Math.abs(input.variant)%3:0};
  }
  function available(mode){return aspects.filter(a=>!a.modes||a.modes.includes(mode));}
  function generate(input){
   const r=normalize(input),personal=r.tone==='personal',parts=[];
   const starts={dinein:['Ich war vor Ort essen.','Ich habe das Restaurant besucht.','Ich habe vor Ort gegessen.'],takeaway:['Ich habe mein Essen abgeholt.','Ich habe zum Mitnehmen bestellt.','Ich habe meine Bestellung selbst abgeholt.'],delivery:['Ich habe mir das Essen liefern lassen.','Ich habe eine Lieferung bestellt.','Meine Bestellung wurde geliefert.']};
-  if(r.length!=='short')parts.push(personal?starts[r.mode][r.variant]:`Bestellung: ${modes[r.mode]}.`);
+  if(r.mode&&r.length!=='short')parts.push(personal?starts[r.mode][r.variant]:`Bestellung: ${modes[r.mode]}.`);
   if(r.dish.trim())parts.push(`Bestellt habe ich: ${r.dish.trim()}.`.replace(/([.!?])\.$/,'$1'));
   for(const a of available(r.mode)){
    const choice=a.choices.find(c=>c.id===r.selected[a.id]);if(!choice)continue;
@@ -38,7 +38,7 @@
   }
   if(r.notes.trim())parts.push(r.notes.trim());
   if(r.own!==null)parts.push(`${personal?'Meine persönliche Bewertung':'Gesamtbewertung'}: ${r.own.toFixed(1).replace('.',',')} von 10 Punkten.`);
-  if(r.returnVisit)parts.push((r.mode==='dinein'?{yes:'Ich würde wiederkommen.',maybe:'Ob ich wiederkomme, weiß ich noch nicht.',no:'Ich würde eher nicht wiederkommen.'}:{yes:'Ich würde wieder hier bestellen.',maybe:'Ob ich noch einmal hier bestelle, weiß ich noch nicht.',no:'Ich würde eher nicht noch einmal hier bestellen.'})[r.returnVisit]);
+  if(r.returnVisit)parts.push((!r.mode?{yes:'Ich würde dieses Restaurant wieder wählen.',maybe:'Ob ich dieses Restaurant wieder wähle, weiß ich noch nicht.',no:'Ich würde dieses Restaurant eher nicht noch einmal wählen.'}:r.mode==='dinein'?{yes:'Ich würde wiederkommen.',maybe:'Ob ich wiederkomme, weiß ich noch nicht.',no:'Ich würde eher nicht wiederkommen.'}:{yes:'Ich würde wieder hier bestellen.',maybe:'Ob ich noch einmal hier bestelle, weiß ich noch nicht.',no:'Ich würde eher nicht noch einmal hier bestellen.'})[r.returnVisit]);
   return parts.join(r.length==='detailed'?'\n\n':' ');
  }
  return {modes,aspects,available,normalize,generate};

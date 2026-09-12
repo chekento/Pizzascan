@@ -56,7 +56,7 @@ public class AppSmokeTest {
             assertEquals("false", js(scenario, "PizzaScan.diagnostics().mapFullscreen"));
             js(scenario, "document.getElementById('settings-open').click(); document.querySelector('input[value=clip16]').click(); document.getElementById('dark-mode').click(); document.getElementById('settings-save').click();");
             String dark = js(scenario,"document.body.classList.contains('dark')");
-            js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});document.getElementById('review-rating').value='7.8';document.getElementById('review-rating').dispatchEvent(new Event('input'));document.querySelector('[data-aspect=service][data-choice=friendly]').click();document.getElementById('review-visited').click();");
+            js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});document.querySelector('[data-visit-mode=dinein]').click();document.getElementById('review-rating').value='7.8';document.getElementById('review-rating').dispatchEvent(new Event('input'));document.querySelector('[data-aspect=service][data-choice=friendly]').click();document.getElementById('review-visited').click();");
             assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes('freundlich') && !document.getElementById('copy-draft').disabled"));
             js(scenario, "PizzaScan.back();");
             assertEquals("true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));

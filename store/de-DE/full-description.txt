@@ -11,7 +11,7 @@ Die Detailseite zeigt 25 Fotokriterien auf einer Skala von 0,1 bis 10,0 sowie 10
 DEIN REZENSIONSBAUKASTEN
 Öffne den Baukasten direkt beim Restaurant – eine Fotoanalyse ist dafür nicht nötig. Wähle „Vor Ort“, „Abholung“ oder „Lieferung“ und füge passende Aussagen per Button hinzu. 14 Aspekte stehen je nach Besuchsart bereit: etwa Geschmack, Service, Wartezeit, Ambiente, Sauberkeit, Preis-Leistung oder Verpackung. Manche Antworten öffnen eine passende Nachfrage.
 
-Du entscheidest, was erwähnt wird. Der Text verwendet ausschließlich deine eigenen Angaben und übernimmt keine KI-Fotowerte. Wähle deine Gesamtbewertung von 0,1 bis 10,0, ergänze eigene Sätze und passe Schreibstil und Textform an. Entwürfe bleiben pro Restaurant auf deinem Gerät gespeichert. Eigene Textänderungen werden beim Wechsel der Bausteine geschützt.
+Du entscheidest, was erwähnt wird. Der Text verwendet ausschließlich deine eigenen Angaben und übernimmt keine KI-Fotowerte. Wähle deine Gesamtbewertung von 0,1 bis 10,0, ergänze eigene Sätze und passe Schreibstil und Textform an. Entwürfe bleiben pro Restaurant auf deinem Gerät gespeichert. Eigene Textänderungen werden beim Wechsel der Bausteine geschützt. In „Meine Rezensionsentwürfe“ findest du alle Texte auch offline wieder. Suche nach Restaurant oder Text, exportiere einzelne Entwürfe als JSON und stelle sie bei Bedarf wieder her.
 
 Kopiere den geprüften Text und öffne das Restaurant in Google Maps. Dort wählst du die Sterne, fügst den Text ein und veröffentlichst selbst. PizzaScan veröffentlicht nichts automatisch und ist unabhängig von Google.
 
