@@ -3,6 +3,8 @@
   'use strict';
   const langs=['de','en','it','es','fr'];
   const copy={
+    shortcut:['Bewertungen','Ratings','Valutazioni','Valoraciones','Notes'],
+    apply:['Bewertungsfilter anwenden','Apply rating filter','Applica filtro valutazioni','Aplicar filtro de valoraciones','Appliquer le filtre par note'],
     heading:['Offene Ortsbewertungen','Open place ratings','Valutazioni aperte dei luoghi','Valoraciones abiertas de lugares','Notes ouvertes des lieux'],
     enable:['Offene Bewertungen laden','Load open ratings','Carica valutazioni aperte','Cargar valoraciones abiertas','Charger les notes ouvertes'],
     free:['Kostenlose Daten von Mangrove/Open Reviews. Die Abdeckung ist lückenhaft.','Free data from Mangrove/Open Reviews. Coverage is incomplete.','Dati gratuiti di Mangrove/Open Reviews. La copertura è incompleta.','Datos gratuitos de Mangrove/Open Reviews. La cobertura es incompleta.','Données gratuites de Mangrove/Open Reviews. La couverture est incomplète.'],
@@ -46,7 +48,7 @@
   function beginRender(){frameKnown=known();frameSummaries=new Map();}
   function summary(p){const key=`${p.placeId}:${p.name}:${p.lat}:${p.lng}`;if(!frameSummaries.has(key))frameSummaries.set(key,service.get(p,frameKnown));return frameSummaries.get(key);}
   const enabled=()=>mapConfig().ratingsEnabled;
-  function filterHtml(cfg){return `<fieldset class="rating-filter" translate="no"><legend>${esc(t('heading'))}</legend><label class="check"><input id="ratings-enabled" type="checkbox" ${cfg.ratingsEnabled?'checked':''}><span>${esc(t('enable'))}</span></label><p class="hint">${esc(t('free'))}</p><div class="field"><label for="filter-min-rating">${esc(t('minimum'))}</label><output id="rating-threshold" for="filter-min-rating">${esc(thresholdText(cfg.minRating))}</output><input id="filter-min-rating" type="range" min="0" max="5" step="0.1" value="${cfg.minRating}" ${cfg.ratingsEnabled?'':'disabled'} aria-describedby="rating-filter-help" aria-valuetext="${esc(thresholdText(cfg.minRating))}"></div><label class="check"><input id="filter-unrated" type="checkbox" ${cfg.includeUnrated?'checked':''} ${cfg.ratingsEnabled&&cfg.minRating>0?'':'disabled'}><span>${esc(t('unknownOption'))}</span></label><p class="hint" id="rating-filter-help">${esc(t('scope'))}</p></fieldset>`;}
+  function filterHtml(cfg){return `<fieldset id="ratings-settings" class="rating-filter" translate="no"><legend>${esc(t('heading'))}</legend><label class="check"><input id="ratings-enabled" type="checkbox" ${cfg.ratingsEnabled?'checked':''}><span>${esc(t('enable'))}</span></label><p class="hint">${esc(t('free'))}</p><div class="field"><label for="filter-min-rating">${esc(t('minimum'))}</label><output id="rating-threshold" for="filter-min-rating">${esc(thresholdText(cfg.minRating))}</output><input id="filter-min-rating" type="range" min="0" max="5" step="0.1" value="${cfg.minRating}" ${cfg.ratingsEnabled?'':'disabled'} aria-describedby="rating-filter-help" aria-valuetext="${esc(thresholdText(cfg.minRating))}"></div><label class="check"><input id="filter-unrated" type="checkbox" ${cfg.includeUnrated?'checked':''} ${cfg.ratingsEnabled&&cfg.minRating>0?'':'disabled'}><span>${esc(t('unknownOption'))}</span></label><p class="hint" id="rating-filter-help">${esc(t('scope'))}</p></fieldset>`;}
   const thresholdText=value=>Number(value)>0?t('at',{value:number(Number(value))}):t('off');
   function card(p){
     if(!enabled())return '';
@@ -66,6 +68,7 @@
   function paintStatus(){
     const el=document.getElementById('ratings-status'),fs=document.getElementById('fs-rating-filter');if(!el)return;
     const cfg=mapConfig(),list=onlySaved?saved:places;el.hidden=!cfg.ratingsEnabled||!list.length;
+    const shortcut=document.getElementById('rating-filter-open');if(shortcut){const active=cfg.ratingsEnabled&&cfg.minRating>0;shortcut.textContent=active?'★ ≥ '+number(cfg.minRating):'★ '+t('shortcut');shortcut.classList.toggle('active',active);shortcut.setAttribute('aria-pressed',String(active));shortcut.setAttribute('aria-label',t('minimum')+(active?': '+thresholdText(cfg.minRating):''));}
     if(fs){fs.hidden=!cfg.ratingsEnabled||cfg.minRating===0;fs.textContent=cfg.minRating?`★ ≥ ${number(cfg.minRating)} · Mangrove`:'';}
     if(el.hidden)return;
     const rated=list.filter(p=>summary(p).rating!=null).length;
@@ -91,6 +94,8 @@
       finally{if(own===revision){loading=false;repaint();}}
     },150);
   }
+  function openFilter(){openSheet('rating-filters',t('shortcut'),filterHtml(mapConfig())+`<button id="rating-apply" class="primary full" translate="no" data-action="apply-rating-filter">${esc(t('apply'))}</button>`);}
+  function applyFilter(){settings.filters={...mapConfig(),ratingsEnabled:document.getElementById('ratings-enabled').checked,minRating:PizzaRatings.minimum(document.getElementById('filter-min-rating').value),includeUnrated:document.getElementById('filter-unrated').checked};saveSettings();map.closePopup();closeSheet();refreshArea();}
   function refresh(id){const list=id?known().filter(p=>p.placeId===id):onlySaved?saved:places;schedule(list,true);}
   function privacyHtml(){return `<section class="ratings-privacy" translate="no"><h2>${esc(t('privacyTitle'))}</h2><p>${esc(t('privacyText'))}</p><p>${esc(t('privacyCache'))}</p><p><a href="https://mangrove.reviews/terms" target="_blank" rel="noopener noreferrer">Open Reviews / Mangrove</a> · <a href="https://www.tripadvisor.com/pages/privacy.html" target="_blank" rel="noopener noreferrer">Tripadvisor</a> · <a href="https://terms.yelp.com/privacy" target="_blank" rel="noopener noreferrer">Yelp</a></p></section>`;}
   document.addEventListener('input',event=>{
@@ -99,7 +104,7 @@
     if(!range||!toggle)return;range.disabled=!toggle.checked;unknown.disabled=!toggle.checked||Number(range.value)===0;
     const text=thresholdText(range.value);value.textContent=text;range.setAttribute('aria-valuetext',text);
   });
-  root.PizzaRatingsUI={t,copy,service,summary,card,details,filterHtml,paintStatus,schedule,refresh,privacyHtml,portalLinks,beginRender,
+  root.PizzaRatingsUI={t,copy,service,summary,card,details,filterHtml,paintStatus,schedule,refresh,privacyHtml,portalLinks,beginRender,openFilter,applyFilter,
     passes:(p,cfg)=>!cfg.ratingsEnabled||cfg.minRating===0||PizzaRatings.passes(summary(p),cfg.minRating,cfg.includeUnrated),
     get loading(){return loading;},get errors(){return errors;}};
 })(globalThis);

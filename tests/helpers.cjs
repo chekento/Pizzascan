@@ -1,5 +1,5 @@
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
-const root=path.resolve(__dirname,'../web');
+const root=process.env.PIZZASCAN_WEB_ROOT?path.resolve(process.env.PIZZASCAN_WEB_ROOT):path.resolve(__dirname,'../web');
 const types={'.html':'text/html','.js':'application/javascript','.mjs':'application/javascript','.wasm':'application/wasm','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.woff2':'font/woff2'};
 async function server(){const s=http.createServer((req,res)=>{const pathname=decodeURIComponent(req.url.split('?')[0]);const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile()){res.writeHead(404);res.end();return;}res.setHeader('Content-Type',types[path.extname(file)]||'application/octet-stream');fs.createReadStream(file).pipe(res);});await new Promise(r=>s.listen(0,'127.0.0.1',r));return {server:s,url:'http://127.0.0.1:'+s.address().port};}
 async function until(page,fn,timeout=15000){const end=Date.now()+timeout;while(Date.now()<end){if(await page.evaluate(fn))return;await new Promise(r=>setTimeout(r,200));}throw Error('Timed out: '+fn.toString());}

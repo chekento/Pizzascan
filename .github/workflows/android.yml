@@ -35,6 +35,7 @@ jobs:
           npm run smoke
           npm run map-smoke
           npm run ratings-smoke
+          npm run navigation-smoke
           npm run runtime-assets
           npm run marker-i18n
           npm run i18n-content
@@ -79,23 +80,28 @@ jobs:
         run: |
           node scripts/download-test-photo.cjs
           gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug assembleRelease bundleRelease lintRelease
+      - name: Test the web UI extracted from the actual APK
+        run: |
+          npx playwright install --with-deps chromium
+          python3 -m zipfile -e app/build/outputs/apk/debug/app-debug.apk test-results/packaged-apk
+          PIZZASCAN_WEB_ROOT=test-results/packaged-apk/assets npm run navigation-smoke
       - name: Verify and collect the APK
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-2.3.0-lang1-debug.apk
-          cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/PizzaScan-2.3.0-unsigned.apk
-          cp app/build/outputs/bundle/release/app-release.aab artifacts/PizzaScan-2.3.0-unsigned.aab
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-2.3.1-lang1-debug.apk
+          cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/PizzaScan-2.3.1-unsigned.apk
+          cp app/build/outputs/bundle/release/app-release.aab artifacts/PizzaScan-2.3.1-unsigned.aab
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-2.3.0-lang1-debug.apk > artifacts/lang1-debug-signature.txt
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-2.3.1-lang1-debug.apk > artifacts/lang1-debug-signature.txt
           cp "$BUILD_TOOLS/lib/apksigner.jar" artifacts/apksigner.jar
-          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.3.0-lang1-debug.apk > artifacts/lang1-debug-apk-info.txt
-          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.3.0-unsigned.apk > artifacts/apk-info.txt
-          sha256sum artifacts/PizzaScan-2.3.0-lang1-debug.apk > artifacts/LANG1-SHA256.txt
-          sha256sum artifacts/PizzaScan-2.3.0-unsigned.* > artifacts/SHA256SUMS.txt
+          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.3.1-lang1-debug.apk > artifacts/lang1-debug-apk-info.txt
+          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.3.1-unsigned.apk > artifacts/apk-info.txt
+          sha256sum artifacts/PizzaScan-2.3.1-lang1-debug.apk > artifacts/LANG1-SHA256.txt
+          sha256sum artifacts/PizzaScan-2.3.1-unsigned.* > artifacts/SHA256SUMS.txt
           curl --fail --location --retry 2 --output artifacts/bundletool.jar https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar
           echo 'a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29  artifacts/bundletool.jar' | sha256sum -c -
-          java -jar artifacts/bundletool.jar validate --bundle=artifacts/PizzaScan-2.3.0-unsigned.aab > artifacts/bundle-validation.txt
-          java -jar artifacts/bundletool.jar dump manifest --bundle=artifacts/PizzaScan-2.3.0-unsigned.aab > artifacts/bundle-manifest.xml
+          java -jar artifacts/bundletool.jar validate --bundle=artifacts/PizzaScan-2.3.1-unsigned.aab > artifacts/bundle-validation.txt
+          java -jar artifacts/bundletool.jar dump manifest --bundle=artifacts/PizzaScan-2.3.1-unsigned.aab > artifacts/bundle-manifest.xml
           cp package-lock.json artifacts/package-lock.json
           tar -czf artifacts/web-bundle.tar.gz web
       - name: Upload APK for private final signing
