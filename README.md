@@ -1,41 +1,68 @@
-# PizzaScan 2.3 — Android und Google Play
+<p align="center">
+  <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan App-Symbol" width="112" height="112">
+</p>
 
-Eine Android-App auf Deutsch, Englisch, Italienisch, Spanisch und Französisch für **Pizzakarte mit GPS** und **lokale Fotobewertung**. Drei kostenlose Bildmodelle stehen in den Einstellungen zur Auswahl. Es wird kein KI-API-Schlüssel benötigt, kein Inferenzdienst aufgerufen und kein Foto für die Analyse hochgeladen.
+<h1 align="center">PizzaScan</h1>
+<p align="center"><strong>Gute Pizza finden. Dein Foto lokal analysieren. Deinen Besuch bewerten.</strong></p>
+<p align="center">Deutsch · English · Italiano · Español · Français</p>
 
-## Aktuelle Testfassung 2.3
+<p align="center">
+  <img src="store/graphics/PizzaScan-Feature-EN-1024x500.png" alt="PizzaScan – Pizzerien entdecken und Pizza auf dem eigenen Gerät analysieren" width="1024">
+</p>
 
-Die Test-APK verwendet die separate App-ID `cloud.kosch.pizzascan.lang1` (VersionCode 6). Sie wird neben früheren Testfassungen installiert; deren lokale Daten und Modelle werden nicht automatisch übernommen. Die Release-App-ID bleibt `cloud.kosch.pizzascan`.
+## Android-App herunterladen
 
-- Restaurant- und GPS-Marker bleiben beim Verschieben, Zoomen, Wechsel ins Vollbild und Drehen des Bildschirms an ihren geografischen Koordinaten.
-- Gerätesprache wird erkannt; manuelle Auswahl im Willkommen-Dialog und in den Einstellungen. Auch der Rezensionsbaukasten, Modellhinweise und native Android-Dialoge folgen der App-Sprache.
-- Das freigegebene App-Symbol wird als PNG in der APK verwendet. Store-Dateien liegen unter `store/graphics`: Icon 512 × 512, Vorstellungsgrafiken DE/EN exakt 1024 × 500.
-- Native Offline-Modelle bleiben im dauerhaften App-Speicher. In der Browser-Version kann der Browsercache entfernt werden.
+<p align="center">
+  <a href="https://github.com/chekento/Pizzascan/raw/refs/heads/main/downloads/PizzaScan-2.3.0-Test.apk">
+    <img src="store/graphics/Download-Android-APK.svg" alt="JETZT ANDROID-APK HERUNTERLADEN – PizzaScan 2.3 kostenlose Testversion" width="760">
+  </a>
+</p>
 
-## Installation früherer Release-Fassungen
+**[⬇ Direkter Download: PizzaScan-2.3.0-Test.apk](https://github.com/chekento/Pizzascan/raw/refs/heads/main/downloads/PizzaScan-2.3.0-Test.apk)** · [SHA-256 prüfen](downloads/SHA256SUMS.txt) · [Datenschutz](docs/Datenschutz.md)
 
-Die installierbare Datei heißt `PizzaScan-2.2.0.apk`. Sie wird als Download im Chat bereitgestellt. Der [GitHub-Actions-Lauf](https://github.com/chekento/Pizzascan/actions) stellt im Artifact `PizzaScan-Build` die unsignierte Release-APK für die abschließende private Signierung bereit. Die im Chat ausgelieferte Datei ist bereits signiert und installierbar.
+Android 8 oder neuer. APK öffnen und die Installation aus deiner Download-App erlauben. Diese signierte Testfassung ist kostenlos; Karten und offene Bewertungen benötigen Internet. Die zusätzlichen Offline-Bildmodelle werden erst nach Bestätigung geladen. Es gibt kein KI-Abo und keine API-Nutzungsgebühren in der eingebauten Lösung.
 
-Android 8 oder neuer; auf dem Gerät die Installation aus der verwendeten Download-App erlauben. Die APK ist ein Release-Build mit ausgeschaltetem WebView-Debugging und einem separat gesicherten privaten Signierschlüssel. App-ID: `cloud.kosch.pizzascan`. Ein signiertes AAB für die Vorbereitung eines Play-Releases wird zusätzlich bereitgestellt; eine Veröffentlichung in Play Console ist ein separater Schritt. Siehe [Store-Anleitung](store/PLAY-CONSOLE.md).
+### Neu: offene Bewertungen und Mindestbewertung
 
-**Wechsel von Version 1:** Der damalige kurzlebige CI-Debug-Schlüssel wurde nicht dauerhaft gesichert. Deshalb kann Android Version 2 nicht über die alte Version installieren. Vor Deinstallation der alten App vorhandene Daten exportieren; eine Deinstallation entfernt deren lokalen Speicher. Ab der hier gelieferten Version 2 muss für Updates der neue gesicherte private Signierschlüssel verwendet werden.
+In **Einstellungen → Offene Ortsbewertungen → Mindestbewertung** einen Wert wählen, zum Beispiel **ab 4,6 / 5**, und speichern. Karte und Liste zeigen dieselbe Auswahl. Der Regler arbeitet in 0,1er-Schritten; bei 0 ist der Bewertungsfilter aus. Orte ohne bekannte offene Bewertung sind bei aktivem Filter zunächst ausgeblendet und können gesondert eingeschlossen werden.
 
-**Update von 2.0:** Version 2.1 verwendet denselben gesicherten Release-Schlüssel und eine höhere Versionsnummer. Über die vorhandene 2.0 installieren; App-ID und lokale Daten bleiben erhalten.
+Die Daten stammen kostenlos aus **Mangrove/Open Reviews**, mit Quellen- und Lizenzhinweisen. Ihre Abdeckung ist lückenhaft. Google Maps, Tripadvisor und Yelp sind zusätzlich als externe Suchlinks erreichbar; deren Sterne werden nicht in den Filter übernommen. [Datenquelle, Lizenz und Berechnung](docs/Offene-Bewertungen.md).
+
+### Was PizzaScan kann
+
+| Funktion | In der App |
+|---|---|
+| Pizzakarte | OpenStreetMap, GPS, stabile Emoji-Marker, Vollbild und Restaurantsuche |
+| Auswahl | Bewertungen, Öffnungszeiten, Ortstypen, Suchradius und gemerkte Orte |
+| Restaurantdetails | Adresse, Kontakt, Speisekarte, Öffnungszeiten und offene Bewertungen |
+| Fotoanalyse | Drei kostenlose lokale Bildmodelle; Fotos bleiben auf deinem Gerät |
+| Rezensionsbaukasten | Eigene Erfahrungen zu Essen, Service, Atmosphäre und mehr; private Entwürfe |
+| Sprachen | Deutsch, Englisch, Italienisch, Spanisch und Französisch |
+
+### Testfassung und Updates
+
+Die APK verwendet `cloud.kosch.pizzascan.lang1`. Sie lässt sich über die bisherige **2.3.0-Test-APK mit demselben Signierschlüssel** installieren; deren lokale Daten und Modelle bleiben erhalten. Ältere Testpakete wie `.search1` und die spätere Play-App `cloud.kosch.pizzascan` sind eigene Installationen. Zwischen unterschiedlichen Paketen werden lokale Daten und Modelle nicht automatisch übernommen.
+
+[Quellcode und Änderungen dieser Testfassung](https://github.com/chekento/Pizzascan/pull/6) · [Testplan](store/TESTPLAN.md) · [Vorbereitung für Google Play](store/PLAY-CONSOLE.md)
+
+<details>
+<summary><strong>Funktionen, lokale KI, technische Details und Lizenzen</strong></summary>
 
 ## Karte und Suche
 
 - Vollbildkarte mit Zurückknopf, einblendbarer Restaurantsuche, GPS, Filtern und „Hier suchen“. Android-Zurück schließt zuerst eine geöffnete Detailseite und danach den Vollbildmodus.
 
 - Sichtbare Emoji-Marker für Pizzerien 🍕, Cafés ☕, Imbisse 🍔, Foodtrucks 🚚, Pizzaautomaten 🤖 und weitere Orte 🍽️; Markierung für gemerkte/besuchte Orte.
-- GPS beim ersten Start wählbar, später auf Wunsch automatisch; Suchposition bleibt gespeichert. Name, Stadt und Adresse suchen. Vorschläge während der Eingabe kommen lokal aus geladenen Restaurants; abgesendete Suchbegriffe liefern auswählbare Photon-Treffer mit Adresse und Entfernung. Keine Online-Autovervollständigung.
+- GPS beim ersten Start wählbar, später auf Wunsch automatisch; Suchposition bleibt gespeichert. Name, Stadt und Adresse suchen. Vorschläge verwenden geladene Restaurants und nach einer kurzen Eingabepause zusätzlich Photon. Der Suchbutton liefert auswählbare Treffer mit Adresse und Entfernung.
 - Wie im ursprünglichen HTML berücksichtigt die Karte auch italienische Gastronomie. Wenn Pizza nicht ausdrücklich in OSM hinterlegt ist, wird das transparent gekennzeichnet und lässt sich ausschließen. Keine erfundenen Restaurants oder Google-Bewertungen.
 - Zwei Overpass-Anbieter mit begrenzten Abfragen, Timeout, Ausweichdienst, Abbruch veralteter Anfragen und räumlichem Cache. „Hier suchen“ lädt auch ohne Kartenbewegung neu. Speicherfehler werden nicht als Netzwerkfehler ausgegeben.
 - Einstellungen: 1/3/5/10 km oder Kartenausschnitt, alle sechs Ortstypen, nur geöffnet, unbekannte Zeiten gesondert einschließen, automatische Kartensuche, Sortierung, besuchte Orte ausblenden und Routenmodus. Filter wirken auf Karte und Liste und bleiben gespeichert.
 - Detailseite mit abgeglichener Adresse, Telefon, Website, Speisekarte, Öffnungsstatus samt nächstem Wechsel und Sieben-Tage-Übersicht sowie vorhandenen Informationen zu Lieferung, Mitnehmen, Ernährung, Rollstuhl, Sitzplätzen und Bezahlung. Ergänzung aus Overpass und Photon ausschließlich über dieselbe OSM-Identität; gleichnamige Filialen werden nicht vermischt. Originalquelle und Koordinaten sind einsehbar.
 - Öffnungsstatus mit `opening_hours` und Ortszeitzone. Fehlende, nicht auswertbare oder ohne Region nicht prüfbare Feiertagsregeln gelten als unbekannt, niemals als geöffnet. Sonnenzeit-Regeln werden als unbekannt behandelt. Kurzfristige Abweichungen lassen sich aus diesen Daten nicht erkennen. Öffnungszeiten, Fotos und Bewertungen werden nicht von Google kopiert.
 
-Die Kartendaten werden mit [Overpass Private.coffee](https://overpass.private.coffee/) bzw. [overpass-api.de](https://overpass-api.de/) geladen. [Photon](https://github.com/komoot/photon) übernimmt abgesendete Ortssuchen und den Adressabgleich geöffneter Details. Keine Zugangsdaten nötig; öffentliche Dienste können ausfallen und Datensätze können unvollständig sein.
+Die Kartendaten werden mit [Overpass Private.coffee](https://overpass.private.coffee/) bzw. [overpass-api.de](https://overpass-api.de/) geladen. [Photon](https://github.com/komoot/photon) übernimmt Suchvorschläge, abgesendete Ortssuchen und den Adressabgleich geöffneter Details. Keine Zugangsdaten nötig; öffentliche Dienste können ausfallen und Datensätze können unvollständig sein.
 
-## Version 2.2
+## Bisherige Version 2.2
 
 Community-Funktionen, Nostr-Bibliothek, Relay-Verbindungen und native Identitätsverwaltung sind entfernt. Bestehende lokale Fotoanalysen, Einstellungen und gemerkte Orte bleiben erhalten. API 36, VersionCode 5; APK und AAB werden ohne privaten Schlüssel in CI gebaut und anschließend privat signiert. Datenschutzerklärung lokal in der App und [öffentlich lesbar](docs/Datenschutz.md). Store-Texte, Datensicherheits-Arbeitsblatt und Testplan liegen unter `store/`. CI rendert die vorhandene App-Grafik und vier Store-Screenshots; Testeingaben werden ausdrücklich als Beispielrestaurant gezeigt.
 
@@ -86,6 +113,10 @@ npm test
 npx playwright install --with-deps chromium
 npm run smoke
 npm run map-smoke
+npm run ratings-smoke
+npm run runtime-assets
+npm run marker-i18n
+npm run i18n-content
 npm run live-map
 node scripts/download-test-photo.cjs
 gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug assembleRelease bundleRelease lintRelease
@@ -104,4 +135,13 @@ Die ursprünglichen Uploads sind unverändert in `source-original/` archiviert.
 - [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started) für Ortssuche und Navigation, keine automatische Veröffentlichung von Rezensionen.
 - Testfoto: Valerio Capello, Farbrevision Rainer Zenz, [Pizza Margherita, Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Eq_it-na_pizza-margherita_sep2005_sml.jpg), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Ausschließlich CI-Test, Vorschau verkleinert/neu kodiert; keine Veröffentlichung. Nicht in der APK gebündelt.
 
+- [Mangrove / Open Reviews](https://open-reviews.net/technology/) — offene Bewertungsdaten, standardmäßig CC BY 4.0; BY-SA-Beiträge entsprechend gekennzeichnet. [Berechnung und Filter](docs/Offene-Bewertungen.md).
+
 Kopien der Lizenzen gepackter Abhängigkeiten liegen nach `npm run assets` in `web/vendor`. Die Nutzungsbedingungen externer Kartenanbieter gelten für deren Dienste.
+
+
+</details>
+
+---
+
+By KoSch of [kosch.cloud](https://kosch.cloud) based on [pizzascan.on.websim.com](https://pizzascan.on.websim.com) ❣️

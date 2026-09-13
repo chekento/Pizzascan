@@ -1,49 +1,68 @@
-# PizzaScan 2.2.0 für Google Play vorbereiten
+# PizzaScan 2.3.0 für Google Play vorbereiten
 
-Stand: 12. September 2026. Das Paket enthält die technische Vorbereitung und Eintragstexte. Ein Console-Konto, die persönlichen Pflichtangaben und Googles Prüfung werden dadurch nicht ersetzt. Noch nichts bei Google veröffentlicht.
+Stand: 13. September 2026. Das Entwicklerkonto ist bereits verifiziert. Dieser Leitfaden bereitet den kommenden Test vor; es wurde noch keine Version in Play Console hochgeladen oder veröffentlicht.
 
-## 1. Entwicklerkonto
+## Aktueller Stand
 
-Öffne [Play Console](https://play.google.com/console/), lege bei Bedarf ein Entwicklerkonto an und vervollständige die dort verlangte Identitäts- und Geräteprüfung. Wähle den Kontotyp entsprechend deiner tatsächlichen Tätigkeit. Registrierung und gegebenenfalls Zahlungen führst du selbst in deinem Google-Konto aus.
+Die signierte **PizzaScan-2.3.0-Test.apk** enthält stabile Kartenmarker, fünf Sprachen, die freigegebenen Grafiken und den neuen Filter für kostenlose offene Ortsbewertungen. Sie dient zunächst zur Geräteprüfung. Ergebnisse und noch offene Prüfungen: [VERIFICATION-2.3.0.md](../docs/VERIFICATION-2.3.0.md).
 
-Halte eine erreichbare **Support-E-Mail-Adresse**, deinen rechtlichen Namen und die von Google verlangten Anschrift-/Kontaktangaben bereit. Es wurde keine E-Mail-Adresse erfunden. Die App-Datenschutzerklärung nennt Kolja Schumann und das vorhandene Kontaktformular von kosch.cloud. Prüfe vor Einreichung, ob dieser Verantwortliche für dein Entwicklerkonto zutrifft und ob weitere Kontaktdaten ergänzt werden müssen.
+**Ein neues Play-Bundle mit diesen Änderungen ist noch nicht erstellt.** Das frühere 2.2.0-AAB enthält den Bewertungsfilter nicht. Nach dem Gerätetest wird das aktuelle Release-Bundle gebaut und mit dem passenden Upload-Schlüssel signiert. Die Test-APK ist kein Play-Uploadpaket.
 
-## 2. App anlegen
+## 1. App-Eintrag und Paket
 
-Name **PizzaScan**, Standardsprache **Deutsch (Deutschland)**, Typ **App**, Kategorie **Essen & Trinken**. Die App enthält keine Bezahlfunktionen und ist als kostenloser Eintrag vorbereitet. Bestätige Google-Erklärungen erst nach eigener Prüfung. Paket-ID unverändert: `cloud.kosch.pizzascan`. VersionName `2.2.0`, VersionCode `5`, Android mindestens 8 / API 26, Ziel Android 16 / API 36. Dieses Ziel erfüllt die seit 31. August 2026 geltende Vorgabe für neue Smartphone-Apps. [Google: Ziel-API](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en).
+Name **PizzaScan**, Standardsprache **Deutsch (Deutschland)**, Typ **App**, Kategorie **Essen & Trinken**, kostenlos und ohne Werbung oder In-App-Käufe. Paket-ID für Play: `cloud.kosch.pizzascan`. Aktueller Quellstand: VersionName `2.3.0`, VersionCode `6`, Android mindestens 8 / API 26, Ziel Android 16 / API 36. Vor dem Bundlebau prüfen, ob VersionCode 6 in diesem Play-Eintrag noch unbenutzt ist; verwendete Codes können nicht erneut hochgeladen werden.
 
-## 3. Signierung vor dem ersten Upload festlegen
+API 36 erfüllt die seit 31. August 2026 geltende Ziel-API-Vorgabe für neue Smartphone-Apps und Updates. [Google: Ziel-API](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en).
 
-Für Google Play ist die Datei **PizzaScan-2.2.0.aab** bestimmt. Die APK dient zur direkten Installation außerhalb des Stores. Neue Play-Apps verwenden Android App Bundles. [Android App Bundle](https://developer.android.com/guide/app-bundle).
+Eine erreichbare **Support-E-Mail-Adresse** und die erforderlichen Kontaktangaben aus dem bestehenden Entwicklerkonto übernehmen. Die Datenschutzerklärung nennt **Kolja Werner Schumann (KoSch)** und das Kontaktformular auf kosch.cloud. Es wurde keine E-Mail-Adresse oder Testergruppen-Adresse erfunden.
 
-Damit bisherige PizzaScan-2.x-Installationen später auf die Play-Version aktualisiert werden können, muss Play dieselbe bestehende App-Signatur verwenden. Wähle bei der erstmaligen Einrichtung von **Play App Signing** die Option zum Importieren eines vorhandenen Signierschlüssels. Verwende die in deiner Console angezeigte PEPK-Anleitung und ihren öffentlichen Verschlüsselungsschlüssel. Dafür benötigst du das bereits separat bereitgestellte **private Signierbackup**. Es ist absichtlich nicht in diesem Store-Paket enthalten. Den privaten Schlüssel niemals in GitHub, Store-Grafiken oder öffentliche Dateien kopieren. [Google: App-Signierung](https://developer.android.com/studio/publish/app-signing).
+## 2. Signierung und Bundle
 
-Bestehendes Zertifikat SHA-256: `53af9ce0b7893f99153f34b4617dabf1c7ddafb45f8625ca5ea32d090ae9768f`.
+Neue Play-Apps verwenden [Android App Bundles](https://developer.android.com/guide/app-bundle). Vor dem ersten Upload die Seite **App-Integrität → App-Signierung** und vorhandene Schlüssel abgleichen. Der frühere Produktionsschlüssel hat den Zertifikat-Fingerabdruck SHA-256 `53af9ce0b7893f99153f34b4617dabf1c7ddafb45f8625ca5ea32d090ae9768f`.
 
-Das AAB ist mit diesem vorhandenen Schlüssel für den Upload signiert. Google unterscheidet Upload-Schlüssel und App-Signierschlüssel. Falls dein Console-Eintrag bereits einen anderen Upload-Schlüssel registriert hat, muss das Bundle mit genau diesem Upload-Schlüssel signiert werden. Falls Play bereits einen anderen App-Signierschlüssel verwendet, erst die Signierungsseite abgleichen. Nicht versuchsweise die installierte App deinstallieren: Dabei gehen lokale Daten verloren.
+Falls bisherige Produktionsinstallationen von `cloud.kosch.pizzascan` über Play aktualisierbar bleiben sollen, muss deren App-Signierschlüssel übernommen werden. Bei erstmaliger Einrichtung unterstützt Play den Import eines vorhandenen Schlüssels; dafür die aktuelle PEPK-Anleitung der eigenen Console verwenden. Ist Play App Signing bereits eingerichtet, dessen registrierten App- und Upload-Schlüssel verwenden. Private Schlüssel bleiben im separat gesicherten Signierbackup und werden niemals im Repository abgelegt. [Google: App-Signierung](https://developer.android.com/studio/publish/app-signing).
 
-## 4. Store-Eintrag füllen
+Die Testfassung hat die **andere Paket-ID `cloud.kosch.pizzascan.lang1`** und einen eigenen Testschlüssel. Die Play-App wird daneben installiert und übernimmt ihre lokalen Daten oder Modellgewichte nicht automatisch. Die Test-Signatur ist keine Freigabe für den Produktionsschlüssel.
 
-Kopiere `de-DE/title.txt`, `short-description.txt` und `full-description.txt` in die zugehörigen Felder. Lade `graphics/icon-512.png`, `graphics/feature-1024x500.png` und die nummerierten Telefon-Screenshots hoch. Die Grafiken haben die erforderlichen Pixelmaße; die Screenshots zeigen die tatsächliche Oberfläche, der Baukasten ausdrücklich ein Beispielrestaurant. Alt-Texte stehen in `graphics/BILDNACHWEIS.txt`. Prüfe den Store-Vorschauzuschnitt. [Google: Grafiken](https://support.google.com/googleplay/android-developer/answer/9866151?hl=en).
+## 3. Texte, Bilder und Datenschutz
 
-Trage deine Support-E-Mail ein. Website: https://kosch.cloud/ . Datenschutzerklärung: https://github.com/chekento/Pizzascan/blob/main/docs/Datenschutz.md . Die URL muss ohne Anmeldung öffentlich erreichbar bleiben. Die identische Erklärung liegt zusätzlich lokal in der App unter Einstellungen → Datenschutz & lokale Daten. Bei Veröffentlichung einer eigenen HTML-Seite kann `privacy.html` aus diesem Paket verwendet und die Console-URL entsprechend ersetzt werden. [Google: Nutzerdaten](https://support.google.com/googleplay/android-developer/answer/10144311?hl=de).
+Die deutschen Eintragstexte liegen unter `de-DE/`, Versionshinweise zusätzlich unter `en-US/`. Die freigegebenen Bilder sind:
 
-## 5. App-Inhalte und Datensicherheit
+| Verwendung | Datei | Maße |
+|---|---|---|
+| App-Symbol | `graphics/PizzaScan-App-Icon-512.png` | 512 × 512 PNG |
+| Vorstellungsgrafik Deutsch | `graphics/PizzaScan-Feature-DE-1024x500.png` | 1024 × 500 PNG |
+| Vorstellungsgrafik Englisch | `graphics/PizzaScan-Feature-EN-1024x500.png` | 1024 × 500 PNG |
 
-Siehe `DATENSICHERHEIT.md`. **Nicht pauschal „Keine Daten erhoben“ wählen:** Die Bildanalyse bleibt lokal, doch Karten- und Modelldienste erhalten Such- und Verbindungsdaten.
+Beide Vorstellungsgrafiken sind jeweils kleiner als 15 MB. Dasselbe App-Symbol ist in Android enthalten. Für den endgültigen Store-Eintrag aktuelle Telefon-Screenshots aus dem freigegebenen Build aufnehmen; ältere Screenshots erst auf Übereinstimmung mit der aktuellen Oberfläche prüfen. Testdaten dürfen keine echten Restaurantbewertungen vortäuschen. [Google: Grafiken](https://support.google.com/googleplay/android-developer/answer/9866151?hl=en).
 
-App-Zugriff: alle Funktionen ohne Login zugänglich. Werbung: keine. Keine Kontoerstellung oder In-App-Käufe. Keine öffentliche Community und kein In-App-Feed. Die App überträgt keine KI-Fotowerte in Google-Rezensionen. Im Altersfreigabefragebogen die tatsächlichen Inhalte und externen Funktionen angeben; keine Altersfreigabe vorweg erfinden. Zielaltersgruppen und Länder bestimmst du für dein Angebot. Es wurden keine Kinderausrichtung, Händlererklärung oder gesetzlichen Selbstauskünfte in deinem Namen bestätigt.
+Website: [kosch.cloud](https://kosch.cloud). Öffentliche [Datenschutzerklärung](https://github.com/chekento/Pizzascan/blob/main/docs/Datenschutz.md); derselbe Inhalt ist in der App offline erreichbar. Die Support-E-Mail im Store ergänzen. [Google: Nutzerdaten](https://support.google.com/googleplay/android-developer/answer/10144311?hl=de).
 
-## 6. Intern testen
+## 4. App-Inhalte und Datensicherheit
 
-Unter Testen → Interner Test eine Version erstellen, AAB hochladen und Versionshinweise aus `de-DE/release-notes.txt` einfügen. Bundle-Details auf Paket-ID, VersionCode 5, Ziel-API 36 und Zertifikate prüfen. Eigene Testkonten hinzufügen, Opt-in-Link öffnen und über Play installieren. Siehe `TESTPLAN.md`. Den Pre-Launch-Bericht prüfen, insbesondere Kamera/Dateiauswahl, Standortberechtigung, Zurück-Gesten, Bildschirmgrößen und Modellstart.
+[DATENSICHERHEIT.md](DATENSICHERHEIT.md) berücksichtigt auch Mangrove/Open Reviews und die verzögerten Photon-Suchvorschläge. Nicht pauschal „Keine Daten erhoben“ wählen: Fotos, eigene Rezensionstexte und KI-Analyse bleiben lokal; Karten-, Such-, Bewertungs- und Downloadanbieter erhalten die für ihre Verbindungen nötigen Daten.
 
-Der erste Modelldownload kann je nach Gerät und Verbindung dauern. Testern den Downloadhinweis zeigen und nach erfolgreichem Laden die Analyse auch im Flugmodus mit einem neuen Foto ausprobieren. Der Rezensionsbaukasten benötigt keinen Modelldownload.
+Alle Funktionen sind ohne Login erreichbar. Es gibt keine Kontoerstellung, Werbung oder öffentliche Community. Aus Mangrove werden nur offene Zahlen übernommen, keine fremden Rezensionstexte oder Fotos. Google Maps, Tripadvisor und Yelp öffnen sich als externe Suchlinks. Pflichtangaben zu Altersgruppen, Ländern und Händlerstatus anhand des tatsächlichen Angebots ausfüllen; diese Erklärungen wurden nicht im Namen des Entwicklers abgegeben.
 
-## 7. Geschlossener Test, falls für dein Konto erforderlich
+## 5. Geräteprüfung und interner Test
 
-Für persönliche Entwicklerkonten, die nach dem 13. November 2023 angelegt wurden, sind mindestens zwölf Tester nötig, die dem geschlossenen Test mindestens 14 Tage ohne Unterbrechung beigetreten bleiben. Danach beantragst du Produktionszugang; dies ist keine automatische Freigabe. Echte Rückmeldungen sammeln und beheben, keine Testberichte erfinden. [Google: Testpflicht](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en).
+Zunächst die aktuelle APK anhand von [TESTPLAN.md](TESTPLAN.md) auf einem echten Telefon prüfen, insbesondere Installation als Update, Standort, Kamera, Modellstart, Offline-Nutzung und Mindestbewertung. Beobachtungen mit Gerät, Android- und WebView-Version festhalten.
 
-## 8. Zur Prüfung einreichen
+Danach das korrekt signierte Release-AAB in **Testen → Interner Test** hochladen, Bundle-Details auf Paket-ID, Versionscode, API und Zertifikate prüfen und Versionshinweise einfügen. Testkonten hinzufügen, den Opt-in-Link öffnen und über Play installieren. Den Pre-Launch-Bericht auswerten, insbesondere Android-Zurück, Kamera/Dateiauswahl, Standort, Querformat und Schriftvergrößerung. Die Test-APK ersetzt diese Play-Prüfung nicht.
 
-Wenn alle Console-Aufgaben, Testpflichten, Kontaktangaben, Datenschutzhinweise und Berichte geklärt sind, Produktionsversion vorbereiten und zur Google-Prüfung einreichen. Veröffentlichungssteuerung verwenden, wenn du den Zeitpunkt nach Freigabe selbst bestimmen möchtest. Neue Updates benötigen einen höheren VersionCode und die passende Signierung. Die technische Vorbereitung ist keine Zusage über Googles Zulassung.
+## 6. Freiwillige Tester über Google Groups
+
+Die geplante Testergruppe kann für einen **geschlossenen Test** verwendet werden. Ihre tatsächliche Gruppenadresse ist noch einzutragen.
+
+1. In der Google Group freiwillige Tester aufnehmen. Sie müssen mit dem Google-Konto Mitglied sein, das sie für Play verwenden.
+2. In Play Console unter **Testen → Geschlossener Test → Tester → Google Groups** die echte Gruppenadresse im Format `gruppenname@googlegroups.com` eintragen.
+3. Die Testversion im geschlossenen Track verfügbar machen. Den von Play erzeugten Opt-in-Link zusammen mit Testplan und Feedbackweg an die Tester geben.
+4. Tester treten zuerst der Gruppe bei, öffnen dann den Opt-in-Link, nehmen am Test teil und installieren über Google Play. Der Gruppeneintritt allein genügt nicht.
+
+Google dokumentiert den [Test mit Google Groups und Opt-in-Link](https://support.google.com/googleplay/android-developer/answer/9845334?hl=en). Ein APK-Download von GitHub zählt nicht als Teilnahme am geschlossenen Play-Test.
+
+Für persönliche Entwicklerkonten, die nach dem 13. November 2023 angelegt wurden, verlangt Google mindestens **12 Tester, die 14 Tage ohne Unterbrechung am geschlossenen Test teilnehmen**. Danach kann Produktionszugang beantragt werden; er wird nicht automatisch erteilt. Ob diese Pflicht für das vorhandene Konto gilt, zeigt die Console. Echte Nutzung und Rückmeldungen sammeln. [Google: Testpflicht](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en).
+
+## 7. Freigabe vorbereiten
+
+Erst nach abgearbeiteten Gerätebefunden, Pre-Launch-Bericht und gegebenenfalls Testpflicht Produktionszugang beantragen und den Store-Eintrag zur Prüfung einreichen. Vor jedem Update VersionCode und Signierung abgleichen. Die App bleibt kostenlos; es werden keine kostenpflichtigen Bewertungs-APIs aktiviert.

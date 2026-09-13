@@ -5,7 +5,7 @@
  const byId=id=>document.getElementById(id);
  function currentCenter(){try{return mapCenter();}catch{return {lat:53.5511,lng:9.9937};}}
  function inFullscreen(){try{return !!mapFullscreen;}catch{return document.body.classList.contains('map-fullscreen');}}
- function closeAutocomplete(clearStatus=true){clearTimeout(autocompleteTimer);autocompleteAbort?.abort();autocompleteAbort=null;try{showSearchResults([]);}catch{}if(clearStatus&&byId('search-status'))byId('search-status').textContent='';}
+ function closeAutocomplete(clearStatus=true){clearTimeout(autocompleteTimer);clearTimeout(searchTimer);autocompleteAbort?.abort();autocompleteAbort=null;try{showSearchResults([]);}catch{}if(clearStatus&&byId('search-status'))byId('search-status').textContent='';}
  function openSearch(){const panel=byId('search-panel'),toggle=byId('search-toggle');if(!panel)return;if(inFullscreen()){document.body.classList.add('fs-search-open');byId('fs-search')?.setAttribute('aria-expanded','true');}else{panel.classList.remove('search-panel-collapsed');toggle?.setAttribute('aria-expanded','true');}setTimeout(()=>byId('search')?.focus(),30);}
  function closeSearch(){const panel=byId('search-panel'),toggle=byId('search-toggle');if(!panel)return;closeAutocomplete();document.body.classList.remove('fs-search-open');byId('fs-search')?.setAttribute('aria-expanded','false');panel.classList.add('search-panel-collapsed');toggle?.setAttribute('aria-expanded','false');byId('search')?.blur();}
  function dedupe(items){const seen=new Set();return items.filter(item=>{const p=item.place||item,key=p?.placeId||item.osmId||[item.kind,item.name,item.address,Number(item.lat).toFixed(5),Number(item.lng).toFixed(5)].join('|');if(seen.has(key))return false;seen.add(key);return true;});}

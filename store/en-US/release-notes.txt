@@ -1,0 +1,1 @@
+New: free open venue ratings from Mangrove and a saved minimum-rating slider in 0.1 steps, such as at least 4.6 out of 5. Map and list use the same filter. Sources and retrieval dates are visible; coverage is still limited. Stable map markers, five languages, a consistent app icon and both footer links. Search results stay visible when delayed suggestions complete.
