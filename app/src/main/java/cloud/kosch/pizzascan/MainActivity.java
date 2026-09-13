@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
     static final String START_URL = ORIGIN + "/assets/index.html";
     private static final int LOCATION = 41, PICK_FILE = 42, SAVE_FILE = 43;
     private WebView web;
+    private PersistentModelStore modelStore;
     private ValueCallback<Uri[]> fileCallback;
     private Uri captureUri;
     private File captureFile;
@@ -56,6 +57,7 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        modelStore = new PersistentModelStore(this);
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.rgb(255, 249, 246));
         web = new WebView(this);
@@ -85,6 +87,8 @@ public class MainActivity extends Activity {
                 .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this)).build();
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+                WebResourceResponse model = modelStore.intercept(request);
+                if (model != null) return model;
                 WebResourceResponse result = loader.shouldInterceptRequest(request.getUrl());
                 if (result != null) {
                     String path = request.getUrl().getPath();
@@ -231,6 +235,11 @@ public class MainActivity extends Activity {
                     startActivity(Intent.createChooser(share, "Pizzafoto und Rezension teilen"));
                     break;
                 }
+                case "modelStorageStatus": {
+                    reply(request, modelStore.status(request.optString("repo")).toString(), null);
+                    return;
+                }
+                case "clearModelStorage": modelStore.clearAll(); break;
                 case "open": openExternal(Uri.parse(request.optString("url"))); break;
                 default: throw new IllegalArgumentException("Unbekannte Android-Aktion");
             }
