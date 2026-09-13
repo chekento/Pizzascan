@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="118" viewBox="0 0 760 118" role="img" aria-labelledby="t d">
+<title id="t">PizzaScan Mini Live öffnen</title><desc id="d">Browser-Demo mit echter Pizza-Karte öffnen</desc>
+<defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#201b19"/><stop offset="1" stop-color="#45372f"/></linearGradient></defs>
+<rect width="760" height="118" rx="24" fill="url(#g)"/>
+<circle cx="64" cy="59" r="37" fill="#fff" opacity=".1"/><text x="64" y="70" text-anchor="middle" font-size="35">🍕</text>
+<text x="120" y="49" fill="#ffb096" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="700">IM BROWSER AUSPROBIEREN</text>
+<text x="120" y="80" fill="white" font-family="Arial,Helvetica,sans-serif" font-size="27" font-weight="800">PIZZASCAN MINI LIVE  →</text>
+<text x="720" y="69" text-anchor="end" fill="#fff" opacity=".72" font-family="Arial,Helvetica,sans-serif" font-size="15">OSM · GPS · Suche</text>
+</svg>
