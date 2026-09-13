@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#e94e27">
+<title>PizzaScan · Mini Live</title>
+<meta name="description" content="PizzaScan Mini Live: Pizza-Orte auf einer interaktiven OpenStreetMap-Karte finden. Kostenlos, ohne API-Key.">
+<link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3LNMPiHnJgZx0Ek3Lh3Q4Aw0w7g6I=" crossorigin="">
+<style>
+:root{--brand:#e94e27;--brand2:#ff7a3d;--ink:#201b19;--muted:#746a66;--paper:#fffaf7;--card:#fff;--line:#eadfd8;--shadow:0 14px 40px rgba(72,42,27,.13)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(180deg,#fff8f3 0,#fff 38%,#fff9f4 100%)}
+a{color:inherit}.shell{max-width:1180px;margin:auto;padding:18px}.top{display:flex;align-items:center;gap:14px;justify-content:space-between;padding:8px 0 18px}.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px;text-decoration:none}.brand i{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:linear-gradient(135deg,var(--brand),var(--brand2));font-style:normal;box-shadow:var(--shadow)}.brand span span{color:var(--brand)}.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{appearance:none;border:0;border-radius:13px;padding:11px 15px;font:inherit;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn.primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 8px 24px rgba(233,78,39,.25)}.btn.secondary{background:#fff;border:1px solid var(--line)}
+.hero{display:grid;grid-template-columns:minmax(0,.8fr) minmax(380px,1.2fr);gap:22px;align-items:stretch}.intro,.mapcard{background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}.intro{padding:34px}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.13em;color:var(--brand);text-transform:uppercase}.intro h1{font-size:clamp(36px,5vw,65px);line-height:.98;margin:10px 0 18px;letter-spacing:-.045em}.intro h1 em{font-style:normal;color:var(--brand)}.intro p{font-size:17px;color:var(--muted);line-height:1.65}.pillrow{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.pill{padding:8px 10px;border-radius:999px;background:#fff2eb;color:#8d311b;font-size:13px;font-weight:800}.intro .download{margin-top:24px;width:100%;font-size:17px;padding:15px}.sub{font-size:12px!important;margin-top:10px!important}.maphead{padding:18px;display:flex;gap:10px;align-items:center}.search{flex:1;display:flex;gap:8px}.search input{min-width:0;flex:1;border:1px solid var(--line);border-radius:13px;padding:12px 13px;font:inherit;background:#fff}.search input:focus{outline:3px solid rgba(233,78,39,.12);border-color:var(--brand)}#map{height:520px;background:#eee}.status{min-height:46px;padding:12px 18px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+.marker{display:grid;place-items:center;width:36px;height:36px;border-radius:50% 50% 50% 10%;transform:rotate(-45deg);background:#fff;box-shadow:0 5px 18px rgba(0,0,0,.22);border:2px solid var(--brand)}.marker span{transform:rotate(45deg);font-size:19px}.leaflet-div-icon{background:transparent;border:0}.leaflet-popup-content-wrapper{border-radius:16px}.leaflet-popup-content{margin:14px;min-width:190px}.popup h3{margin:0 0 5px;font-size:16px}.popup p{margin:4px 0;color:#655b57;font-size:13px}.popup a{color:var(--brand);font-weight:800}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0}.feature{border:1px solid var(--line);background:#fff;border-radius:20px;padding:18px}.feature b{display:block;margin-bottom:5px}.feature p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:24px 0;color:var(--muted);font-size:13px}.foot a{font-weight:700}.notice{margin-top:12px;padding:12px 14px;border-radius:14px;background:#fff4ed;color:#6c3526;font-size:13px;line-height:1.5}
+@media(max-width:850px){.hero{grid-template-columns:1fr}.intro{padding:26px}.mapcard{order:-1}#map{height:54vh;min-height:420px}.features{grid-template-columns:1fr}.top{align-items:flex-start}.actions{justify-content:flex-end}.actions .repo{display:none}}@media(max-width:520px){.shell{padding:10px}.top{padding-bottom:10px}.brand span{font-size:19px}.maphead{flex-direction:column;align-items:stretch}.search{width:100%}.intro h1{font-size:42px}.intro{border-radius:22px;padding:23px}.mapcard{border-radius:22px}#map{min-height:390px}.btn{padding:10px 12px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top">
+<a class="brand" href="https://github.com/chekento/Pizzascan"><i>🍕</i><span>pizza<span>scan</span></span></a>
+<div class="actions"><a class="btn secondary repo" href="https://github.com/chekento/Pizzascan">GitHub</a><a class="btn primary" href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.0-Test.apk">⬇ APK</a></div>
+</header>
+<section class="hero">
+<div class="intro">
+<div class="eyebrow">Mini Live · Browser-Demo</div>
+<h1>Gute Pizza.<br><em>Ganz nah.</em></h1>
+<p>Eine kleine, direkt nutzbare Vorschau von PizzaScan. Suche nach Stadt, Adresse oder Ort und entdecke Pizza-Spots auf OpenStreetMap.</p>
+<div class="pillrow"><span class="pill">✓ ohne API-Key</span><span class="pill">✓ echte OSM-Daten</span><span class="pill">✓ GPS optional</span><span class="pill">✓ mobil</span></div>
+<a class="btn primary download" href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.0-Test.apk">⬇ PizzaScan 2.3 Test-APK herunterladen</a>
+<p class="sub">Android 8+. Die vollständige App enthält zusätzlich Fotoanalyse, 25 Kriterien, 100 simulierte Perspektiven, Bewertungsfilter, Rezensionsbaukasten und Offline-KI.</p>
+<div class="notice"><strong>Mini-Version:</strong> Die Browser-Demo lädt Karten- und Suchdaten aus öffentlichen Diensten. Sie enthält bewusst keine großen Offline-KI-Modelle und speichert keine Fotoanalyse.</div>
+</div>
+<div class="mapcard">
+<div class="maphead">
+<form id="searchForm" class="search"><input id="searchInput" autocomplete="off" placeholder="Stadt, Adresse oder Pizzeria …" aria-label="Ort suchen"><button class="btn primary" type="submit">Suchen</button></form>
+<button id="locate" class="btn secondary" type="button" title="Meinen Standort verwenden">⌖ GPS</button>
+</div>
+<div id="map" role="application" aria-label="PizzaScan Mini Live Karte"></div>
+<div id="status" class="status" role="status">Karte bereit. Suche einen Ort oder nutze GPS.</div>
+</div>
+</section>
+<section class="features">
+<div class="feature"><b>🍕 Pizza-Orte live</b><p>Pizzerien, italienische Restaurants, Pizza-Imbisse, Cafés und Automaten aus OpenStreetMap.</p></div>
+<div class="feature"><b>🔎 Ortssuche</b><p>Photon findet Städte und Adressen. Danach fragt PizzaScan den sichtbaren Bereich über Overpass ab.</p></div>
+<div class="feature"><b>📱 Volle App</b><p>Die Android-Version ergänzt Bewertungsfilter, Foto-KI, lokale Modelle, Besuchsbewertung und Rezensionsentwürfe.</p></div>
+</section>
+<footer class="foot"><span>By KoSch of <a href="https://kosch.cloud">kosch.cloud</a> · based on <a href="https://pizzascan.on.websim.com">pizzascan.on.websim.com</a> ❣️</span><span><a href="Datenschutz.md">Datenschutz</a> · <a href="Offene-Bewertungen.md">Bewertungen</a> · <a href="https://github.com/chekento/Pizzascan">Quellcode</a></span></footer>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+'use strict';
+const statusEl=document.getElementById('status');
+const map=L.map('map',{zoomControl:true}).setView([53.5511,9.9937],12);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+const layer=L.layerGroup().addTo(map);let controller=null;
+function setStatus(text){statusEl.textContent=text}
+function markerIcon(type){const emoji=type==='vending_machine'?'🤖':type==='cafe'?'☕':type==='fast_food'?'🍔':'🍕';return L.divIcon({className:'',html:`<div class="marker"><span>${emoji}</span></div>`,iconSize:[36,36],iconAnchor:[18,32],popupAnchor:[0,-28]})}
+function placeName(t){return t.name||t.brand||'Pizza-Ort ohne Namen'}
+function coords(e){if(Number.isFinite(e.lat)&&Number.isFinite(e.lon))return [e.lat,e.lon];if(e.center)return [e.center.lat,e.center.lon];return null}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+async function loadPizza(){controller?.abort();controller=new AbortController();const b=map.getBounds(),bbox=[b.getSouth(),b.getWest(),b.getNorth(),b.getEast()].join(',');setStatus('Pizza-Orte werden geladen …');const q=`[out:json][timeout:20];(nwr["cuisine"~"pizza|pizzeria",i](${bbox});nwr["amenity"~"restaurant|fast_food|cafe"]["cuisine"~"italian|pizza",i](${bbox});nwr["amenity"~"restaurant|fast_food|cafe"]["name"~"pizza|pizzeria|pizzaria",i](${bbox});nwr["vending"~"pizza",i](${bbox});nwr["vending:pizza"="yes"](${bbox}););out body center;`;
+try{const r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:new URLSearchParams({data:q}),signal:controller.signal});if(!r.ok)throw Error('HTTP '+r.status);const data=await r.json();layer.clearLayers();let count=0;for(const e of data.elements||[]){const c=coords(e);if(!c||!e.tags)continue;const t=e.tags,name=placeName(t),kind=t.vending?'vending_machine':t.amenity||'restaurant',osm=`https://www.openstreetmap.org/${e.type}/${e.id}`,gm=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name+' '+c.join(','))}`;L.marker(c,{icon:markerIcon(kind),title:name}).addTo(layer).bindPopup(`<div class="popup"><h3>${esc(name)}</h3><p>${esc((t.cuisine||kind).replaceAll(';',', '))}</p>${t['addr:street']?`<p>${esc(t['addr:street']+' '+(t['addr:housenumber']||''))}</p>`:''}<p><a href="${osm}" target="_blank" rel="noopener">OpenStreetMap ↗</a> · <a href="${gm}" target="_blank" rel="noopener">Maps ↗</a></p></div>`);count++}setStatus(count?`${count} Pizza-Orte im sichtbaren Bereich.`:'Keine Pizza-Orte im sichtbaren Bereich gefunden. Bewege die Karte oder zoome etwas heraus.')}catch(e){if(e.name!=='AbortError')setStatus('Kartendaten konnten gerade nicht geladen werden. Bitte erneut versuchen.')}}
+let timer;map.on('moveend',()=>{clearTimeout(timer);timer=setTimeout(loadPizza,450)});loadPizza();
+async function searchPlace(q){setStatus(`Suche nach „${q}“ …`);try{const u='https://photon.komoot.io/api/?limit=1&q='+encodeURIComponent(q);const r=await fetch(u);if(!r.ok)throw Error();const d=await r.json(),f=d.features?.[0];if(!f)throw Error('notfound');const [lng,lat]=f.geometry.coordinates;map.setView([lat,lng],14);setStatus('Ort gefunden. Pizza-Orte werden geladen …')}catch{setStatus('Ort nicht gefunden oder Suchdienst nicht erreichbar.')}}
+document.getElementById('searchForm').addEventListener('submit',e=>{e.preventDefault();const q=document.getElementById('searchInput').value.trim();if(q)searchPlace(q)});
+document.getElementById('locate').addEventListener('click',()=>{if(!navigator.geolocation)return setStatus('GPS wird von diesem Browser nicht unterstützt.');setStatus('Standort wird ermittelt …');navigator.geolocation.getCurrentPosition(p=>{map.setView([p.coords.latitude,p.coords.longitude],14);setStatus('Standort gefunden. Pizza-Orte werden geladen …')},()=>setStatus('Standortzugriff nicht möglich. Du kannst stattdessen einen Ort suchen.'),{enableHighAccuracy:true,timeout:10000,maximumAge:60000})});
+</script>
+</body>
+</html>
