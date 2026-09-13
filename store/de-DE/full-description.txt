@@ -3,6 +3,9 @@ Finde Pizza in deiner Nähe und halte fest, wie dein Besuch wirklich war.
 PIZZAKARTE MIT GPS
 Entdecke Pizzerien auf einer Vollbildkarte mit Emoji-Markern. Suche nach Restaurants, Städten oder Adressen, merke dir Orte und starte eine Route. Filtere nach Entfernung, Ortstyp oder aktuell geöffneten Restaurants. Detailseiten zeigen die in OpenStreetMap verfügbaren Adressen, Öffnungszeiten, Kontakte und Ausstattungsmerkmale. Fehlende oder unklare Angaben werden gekennzeichnet.
 
+OFFENE BEWERTUNGEN UND FÜNF SPRACHEN
+Zeige kostenlose offene Ortsbewertungen von Mangrove an und filtere in den Einstellungen zum Beispiel ab 4,6 von 5. Der Mindestwert bleibt gespeichert und gilt für Karte und Liste. Quellen, Anzahl und Abrufdatum sind einsehbar. Die Abdeckung ist noch lückenhaft; Orte ohne Bewertung lassen sich gesondert einschließen. Google Maps, Tripadvisor und Yelp sind zusätzliche externe Suchlinks. Deren Sterne werden nicht übernommen. PizzaScan spricht Deutsch, Englisch, Italienisch, Spanisch und Französisch.
+
 FOTOANALYSE AUF DEINEM GERÄT
 Wähle in den Einstellungen zwischen CLIP ViT-B/32, CLIP ViT-B/16 und SigLIP Base Patch16-224. Die Analyse läuft lokal, ohne KI-API-Schlüssel oder KI-Abonnement. Dein Pizzafoto wird dafür nicht hochgeladen.
 
@@ -16,7 +19,7 @@ Du entscheidest, was erwähnt wird. Der Text verwendet ausschließlich deine eig
 Kopiere den geprüften Text und öffne das Restaurant in Google Maps. Dort wählst du die Sterne, fügst den Text ein und veröffentlichst selbst. PizzaScan veröffentlicht nichts automatisch und ist unabhängig von Google.
 
 WAS DU VORHER WISSEN SOLLTEST
-Die Modellgewichte sind nicht im App-Download enthalten. Das gewählte Offline-Modell wird erst nach deiner Bestätigung separat heruntergeladen: ungefähr 160 MB für CLIP oder 210 MB für SigLIP. WLAN und ausreichend freier Speicher sind sinnvoll. Danach funktioniert die Fotoanalyse offline, solange Android den Modell-Cache nicht entfernt. Kartendienste und der erste Modelldownload benötigen Internet und erhalten die dafür nötigen Such- und Verbindungsdaten.
+Die Modellgewichte sind nicht im App-Download enthalten. Das gewählte Offline-Modell wird erst nach deiner Bestätigung separat heruntergeladen: ungefähr 160 MB für CLIP oder 210 MB für SigLIP. Danach bleiben die Modelle im privaten App-Speicher für die Offline-Analyse erhalten. Sie werden durch gezieltes Entfernen, Löschen der App-Daten oder Deinstallation gelöscht. Karten, offene Bewertungen und der erste Modelldownload benötigen Internet und erhalten die dafür nötigen Such- und Verbindungsdaten.
 
 Die Fotowerte sind experimentelle Bild-Text-Vergleiche, keine wissenschaftlich validierte Qualitätsprüfung. Die 100 Profile sind keine echten Experten und keine unabhängigen Gutachten. Geschmack, Temperatur, Allergene und Lebensmittelsicherheit lassen sich aus einem Foto nicht zuverlässig beurteilen. Karten- und Öffnungsdaten können unvollständig oder veraltet sein.
 

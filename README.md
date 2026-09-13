@@ -1,149 +1,147 @@
-# 🍕 PizzaScan 2.2
+<p align="center">
+  <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan App-Symbol" width="112" height="112">
+</p>
 
-Android-App für **Pizzeria- und Restaurantsuche, lokale Pizza-Fotoanalyse und eigene Restaurantrezensionen**.
+<h1 align="center">PizzaScan</h1>
+<p align="center"><strong>Gute Pizza finden. Dein Foto lokal analysieren. Deinen Besuch bewerten.</strong></p>
+<p align="center">Deutsch · English · Italiano · Español · Français</p>
 
-[![APK direkt herunterladen](https://img.shields.io/badge/Android-APK%20direkt%20herunterladen-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/chekento/Pizzascan/releases/download/latest-test/PizzaScan-latest-test.apk)
+<p align="center">
+  <img src="store/graphics/PizzaScan-Feature-EN-1024x500.png" alt="PizzaScan – Pizzerien entdecken und Pizza auf dem eigenen Gerät analysieren" width="1024">
+</p>
 
-[🔐 Datenschutzerklärung](PRIVACY.md) · [📦 Releases](https://github.com/chekento/Pizzascan/releases) · [🧪 GitHub Actions](https://github.com/chekento/Pizzascan/actions)
+## Android-App herunterladen
 
----
+<p align="center">
+  <a href="https://github.com/chekento/Pizzascan/raw/refs/heads/main/downloads/PizzaScan-2.3.0-Test.apk">
+    <img src="store/graphics/Download-Android-APK.svg" alt="JETZT ANDROID-APK HERUNTERLADEN – PizzaScan 2.3 kostenlose Testversion" width="760">
+  </a>
+</p>
 
-## Direkt installieren
+**[⬇ Direkter Download: PizzaScan-2.3.0-Test.apk](https://github.com/chekento/Pizzascan/raw/refs/heads/main/downloads/PizzaScan-2.3.0-Test.apk)** · [SHA-256 prüfen](downloads/SHA256SUMS.txt) · [Datenschutz](docs/Datenschutz.md)
 
-**[⬇️ PizzaScan APK herunterladen](https://github.com/chekento/Pizzascan/releases/download/latest-test/PizzaScan-latest-test.apk)**
+Android 8 oder neuer. APK öffnen und die Installation aus deiner Download-App erlauben. Diese signierte Testfassung ist kostenlos; Karten und offene Bewertungen benötigen Internet. Die zusätzlichen Offline-Bildmodelle werden erst nach Bestätigung geladen. Es gibt kein KI-Abo und keine API-Nutzungsgebühren in der eingebauten Lösung.
 
-Die direkt verlinkte Datei ist der aktuell auf dem Gerät bestätigte **Testbuild**. Er ist bewusst separat installierbar:
+### Neu: offene Bewertungen und Mindestbewertung
 
-- Test-Paket: `cloud.kosch.pizzascan.search1`
-- Google-Play-Paket: `cloud.kosch.pizzascan`
-- Android 8 oder neuer (`minSdk 26`)
-- Target: Android 16 / API 36
+In **Einstellungen → Offene Ortsbewertungen → Mindestbewertung** einen Wert wählen, zum Beispiel **ab 4,6 / 5**, und speichern. Karte und Liste zeigen dieselbe Auswahl. Der Regler arbeitet in 0,1er-Schritten; bei 0 ist der Bewertungsfilter aus. Orte ohne bekannte offene Bewertung sind bei aktivem Filter zunächst ausgeblendet und können gesondert eingeschlossen werden.
 
-Dadurch kann der Testbuild parallel zu anderen PizzaScan-Versionen installiert werden. Für Google Play wird später das finale Release-AAB mit `cloud.kosch.pizzascan` verwendet.
+Die Daten stammen kostenlos aus **Mangrove/Open Reviews**, mit Quellen- und Lizenzhinweisen. Ihre Abdeckung ist lückenhaft. Google Maps, Tripadvisor und Yelp sind zusätzlich als externe Suchlinks erreichbar; deren Sterne werden nicht in den Filter übernommen. [Datenquelle, Lizenz und Berechnung](docs/Offene-Bewertungen.md).
 
-SHA-256 zum aktuellen Download: [PizzaScan-latest-test-SHA256.txt](https://github.com/chekento/Pizzascan/releases/download/latest-test/PizzaScan-latest-test-SHA256.txt)
+### Was PizzaScan kann
 
-## Funktionen
+| Funktion | In der App |
+|---|---|
+| Pizzakarte | OpenStreetMap, GPS, stabile Emoji-Marker, Vollbild und Restaurantsuche |
+| Auswahl | Bewertungen, Öffnungszeiten, Ortstypen, Suchradius und gemerkte Orte |
+| Restaurantdetails | Adresse, Kontakt, Speisekarte, Öffnungszeiten und offene Bewertungen |
+| Fotoanalyse | Drei kostenlose lokale Bildmodelle; Fotos bleiben auf deinem Gerät |
+| Rezensionsbaukasten | Eigene Erfahrungen zu Essen, Service, Atmosphäre und mehr; private Entwürfe |
+| Sprachen | Deutsch, Englisch, Italienisch, Spanisch und Französisch |
 
-### 🗺️ Pizza- und Restaurantsuche
+### Testfassung und Updates
 
-- OpenStreetMap-Karte mit GPS und manueller Ortssuche
-- Restaurants, Pizzerien, Pizza-Orte, Cafés, Imbisse, Foodtrucks und Pizzaautomaten
-- kompakte **🔍-Suche**, die ein- und wieder ausgeklappt werden kann
-- Autovervollständigung für Restaurants, Pizzerien, Orte und Adressen
-- eigener **Suchen**-Button
-- Suchleiste minimiert sich nach Auswahl eines Treffers wieder
-- Vollbildkarte mit Filtern und GPS
-- stabile, touchfreundliche Restaurant-Popups
-- Emoji-Marker für unterschiedliche Ortstypen
-- Restaurantdetails mit vorhandenen OSM-Daten wie Adresse, Öffnungszeiten, Telefon, Website, Lieferung, Abholung oder Barrierefreiheit
+Die APK verwendet `cloud.kosch.pizzascan.lang1`. Sie lässt sich über die bisherige **2.3.0-Test-APK mit demselben Signierschlüssel** installieren; deren lokale Daten und Modelle bleiben erhalten. Ältere Testpakete wie `.search1` und die spätere Play-App `cloud.kosch.pizzascan` sind eigene Installationen. Zwischen unterschiedlichen Paketen werden lokale Daten und Modelle nicht automatisch übernommen.
 
-Kartendaten und Suche verwenden OpenStreetMap, Overpass und Photon. Öffentliche Dienste können zeitweise ausfallen oder unvollständige Daten liefern.
+[Quellcode und Änderungen dieser Testfassung](https://github.com/chekento/Pizzascan/pull/6) · [Testplan](store/TESTPLAN.md) · [Vorbereitung für Google Play](store/PLAY-CONSOLE.md)
 
-### 📸 Lokale KI-Fotoanalyse
+<details>
+<summary><strong>Funktionen, lokale KI, technische Details und Lizenzen</strong></summary>
 
-PizzaScan kann ein Pizza-Foto vollständig lokal auf dem Android-Gerät analysieren. Es wird kein KI-API-Schlüssel benötigt und das Foto wird nicht für die Inferenz an einen Cloud-KI-Dienst gesendet.
+## Karte und Suche
 
-Verfügbare Modelle:
+- Vollbildkarte mit Zurückknopf, einblendbarer Restaurantsuche, GPS, Filtern und „Hier suchen“. Android-Zurück schließt zuerst eine geöffnete Detailseite und danach den Vollbildmodus.
 
-| Modell | Quelle / Konvertierung | Ausführung |
+- Sichtbare Emoji-Marker für Pizzerien 🍕, Cafés ☕, Imbisse 🍔, Foodtrucks 🚚, Pizzaautomaten 🤖 und weitere Orte 🍽️; Markierung für gemerkte/besuchte Orte.
+- GPS beim ersten Start wählbar, später auf Wunsch automatisch; Suchposition bleibt gespeichert. Name, Stadt und Adresse suchen. Vorschläge verwenden geladene Restaurants und nach einer kurzen Eingabepause zusätzlich Photon. Der Suchbutton liefert auswählbare Treffer mit Adresse und Entfernung.
+- Wie im ursprünglichen HTML berücksichtigt die Karte auch italienische Gastronomie. Wenn Pizza nicht ausdrücklich in OSM hinterlegt ist, wird das transparent gekennzeichnet und lässt sich ausschließen. Keine erfundenen Restaurants oder Google-Bewertungen.
+- Zwei Overpass-Anbieter mit begrenzten Abfragen, Timeout, Ausweichdienst, Abbruch veralteter Anfragen und räumlichem Cache. „Hier suchen“ lädt auch ohne Kartenbewegung neu. Speicherfehler werden nicht als Netzwerkfehler ausgegeben.
+- Einstellungen: 1/3/5/10 km oder Kartenausschnitt, alle sechs Ortstypen, nur geöffnet, unbekannte Zeiten gesondert einschließen, automatische Kartensuche, Sortierung, besuchte Orte ausblenden und Routenmodus. Filter wirken auf Karte und Liste und bleiben gespeichert.
+- Detailseite mit abgeglichener Adresse, Telefon, Website, Speisekarte, Öffnungsstatus samt nächstem Wechsel und Sieben-Tage-Übersicht sowie vorhandenen Informationen zu Lieferung, Mitnehmen, Ernährung, Rollstuhl, Sitzplätzen und Bezahlung. Ergänzung aus Overpass und Photon ausschließlich über dieselbe OSM-Identität; gleichnamige Filialen werden nicht vermischt. Originalquelle und Koordinaten sind einsehbar.
+- Öffnungsstatus mit `opening_hours` und Ortszeitzone. Fehlende, nicht auswertbare oder ohne Region nicht prüfbare Feiertagsregeln gelten als unbekannt, niemals als geöffnet. Sonnenzeit-Regeln werden als unbekannt behandelt. Kurzfristige Abweichungen lassen sich aus diesen Daten nicht erkennen. Öffnungszeiten, Fotos und Bewertungen werden nicht von Google kopiert.
+
+Die Kartendaten werden mit [Overpass Private.coffee](https://overpass.private.coffee/) bzw. [overpass-api.de](https://overpass-api.de/) geladen. [Photon](https://github.com/komoot/photon) übernimmt Suchvorschläge, abgesendete Ortssuchen und den Adressabgleich geöffneter Details. Keine Zugangsdaten nötig; öffentliche Dienste können ausfallen und Datensätze können unvollständig sein.
+
+## Bisherige Version 2.2
+
+Community-Funktionen, Nostr-Bibliothek, Relay-Verbindungen und native Identitätsverwaltung sind entfernt. Bestehende lokale Fotoanalysen, Einstellungen und gemerkte Orte bleiben erhalten. API 36, VersionCode 5; APK und AAB werden ohne privaten Schlüssel in CI gebaut und anschließend privat signiert. Datenschutzerklärung lokal in der App und [öffentlich lesbar](docs/Datenschutz.md). Store-Texte, Datensicherheits-Arbeitsblatt und Testplan liegen unter `store/`. CI rendert die vorhandene App-Grafik und vier Store-Screenshots; Testeingaben werden ausdrücklich als Beispielrestaurant gezeigt.
+
+## Bedienung
+
+1. Eine Stadt auf der Karte suchen oder mit dem GPS-Knopf den eigenen Standort verwenden. Pizzerien stammen aus OpenStreetMap. Orte lassen sich merken und einer Fotoanalyse zuordnen.
+2. Unter **Einstellungen** CLIP B/32, CLIP B/16 oder SigLIP B/16 wählen. „Gewähltes Modell vorbereiten …“ zeigt zuerst Modellname, Anbieter, Größe, Zweck und Disclaimer. Erst „Bestätigen & starten“ erlaubt den Download und bereitet die spätere Offline-Nutzung vor. Die erste Fotoanalyse zeigt denselben Hinweis, bevor ein KI-Worker gestartet wird. Die Freigabe gilt pro Modell und schließt das spätere Nachladen fehlender Cache-Dateien ein; beim Entfernen der Modelle wird sie zurückgesetzt. Der erste Download umfasst grob 160–210 MB je Modell; WLAN und mindestens einige hundert MB freier Speicher sind sinnvoll. Ladezeit und Analysegeschwindigkeit hängen vom Gerät ab.
+3. Unter **Fotobewertung** ein Foto aufnehmen oder auswählen. Die App verkleinert es auf maximal 1200 Pixel und entfernt durch erneutes JPEG-Kodieren Metadaten. Analyse im Web Worker mit ONNX/WASM auf der CPU; weder Cloud-Inferenz noch API-Schlüssel.
+4. Die Detailseite zeigt 25 Kriterien mit Werten von 0,1 bis 10,0 und alle 100 simulierten Bewertungsprofile mit Einzelwerten und Gewichten. Eigene Bewertung auf der Zehn-Punkte-Skala, Besuchsbestätigung und Erlebnistext separat speichern.
+5. **Rezensionsbaukasten** direkt in den Restaurantdetails oder über die eigene Bewertung öffnen. Besuchsart und passende Aspekte per Button auswählen, eigene Gesamtbewertung angeben, Erlebnis bestätigen und Text prüfen. Kopieren und Google Maps öffnen sind bewusst ausgelöste Aktionen; Ort, Sterne und Veröffentlichung bestimmst du dort selbst. Der Baukasten benötigt weder Foto noch KI-Modell.
+
+## Was die Fotozahlen bedeuten
+
+Die App verwendet echte Bild-Sprach-Modelle, aber **keine wissenschaftlich validierte Pizza-Bewertung**. Je Kriterium werden vier sichtbare Ausprägungen als englische Bildbeschreibungen verglichen. Die gruppenweise Softmax-Normierung der Modell-Logits liefert einen gewichteten Index zwischen 0,1 und 10,0. Eine Nachkommastelle bedeutet keine entsprechende Messgenauigkeit. Der angezeigte Textvergleich bezeichnet lediglich die relative Trennung der vier Referenzen, keine kalibrierte Wahrscheinlichkeit für gute Pizza.
+
+Die 25 Kriterien betreffen Rand, Backbild, Belag, Komposition und Fotoqualität. Käse- oder saucenfreie Pizzen, atypische Stile, schlechte Sicht und Beleuchtung können unpassende Ergebnisse verursachen. Die App kann weder Geschmack, Geruch, Temperatur, Lebensmittelsicherheit noch nicht sichtbare Details bestimmen. Ein vorgeschalteter Pizza/Text-Vergleich lehnt uneindeutige Bilder ab; auch diese Erkennung kann Fehler machen.
+
+**100 Profile sind 100 simulierte Perspektiven auf dieselben 25 Modellwerte, keine 100 Menschen und keine 100 unabhängigen KI-Gutachten.** Zehn Fachperspektiven werden mit zehn Gewichtungsvarianten kombiniert. Strenge bzw. großzügige Profile verschieben Werte transparent um −0,6 bzw. +0,4 und begrenzen sie auf die Skala. Der KI-Fotoindex ist das Mittel ihrer 100 gewichteten Gesamtergebnisse. Vollständige Berechnung: `web/analysis.js`; die Oberfläche legt Werte, Gewichte und Grenzen offen.
+
+Der Rezensionsbaukasten verwendet ausschließlich eigene Angaben und keine Bild-/KI-Kriterien. 14 Aspekte passen sich an Vor-Ort-Besuch, Abholung oder Lieferung an. Jede Auswahl ist freiwillig und wieder abwählbar; Details zur Wartezeit erscheinen nur bei der passenden Antwort. Eigene Textänderungen werden nicht automatisch überschrieben. Entwürfe werden pro Restaurant lokal gespeichert. Die Übersicht „Meine Rezensionsentwürfe“ lässt sich durchsuchen und offline öffnen. Einzelne Entwürfe sind als JSON exportierbar und nach Dateiprüfung sowie ausdrücklicher Bestätigung wiederherstellbar. Reines Öffnen des Baukastens erzeugt keinen leeren Eintrag. Google Maps arbeitet mit 1–5 ganzen Sternen; die App schlägt `max(1, min(5, round(eigeneWertung / 2)))` vor und veröffentlicht nichts automatisch.
+
+## Lokale KI-Modelle
+
+| Einstellung | ONNX-Modell | Ausführung |
 |---|---|---|
-| CLIP ViT-B/32 | Xenova / OpenAI CLIP | ONNX / WASM / CPU |
-| CLIP ViT-B/16 | Xenova / OpenAI CLIP | ONNX / WASM / CPU |
-| SigLIP Base Patch16-224 | Xenova / Google SigLIP | ONNX / WASM / CPU |
+| CLIP B/32 | [Xenova/clip-vit-base-patch32](https://huggingface.co/Xenova/clip-vit-base-patch32) | q8 / WASM / CPU |
+| CLIP B/16 | [Xenova/clip-vit-base-patch16](https://huggingface.co/Xenova/clip-vit-base-patch16) | q8 / WASM / CPU |
+| SigLIP B/16 | [Xenova/siglip-base-patch16-224](https://huggingface.co/Xenova/siglip-base-patch16-224) | q8 / WASM / CPU |
 
-Der erste Modelldownload umfasst je nach Modell ungefähr **160–210 MB**.
+Vor der ersten Nutzung jedes Modells wird die ausführliche Erklärung mit Disclaimer und Downloadbestätigung angezeigt. Sie bleibt außerdem im Willkommen-Dialog, auf der Fotoseite und in den KI-Einstellungen erreichbar (`web/model-info.js`). Standard ist **CLIP ViT-B/32 von OpenAI**, alternativ CLIP ViT-B/16 von OpenAI oder SigLIP Base Patch16-224 von Google, jeweils in der q8-ONNX-Konvertierung von Xenova. Der Hinweis erklärt zusätzlichen Speicher- und Datenbedarf, mögliche Mobilfunkkosten, Cache-Bereinigung, lokale Fotoverarbeitung, die Verbindung zum Downloadanbieter und die Grenzen des experimentellen Index.
 
-### 💾 Modelle dauerhaft lokal speichern
+Die Modellgewichte werden nach Bestätigung beim ersten Einsatz von Hugging Face heruntergeladen; kein Account und kein API-Schlüssel erforderlich. Das Foto bleibt lokal. Die Laufzeit ist in der APK enthalten. In Android speichert PizzaScan die Gewichte dauerhaft im privaten App-Speicher. Normales Leeren des App-Caches entfernt sie nicht; App-Daten löschen, Deinstallieren oder das gezielte Entfernen der Modelle schon. Die Browser-Version verwendet den vom Browser verwalteten Cache, den der Browser entfernen kann. Die Modellgewichte sind separate Downloads und nicht in der APK enthalten. Kein Cloud-Ersatz bei Fehlern, keine eingebauten Zugangsdaten, keine inoffiziellen Login- oder Web-Scraping-Umgehungen.
 
-Nach dem ersten vollständigen Download wird das Modell im privaten persistenten Android-App-Speicher unter `filesDir/offline-models` gehalten.
+## Speicher und Android
 
-Damit gilt:
+Fotoanalysen liegen in IndexedDB, Einstellungen, pro Restaurant gespeicherte Rezensionsentwürfe und gemerkte Orte lokal. Einzelfotos können mit allen Kriterien und Profilen als JSON exportiert werden. Frühere Daten von Version 1 bleiben erhalten; gemerkte Orte werden übernommen. Frühere manuelle Ratings und Crawls bleiben im vorhandenen lokalen Datensatz, haben aber keine eigene Ansicht im auf Karte und Foto konzentrierten V2-UI. Normale, mit demselben Release-Schlüssel signierte Updates behalten lokale Daten. Für den Schlüsselwechsel von Version 1 gelten die Hinweise oben.
 
-- kein erneuter vollständiger Download bei jedem App-Start,
-- normale Cache-Bereinigung soll das Modell nicht entfernen,
-- erneuter Download nur nach ausdrücklichem Entfernen, vollständigem Löschen der App-Daten, Deinstallation oder Wechsel auf ein noch nicht installiertes Modell.
+Die WebView lädt ausschließlich gepackte App-Dateien über `WebViewAssetLoader` auf einer HTTPS-Origin. Nativer Message-Kanal nur für diese Origin und das Hauptfenster; kein allgemeines JavaScript-Interface. Dateizugriff aus der WebView ist deaktiviert, Dateiauswahl über Android. Externe Links öffnen sich außerhalb der WebView. Kamera über Androids Aufnahme-Intent und `FileProvider`, GPS nach Nutzeraktion oder bei zuvor aktiviertem Standortstart. Mixed Content und Drittanbieter-Cookies sind deaktiviert. CSP erlaubt WASM, jedoch kein JavaScript-`unsafe-eval`.
 
-Die Modellgewichte selbst sind nicht Bestandteil der APK und werden erst nach Bestätigung geladen.
+## Bauen und prüfen
 
-### ⭐ Eigene Bewertungen und Google-Rezensionsbaukasten
+JDK 17, Android SDK 36, Gradle 8.11.1, Node 22:
 
-- eigene Bewertung auf einer 10-Punkte-Skala
-- eigene Notizen und Besuchsinformationen
-- adaptiver Baukasten für Restaurantrezensionen
-- Vor-Ort-Besuch, Abholung und Lieferung
-- Aspekte wie Pizza, Teig, Zutaten, Service, Geschwindigkeit, Ambiente, Sauberkeit, Preis-Leistung und weitere
-- Text bleibt vor dem Kopieren vollständig bearbeitbar
-- Öffnen von Google Maps nur nach Nutzeraktion
-- **keine automatische Veröffentlichung** einer Rezension
-
-Rezensionsentwürfe werden lokal gespeichert.
-
-## Datenschutz
-
-Die aktuelle verbindliche PizzaScan-Datenschutzerklärung liegt direkt im öffentlichen Repository und benötigt **kein GitHub Pages**:
-
-**[➡️ Datenschutzerklärung öffnen](https://github.com/chekento/Pizzascan/blob/main/PRIVACY.md)**
-
-Für die Google Play Console kann genau diese öffentliche HTTPS-Adresse verwendet werden:
-
-`https://github.com/chekento/Pizzascan/blob/main/PRIVACY.md`
-
-Wesentliche Punkte:
-
-- kein PizzaScan-Benutzerkonto
-- keine Community-Funktion
-- keine Werbung
-- kein eigenes Analytics- oder Tracking-SDK
-- Standort nur optional und im Vordergrund
-- Fotos werden lokal analysiert
-- Offline-KI-Modelle werden nach Zustimmung von Hugging Face geladen und anschließend persistent lokal gespeichert
-- Karten- und Suchanfragen können an OpenStreetMap-/Overpass-/Photon-Dienste gehen
-- Google-Rezensionen werden nie automatisch veröffentlicht
-
-## Technischer Stand
-
-- `compileSdk 36`
-- `targetSdk 36`
-- `minSdk 26`
-- Java 17
-- Gradle 8.11.1
-- AndroidX WebView
-- Leaflet / OpenStreetMap
-- Transformers.js / ONNX Runtime Web
-
-Die App-Weboberfläche wird als lokale App-Assets gebündelt. Externe Links werden außerhalb der WebView geöffnet. Hintergrundstandort ist nicht erforderlich.
-
-## Bauen
-
-Voraussetzungen: JDK 17, Android SDK 36, Node 22 und Gradle 8.11.1.
-
-```bash
+```sh
 npm ci --ignore-scripts --no-audit
 npm run assets
 npm test
-gradle --no-daemon assembleDebug lintDebug assembleRelease bundleRelease lintRelease
+npx playwright install --with-deps chromium
+npm run smoke
+npm run map-smoke
+npm run ratings-smoke
+npm run runtime-assets
+npm run marker-i18n
+npm run i18n-content
+npm run live-map
+node scripts/download-test-photo.cjs
+gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug assembleRelease bundleRelease lintRelease
 ```
 
-Die CI prüft zusätzlich Web-Smoke-Tests, Karten-/Suchfunktionen, Android-Lint, Android-16-Emulatorläufe sowie reale Modellinferenztests für CLIP B/32, CLIP B/16 und SigLIP.
+Echte Modelle separat prüfen, etwa `MODEL=clip32 npm run models`. Der Actions-Workflow prüft alle drei Modelle mit einem realen Pizzafoto, 25 Bildwerten, Offline-Cache mit frischem Worker und einem Negativbild. Zusätzlich: UI, Speicherung nach Neustart, 100 Profile, eigene Wertung, Rezensionskopie, unabhängiger Rezensionsbaukasten mit Besuchsarten und Schutz eigener Textänderungen, Datenschutzansicht und Android-16-Emulator-Smoke-Test inklusive echter CLIP-Fotoanalyse in der gepackten WebView und gespeicherten Entwürfen nach Neustart. Die CI prüft die Test-APK-Signatur mit `apksigner` und erzeugt die Release-APK ohne privaten Schlüssel. Abschließend wird diese lokal mit dem gesicherten Release-Schlüssel signiert und ihre Signatur sowie SHA-256-Prüfsumme geprüft. Private Schlüssel dürfen weder in Git noch in öffentlichen Actions-Artifacts liegen. Bei Fehlern gibt es Screenshots und Logs als Artifacts.
 
-## Google Play
+Die ursprünglichen Uploads sind unverändert in `source-original/` archiviert.
 
-Das endgültige Play-Store-Paket bleibt:
+## Komponenten, Referenzen und Lizenzen
 
-`cloud.kosch.pizzascan`
+- [Transformers.js 3.8.1](https://huggingface.co/docs/transformers.js/v3.8.1/en/index) — Apache-2.0; [ONNX Runtime](https://github.com/microsoft/onnxruntime) — MIT.
+- [OpenAI CLIP](https://github.com/openai/CLIP) — MIT; [Google SigLIP](https://huggingface.co/google/siglip-base-patch16-224) — Apache-2.0. Die verlinkten Xenova-Modellkarten dokumentieren die ONNX-Konvertierungen.
+- [Leaflet 1.9.4](https://leafletjs.com/) — BSD-2-Clause. [OpenStreetMap-Daten](https://www.openstreetmap.org/copyright) — ODbL, Attribution in der Karte.
+- [opening_hours](https://github.com/opening-hours/opening_hours.js) — LGPL-3.0, unverändert gebündelt; [tz-lookup](https://github.com/darkskyapp/tz-lookup) — CC0. Quellpakete und exakte Versionen stehen in package-lock.json.
+- [Google Maps URLs](https://developers.google.com/maps/documentation/urls/get-started) für Ortssuche und Navigation, keine automatische Veröffentlichung von Rezensionen.
+- Testfoto: Valerio Capello, Farbrevision Rainer Zenz, [Pizza Margherita, Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Eq_it-na_pizza-margherita_sep2005_sml.jpg), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Ausschließlich CI-Test, Vorschau verkleinert/neu kodiert; keine Veröffentlichung. Nicht in der APK gebündelt.
 
-Der öffentlich verlinkte Test-APK-Download verwendet absichtlich eine separate Debug-Paketkennung, damit er andere installierte PizzaScan-Versionen nicht überschreibt.
+- [Mangrove / Open Reviews](https://open-reviews.net/technology/) — offene Bewertungsdaten, standardmäßig CC BY 4.0; BY-SA-Beiträge entsprechend gekennzeichnet. [Berechnung und Filter](docs/Offene-Bewertungen.md).
 
-Store-Unterlagen befinden sich unter `store/`.
+Kopien der Lizenzen gepackter Abhängigkeiten liegen nach `npm run assets` in `web/vendor`. Die Nutzungsbedingungen externer Kartenanbieter gelten für deren Dienste.
 
-## Lizenzen und externe Komponenten
 
-- [OpenStreetMap](https://www.openstreetmap.org/copyright) – ODbL
-- [Leaflet](https://leafletjs.com/) – BSD-2-Clause
-- [Transformers.js](https://huggingface.co/docs/transformers.js/) – Apache-2.0
-- [ONNX Runtime](https://github.com/microsoft/onnxruntime) – MIT
-- [OpenAI CLIP](https://github.com/openai/CLIP) – MIT
-- [Google SigLIP](https://huggingface.co/google/siglip-base-patch16-224) – Apache-2.0
+</details>
 
-Weitere genaue Versionen und gebündelte Lizenztexte sind im Repository dokumentiert.
+---
+
+By KoSch of [kosch.cloud](https://kosch.cloud) based on [pizzascan.on.websim.com](https://pizzascan.on.websim.com) ❣️
