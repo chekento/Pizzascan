@@ -2,7 +2,7 @@
 'use strict';
 const TYPES={pizzeria:{emoji:'🍕',name:'Pizzeria / Restaurant'},cafe:{emoji:'☕',name:'Café'},fast_food:{emoji:'🍔',name:'Imbiss / Schnellrestaurant'},food_truck:{emoji:'🚚',name:'Foodtruck'},vending_pizza:{emoji:'🤖',name:'Pizzaautomat'},other:{emoji:'🍽️',name:'Weitere Pizza-Orte'}};
 const providers=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter'];
-const defaults={onlyOpen:false,unknownHours:false,includeItalian:true,radius:3,types:Object.keys(TYPES),autoSearch:true,sort:'distance',travelMode:'walking',hideVisited:false};
+const defaults={onlyOpen:false,unknownHours:false,includeItalian:true,radius:5,types:Object.keys(TYPES),autoSearch:false,sort:'distance',travelMode:'walking',hideVisited:false};
 const text=v=>String(v??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 function address(t){return t['addr:full']||[[t['addr:street']||t['addr:place'],t['addr:housenumber']].filter(Boolean).join(' '),[t['addr:postcode'],t['addr:city']||t['addr:town']||t['addr:village']].filter(Boolean).join(' ')].filter(Boolean).join(', ');}
 function normalize(element,options={}){const t=element.tags||{},lat=element.lat??element.center?.lat,lng=element.lon??element.center?.lon;if(!C.coords(lat,lng)||!['node','way','relation'].includes(element.type)||!/^\d+$/.test(String(element.id)))return null;if(t.disused==='yes'||t.abandoned==='yes'||['disused','abandoned','demolished','construction'].includes(t.amenity))return null;
