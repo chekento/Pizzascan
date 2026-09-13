@@ -1,7 +1,9 @@
 import {env, AutoTokenizer, AutoProcessor, AutoModel, RawImage} from '@huggingface/transformers';
 import A from '../web/analysis.js';
 env.allowLocalModels=false;
-env.useBrowserCache=true;
+// Browser builds keep Transformers.js CacheStorage. The packaged Android origin instead routes
+// every model request through MainActivity's persistent filesDir store, which is not ordinary cache.
+env.useBrowserCache=self.location.origin!=='https://appassets.androidplatform.net';
 env.backends.onnx.wasm.numThreads=1;
 env.backends.onnx.wasm.proxy=false;
 env.backends.onnx.wasm.wasmPaths=new URL('./ort/',self.location.href).href;

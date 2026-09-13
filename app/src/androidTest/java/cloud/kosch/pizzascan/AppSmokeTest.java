@@ -42,7 +42,7 @@ public class AppSmokeTest {
             js(scenario, "runModel(true);");
             String downloadState = js(scenario, "JSON.stringify({dialog:!!document.getElementById('confirm-model-download'),worker:!!worker,busy:PizzaScan.diagnostics().busy})");
             assertEquals(downloadState, "true", js(scenario, "!!document.getElementById('confirm-model-download') && !worker && !PizzaScan.diagnostics().busy"));
-            assertEquals("true", js(scenario, "document.getElementById('sheet-body').textContent.includes('Disclaimer zur Fotobewertung')"));
+            assertEquals("Localized model notice must name the selected model", "true", js(scenario, "document.getElementById('sheet-body').textContent.includes('CLIP ViT-B/32')"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
             assertEquals("true", js(scenario, "!worker && !document.getElementById('sheet').open"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
@@ -57,22 +57,48 @@ public class AppSmokeTest {
             js(scenario, "document.getElementById('settings-open').click(); document.querySelector('input[value=clip16]').click(); document.getElementById('dark-mode').click(); document.getElementById('settings-save').click();");
             String dark = js(scenario,"document.body.classList.contains('dark')");
             js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});document.querySelector('[data-visit-mode=dinein]').click();document.getElementById('review-rating').value='7.8';document.getElementById('review-rating').dispatchEvent(new Event('input'));document.querySelector('[data-aspect=service][data-choice=friendly]').click();document.getElementById('review-visited').click();");
-            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes('freundlich') && !document.getElementById('copy-draft').disabled"));
+            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && !document.getElementById('copy-draft').disabled"));
             js(scenario, "PizzaScan.back();");
             assertEquals("true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));
             js(scenario, "window.nativeCheck='pending';bridge('copy',{text:'PizzaScan Android Test'}).then(()=>window.nativeCheck='ok');");
             long replyDeadline = SystemClock.elapsedRealtime() + 10000;
             while (!"\"ok\"".equals(js(scenario,"window.nativeCheck")) && SystemClock.elapsedRealtime()<replyDeadline) SystemClock.sleep(200);
             assertEquals("\"ok\"", js(scenario,"window.nativeCheck"));
+            String[][] nativeLanguages = {{"de", "Android-Aktion fehlgeschlagen"}, {"en", "Android action failed"}, {"it", "Azione Android non riuscita"}, {"es", "Falló la acción de Android"}, {"fr", "Échec de l’action Android"}};
+            for (String[] localized : nativeLanguages) {
+                js(scenario, "window.nativeLanguageCheck='pending';bridge('setLanguage',{language:'" + localized[0] + "'}).then(()=>bridge('unknownTestAction')).catch(e=>window.nativeLanguageCheck=e.message);");
+                long languageDeadline = SystemClock.elapsedRealtime() + 10000;
+                while ("\"pending\"".equals(js(scenario,"window.nativeLanguageCheck")) && SystemClock.elapsedRealtime()<languageDeadline) SystemClock.sleep(200);
+                assertTrue("Native resources follow app language " + localized[0], js(scenario,"window.nativeLanguageCheck").contains(localized[1]));
+            }
+            js(scenario, "bridge('setLanguage',{language:PizzaI18n.language});");
             scenario.recreate();
             ready(scenario);
             assertEquals(dark, js(scenario,"document.body.classList.contains('dark')"));
             assertEquals("true", js(scenario,"!document.getElementById('welcome').open"));
             assertEquals("true", js(scenario,"PizzaScan.diagnostics().model === 'clip16'"));
             js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});");
-            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes('freundlich') && document.getElementById('review-rating').value === '7.8'"));
+            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && document.getElementById('review-rating').value === '7.8'"));
             js(scenario, "PizzaScan.back();");
 
+        }
+    }
+    @Test public void ratingsAndCompactNavigationAreInTheInstalledApk() throws Exception {
+        try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
+            ready(scenario);
+            js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click();navigate('map');");
+            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.1' && document.querySelector('.brand small').textContent==='2.3.1'"));
+            assertEquals("true", js(scenario, "document.querySelector('.app-bottom-bar').getBoundingClientRect().height<=76 && document.querySelectorAll('.app-footer a').length===2"));
+            js(scenario, "document.getElementById('rating-filter-open').click();");
+            assertEquals("true", js(scenario, "document.getElementById('filter-min-rating').step==='0.1' && document.getElementById('filter-min-rating').getBoundingClientRect().height>0"));
+            js(scenario, "document.getElementById('filter-min-rating').value='4.6';document.getElementById('filter-min-rating').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('rating-apply').click();");
+            assertEquals("true", js(scenario, "mapConfig().minRating===4.6 && document.getElementById('rating-filter-open').getAttribute('aria-pressed')==='true'"));
+            scenario.recreate();ready(scenario);
+            assertEquals("true", js(scenario, "mapConfig().minRating===4.6"));
+            js(scenario, "(()=>{const p=PlaceData.fromOverpass([{type:'node',id:990000001,lat:53.55,lon:10,tags:{name:'APK UI Testrestaurant',cuisine:'pizza'}}])[0];openSheet('place','TEST',detailsHtml(p));})();");
+            assertEquals("true", js(scenario, "document.querySelectorAll('#venue-ratings .rating-portals [data-action=venue-link]').length===3 && ['google.com','tripadvisor.com','yelp.com'].every(host=>[...document.querySelectorAll('#venue-ratings .rating-portals button')].some(b=>new URL(b.dataset.url).hostname.endsWith(host)))"));
+            js(scenario, "closeSheet();settings.filters={...mapConfig(),minRating:0};saveSettings();navigate('photo');");
+            assertEquals("true", js(scenario, "document.getElementById('nav-photo').getAttribute('aria-pressed')==='true'"));
         }
     }
     @Test public void realLocalModelRunsInPackagedAndroidWorker() throws Exception {

@@ -1,0 +1,17 @@
+<resources>
+    <string name="pick_photo">Pizzafoto auswählen</string>
+    <string name="import_json">PizzaScan JSON importieren</string>
+    <string name="share_photo">Pizzafoto und Rezension teilen</string>
+    <string name="exit_title">PizzaScan schließen?</string>
+    <string name="exit_message">Deine Fotos und Bewertungen bleiben auf diesem Gerät.</string>
+    <string name="exit_close">Schließen</string>
+    <string name="exit_stay">Bleiben</string>
+    <string name="no_picker">Keine Dateiauswahl verfügbar.</string>
+    <string name="request_error">App-Anfrage konnte nicht gelesen werden.</string>
+    <string name="reply_error">Android-Antwort fehlgeschlagen.</string>
+    <string name="action_error">Android-Aktion fehlgeschlagen</string>
+    <string name="no_link_app">Keine App zum Öffnen dieses Links verfügbar.</string>
+    <string name="export_saved">JSON-Export gespeichert.</string>
+    <string name="export_error">Export konnte nicht gespeichert werden.</string>
+    <string name="review_clip">PizzaScan Rezension</string>
+</resources>

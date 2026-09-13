@@ -1,0 +1,10 @@
+PizzaScan – Grafiken für Google Play
+
+PizzaScan-App-Icon-512.png: 512 × 512 Pixel, PNG mit Alpha, unter 1 MB. Dieselbe Datei ist als Android-App-Symbol eingebaut.
+PizzaScan-Vorstellung-DE-1024x500.png: Deutsch, 1024 × 500 Pixel, PNG ohne Alpha, unter 1 MB.
+PizzaScan-Feature-EN-1024x500.png: Englisch, 1024 × 500 Pixel, PNG ohne Alpha, unter 1 MB.
+
+Bildgestaltung: OpenAI-Bildgenerierung. Beide Vorstellungsgrafiken verwenden das freigegebene orange Symbol mit weißem Standort-Pin, Pizza und weißen Scan-Ecken. Texte und Layout wurden gegenüber der ersten Fassung beibehalten. Der technische Export stellt die geforderte Pixelgröße sicher.
+
+Deutsch: PizzaScan / Gute Pizza. Ganz nah. / Restaurants finden / Fotos lokal analysieren / Eigene Rezensionen formulieren
+English: PizzaScan / Great pizza. Right nearby. / Find restaurants / Analyze photos on your device / Compose your own reviews

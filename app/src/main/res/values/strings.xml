@@ -1,1 +1,18 @@
-<resources><string name="app_name">PizzaScan</string></resources>
+<resources>
+    <string name="app_name" translatable="false">PizzaScan</string>
+    <string name="pick_photo">Choose a pizza photo</string>
+    <string name="import_json">Import PizzaScan JSON</string>
+    <string name="share_photo">Share pizza photo and review</string>
+    <string name="exit_title">Close PizzaScan?</string>
+    <string name="exit_message">Your photos and ratings stay on this device.</string>
+    <string name="exit_close">Close</string>
+    <string name="exit_stay">Stay</string>
+    <string name="no_picker">No file picker available.</string>
+    <string name="request_error">Could not read app request.</string>
+    <string name="reply_error">Android response failed.</string>
+    <string name="action_error">Android action failed</string>
+    <string name="no_link_app">No app available to open this link.</string>
+    <string name="export_saved">JSON export saved.</string>
+    <string name="export_error">Could not save the export.</string>
+    <string name="review_clip">PizzaScan review</string>
+</resources>
