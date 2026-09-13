@@ -25,7 +25,10 @@
  <button id="photo-drafts-open" class="secondary full">✍️ Meine Rezensionsentwürfe <span class="badge" data-draft-count>0</span></button><div class="section-title"><h2>Deine Fotoanalysen</h2><span id="history-count" class="badge">0</span></div><div id="history" class="cards"></div>
 </section>
 </main>
+<div class="app-bottom-bar">
 <nav class="dock" aria-label="Hauptnavigation"><button id="nav-map" class="selected"><span>⌖</span>Karte</button><button id="nav-photo"><span>▣</span>Fotobewertung</button></nav>
+<footer class="app-footer" translate="no"><span>By KoSch of <a href="https://kosch.cloud" target="_blank" rel="noopener noreferrer">kosch.cloud</a></span><span>based on <a href="https://pizzascan.on.websim.com" target="_blank" rel="noopener noreferrer">pizzascan.on.websim.com</a> ❣️</span></footer>
+</div>
 <div id="toast" class="toast" role="status" hidden></div>
 <dialog id="sheet"><div class="sheet-top"><span id="sheet-kicker" class="eyebrow">PIZZASCAN</span><button id="sheet-close" class="icon" aria-label="Schließen">×</button></div><div id="sheet-body"></div></dialog>
 <dialog id="welcome"><span class="brand-icon big">◔</span><p class="eyebrow">WILLKOMMEN BEI PIZZASCAN</p><h1>Finden. Fotografieren.<br>Pizza verstehen.</h1><p>Karte mit GPS und Fotoanalyse direkt auf deinem Gerät. Drei kostenlose KI-Modelle, kein API-Schlüssel.</p><p class="notice">Für die Fotoanalyse kommt ein Offline-Modell dazu: standardmäßig CLIP ViT-B/32 (ca. 160 MB). Es wird erst nach deiner Bestätigung separat heruntergeladen. Danach bleibt dein Foto zur Analyse auf diesem Gerät.</p><button id="welcome-model-info" class="text-button">Warum ein Offline-Modell? Erklärung & Disclaimer ↗</button><button id="welcome-gps" class="primary full">Mit meinem Standort starten</button><button id="welcome-start" class="secondary full">Ohne Standort starten</button><p class="hint">Der Standortstart lässt sich in den Einstellungen ändern. Kartenanbieter erhalten den angefragten Suchbereich. Fotoanalysen und Rezensionsentwürfe bleiben auf deinem Gerät.</p><button id="welcome-privacy" class="text-button">Datenschutzerklärung</button></dialog>
