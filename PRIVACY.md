@@ -1,7 +1,7 @@
 # PizzaScan – Datenschutzerklärung
 
-**Stand:** 12. September 2026  
-**App:** PizzaScan  
+**Stand:** 13. September 2026\
+**App:** PizzaScan\
 **Android-Paket für Google Play:** `cloud.kosch.pizzascan`
 
 Diese Datenschutzerklärung beschreibt die Datenverarbeitung der Android-App **PizzaScan**. Sie gilt für den von KoSch veröffentlichten offiziellen App-Stand. PizzaScan ist so konzipiert, dass persönliche Bewertungen, Fotos, Entwürfe und KI-Auswertungen möglichst lokal auf dem Android-Gerät verarbeitet werden.
@@ -10,9 +10,9 @@ Diese Datenschutzerklärung beschreibt die Datenverarbeitung der Android-App **P
 
 Verantwortlich für PizzaScan ist:
 
-**Kolja Werner Schumann (KoSch)**  
-Deutschland  
-Website und Kontakt: <https://kosch.cloud/>  
+**Kolja Werner Schumann (KoSch)**\
+Deutschland\
+Website und Kontakt: <https://kosch.cloud/>\
 Projekt und technischer Kontakt: <https://github.com/chekento/Pizzascan>
 
 Für Datenschutzanfragen kann über die Website oder das öffentliche GitHub-Repository Kontakt aufgenommen werden. Weitere veröffentlichte Entwickler-Kontaktdaten ergeben sich aus dem Google-Play-Entwicklerprofil.
@@ -25,6 +25,7 @@ PizzaScan benötigt **kein Benutzerkonto** und betreibt keinen eigenen Server f�
 - Heruntergeladene Offline-KI-Modelle werden nach dem ersten Download im **privaten persistenten App-Speicher** gespeichert und bei späteren Analysen wiederverwendet.
 - Standortzugriff ist **optional** und erfolgt nur im Vordergrund für standortbezogene Karten- und Suchfunktionen.
 - Restaurant-, Karten- und Suchdaten werden über externe OpenStreetMap-basierte Dienste geladen.
+- Offene Ortsbewertungen stammen optional von Mangrove/Open Reviews; Quelle und Abrufdatum bleiben sichtbar.
 - Eigene Bewertungen, Notizen, gemerkte Orte und Rezensionsentwürfe werden lokal gespeichert.
 - PizzaScan veröffentlicht **keine Google-Rezension automatisch**.
 - Die aktuelle App enthält **keine Werbung, kein eigenes Analytics-SDK und kein eigenes Nutzertracking**.
@@ -41,7 +42,8 @@ Abhängig von der Nutzung speichert PizzaScan lokal auf dem Gerät insbesondere:
 - Rezensionsentwürfe und ausgewählte Bewertungsbausteine,
 - Ergebnisse lokaler Fotoanalysen,
 - ausgewählte bzw. temporär verarbeitete Fotos,
-- heruntergeladene Offline-KI-Modelldateien.
+- heruntergeladene Offline-KI-Modelldateien,
+- reduzierte offene Bewertungsdaten für den Mindestbewertungsfilter, ohne fremde Rezensionstexte oder Fotos.
 
 Diese Daten werden nicht automatisch an einen PizzaScan-Server übertragen, weil ein solcher Benutzerdaten-Server nicht betrieben wird.
 
@@ -116,7 +118,7 @@ Datenschutz Private.coffee: <https://private.coffee/privacy.html>
 
 Für Restaurant-, Pizzeria-, Orts- und Adresssuche sowie Autovervollständigung können Suchtexte an Photon gesendet werden. Dadurch kann bereits während einer aktiven Suche eine Netzwerkanfrage ausgelöst werden.
 
-Photon-Projekt: <https://github.com/komoot/photon>  
+Photon-Projekt: <https://github.com/komoot/photon>\
 komoot Datenschutz: <https://www.komoot.com/privacy>
 
 ### Welche Daten erhalten diese Dienste?
@@ -131,6 +133,14 @@ Bei einer Netzwerkanfrage erhalten externe Anbieter typischerweise:
 - gegebenenfalls Koordinaten bzw. Suchmittelpunkte.
 
 PizzaScan kontrolliert die Serverprotokolle und Aufbewahrungsfristen dieser unabhängigen Anbieter nicht.
+
+## 7a. Offene Ortsbewertungen und Bewertungsfilter
+
+Wenn „Offene Bewertungen laden“ eingeschaltet ist, fragt PizzaScan api.mangrove.reviews direkt nach öffentlichen Bewertungen im Bereich geladener Orte ab. Die Open Reviews Association erhält den abgefragten Suchbereich sowie IP-Adresse und technische Verbindungsdaten. Bei standortnaher Suche kann der Bereich Rückschlüsse auf deinen Standort ermöglichen. Deine Fotos, eigenen Bewertungen und Entwürfe werden nicht übertragen. Die Funktion ist in den Einstellungen abschaltbar.
+
+Der lokale Bewertungs-Cache enthält nur Zahlen, Ortsbezüge, öffentliche Bewertungskennungen und die zur Vermeidung von Doppelzählungen nötigen öffentlichen Identitäten, keine Rezensionstexte oder Fotos. Er wird bei Bedarf nach 15 Minuten aktualisiert; gespeicherte Ergebnisse werden höchstens sieben Tage genutzt und bei einem Neuabruf ersetzt. Alle Daten lassen sich über Androids App-Speicher löschen. Externe Links zu Google Maps, Tripadvisor und Yelp werden erst nach Antippen geöffnet; dabei gehen die Suchangaben an den gewählten Anbieter.
+
+Hinweise der Anbieter: [Open Reviews / Mangrove](https://mangrove.reviews/terms), [Tripadvisor](https://www.tripadvisor.com/pages/privacy.html) und [Yelp](https://terms.yelp.com/privacy).
 
 ## 8. Restaurantdetails und externe Links
 
@@ -178,7 +188,7 @@ Die aktuelle PizzaScan-Version enthält:
 - kein soziales Netzwerk oder Community-System,
 - keinen eigenen Benutzerkonto-Dienst.
 
-Unabhängige externe Dienste, die für Karte, Suche oder Modelldownload erforderlich sind, können eigene technische Serverprotokolle führen.
+Unabhängige externe Dienste, die für Karte, Suche, offene Bewertungen oder Modelldownload erforderlich sind, können eigene technische Serverprotokolle führen.
 
 Google Play und das Android-Betriebssystem können außerdem eigenständig Installations-, Geräte-, Sicherheits- oder Store-Daten verarbeiten. Diese Verarbeitung erfolgt nicht durch PizzaScan selbst und richtet sich nach den Datenschutzbestimmungen von Google bzw. des Geräteanbieters.
 
@@ -213,7 +223,7 @@ Eine erteilte Standortberechtigung kann für die Zukunft über Android widerrufe
 
 ## 15. Internationale Datenübermittlung
 
-Externe Anbieter für Karten, Suche oder Modelldownload können Daten außerhalb Deutschlands bzw. außerhalb des Europäischen Wirtschaftsraums verarbeiten. Maßgeblich sind insoweit die Datenschutzinformationen und Rechtsgrundlagen des jeweiligen Anbieters.
+Externe Anbieter für Karten, Suche, offene Bewertungen oder Modelldownload können Daten außerhalb Deutschlands bzw. außerhalb des Europäischen Wirtschaftsraums verarbeiten. Maßgeblich sind insoweit die Datenschutzinformationen und Rechtsgrundlagen des jeweiligen Anbieters.
 
 PizzaScan selbst betreibt keinen eigenen Cloud-Dienst, an den persönliche Pizza-Fotos oder private Rezensionsentwürfe zur Verarbeitung übertragen werden.
 
@@ -250,6 +260,8 @@ PizzaScan does not require an account and does not operate its own backend for u
 Optional foreground location access is used for nearby restaurant and pizza-place searches. OpenStreetMap, Overpass and Photon may receive IP addresses, search text, map areas and coordinates when their services are used. Search autocomplete may perform network requests while the user is actively typing.
 
 AI photo analysis is performed locally. Selected model files are downloaded from Hugging Face after user confirmation and are then kept in persistent private Android app storage so that they do not normally need to be downloaded again after app restarts or ordinary cache clearing. Photos are not uploaded to the model provider for inference.
+
+When open ratings are enabled, Mangrove/Open Reviews receives the requested area, IP address and connection data. PizzaScan keeps a limited local cache without review texts or photos; saved results are used for at most seven days. The feature can be disabled in settings. Google Maps, Tripadvisor and Yelp searches open only when tapped and do not supply the rating filter.
 
 PizzaScan does not automatically publish Google reviews and currently contains no advertising, own analytics SDK or own user-tracking backend.
 
