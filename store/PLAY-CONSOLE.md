@@ -31,7 +31,7 @@ Die deutschen Eintragstexte liegen unter `de-DE/`, Versionshinweise zusätzlich 
 | Verwendung | Datei | Maße |
 |---|---|---|
 | App-Symbol | `graphics/PizzaScan-App-Icon-512.png` | 512 × 512 PNG |
-| Vorstellungsgrafik Deutsch | `graphics/PizzaScan-Feature-DE-1024x500.png` | 1024 × 500 PNG |
+| Vorstellungsgrafik Deutsch | `graphics/PizzaScan-Vorstellung-DE-1024x500.png` | 1024 × 500 PNG |
 | Vorstellungsgrafik Englisch | `graphics/PizzaScan-Feature-EN-1024x500.png` | 1024 × 500 PNG |
 
 Beide Vorstellungsgrafiken sind jeweils kleiner als 15 MB. Dasselbe App-Symbol ist in Android enthalten. Für den endgültigen Store-Eintrag aktuelle Telefon-Screenshots aus dem freigegebenen Build aufnehmen; ältere Screenshots erst auf Übereinstimmung mit der aktuellen Oberfläche prüfen. Testdaten dürfen keine echten Restaurantbewertungen vortäuschen. [Google: Grafiken](https://support.google.com/googleplay/android-developer/answer/9866151?hl=en).
