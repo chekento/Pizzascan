@@ -59,7 +59,7 @@ test('broad discovery includes named restaurants and every default food category
  assert.match(expanded,/\["name"\]/,'all named venues are candidates even without pizza/Italian tags');
  assert.match(expanded,/around:10000,53\.67,10\.24/);
  assert.equal(B.expandDiscoveryQuery(base,false),base);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v4','existing installs receive the restored broad defaults once');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v5','existing installs receive the restored broad defaults once after the search rollback');
 });
 
 test('only truly sparse provider results are supplemented and element ids are deduplicated',()=>{
