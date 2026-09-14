@@ -1,6 +1,8 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 const {server,until}=require('./helpers.cjs');
 
+async function untilNode(fn,timeout=5000){const end=Date.now()+timeout;while(Date.now()<end){if(fn())return;await new Promise(r=>setTimeout(r,100));}throw Error('Timed out waiting for Node-side condition');}
+
 (async()=>{
  const {server:s,url}=await server();
  const browser=await chromium.launch();
@@ -36,7 +38,7 @@ const {server,until}=require('./helpers.cjs');
   const beforeOnline=overpassCalls;
   emptyMode=false;
   await page.evaluate(()=>window.dispatchEvent(new Event('online')));
-  await until(page,()=>overpassCalls>beforeOnline,5000);
+  await untilNode(()=>overpassCalls>beforeOnline,5000);
   await until(page,()=>PizzaScan.diagnostics().places===1&&!PizzaScan.diagnostics().mapLoading,10000);
   assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().mapConfig.radius),1,'Network recovery does not alter filters');
   console.log('PASS one-time discovery preserves later filters and online recovery refreshes the map');
