@@ -1,4 +1,4 @@
-/* Exact search policy: map discovery and venue search obey the active PizzaScan settings. */
+/* Hybrid search policy: discover enough pizza candidates first, then apply the active PizzaScan settings. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -7,6 +7,7 @@
   'use strict';
 
   const genericSearchWords=new Set(['restaurant','restaurants','ristorante','trattoria','pizzeria','pizzerias','pizzaria','pizza','cafe','cafes','imbiss','fast','food']);
+  const pizzaWords=/pizza|pizzeria|pizzaria/i;
 
   function evidenceAllowed(place,cfg,explicit=false){
     const evidence=place?.pizzaEvidence||'';
@@ -43,7 +44,10 @@
   function fallbackTerms(cfg){
     const types=new Set(Array.isArray(cfg?.types)?cfg.types:[]),terms=[];
     if(types.size===0)return [];
-    if(types.has('pizzeria'))terms.push('pizza','pizzeria');
+    if(types.has('pizzeria')){
+      terms.push('pizza','pizzeria','pizza restaurant');
+      if(cfg?.includeItalian)terms.push('italian restaurant');
+    }
     if(types.has('cafe'))terms.push('pizza cafe');
     if(types.has('fast_food'))terms.push('pizza fast food');
     if(types.has('food_truck'))terms.push('pizza food truck');
@@ -61,6 +65,28 @@
     const lat=Number(place.lat),lng=Number(place.lng);
     if(!(lat>=b.south&&lat<=b.north))return false;
     return b.west<=b.east?lng>=b.west&&lng<=b.east:lng>=b.west||lng<=b.east;
+  }
+
+  function fallbackElement(item,term,cfg){
+    const place=item?.place;
+    if(!place||!Array.isArray(cfg?.types)||!cfg.types.includes(place.type))return null;
+    const match=/^(node|way|relation)-(\d+)$/.exec(place.placeId||'');
+    if(!match)return null;
+    const tags={...(place.tags||{}),name:place.name||item.name};
+    if(!tags.amenity&&place.type==='pizzeria')tags.amenity='restaurant';
+    if(place.pizzaEvidence==='search'&&pizzaWords.test(term||''))tags['pizzascan:evidence']='possible';
+    if(place.pizzaEvidence==='search'&&!tags['pizzascan:evidence'])return null;
+    return {type:match[1],id:Number(match[2]),lat:place.lat,lon:place.lng,tags};
+  }
+
+  function mergeElements(primary=[],secondary=[]){
+    const result=new Map();
+    for(const element of [...primary,...secondary]){
+      const key=element&&`${element.type}-${element.id}`;
+      if(!key||key==='undefined-undefined')continue;
+      if(!result.has(key))result.set(key,element);
+    }
+    return [...result.values()];
   }
 
   function install(root){
@@ -90,6 +116,18 @@
       if(place.pizzaEvidence==='search'&&explicit&&!explicitQueryMatches(place,query))return false;
       return true;
     }
+
+    const baseFromOverpass=PD.fromOverpass.bind(PD);
+    PD.fromOverpass=function(elements,options){
+      const normal=baseFromOverpass(elements,options);
+      if(!Array.isArray(elements)||options?.allowNamed)return normal;
+      const possible=elements
+        .filter(element=>element?.tags?.['pizzascan:evidence']==='possible')
+        .map(element=>PD.normalize(element,{allowNamed:true}))
+        .filter(Boolean)
+        .map(place=>({...place,pizzaEvidence:'possible',dataSource:'Photon · PizzaScan Kandidat'}));
+      return PD.merge(normal,possible);
+    };
 
     const baseFilter=PD.filter.bind(PD);
     PD.filter=function(list,cfg,context,hours){
@@ -121,35 +159,58 @@
       const area=parseArea(query),cfg=currentConfig();
       if(!area||!Array.isArray(cfg.types)||cfg.types.length===0)return [];
       const found=new Map();
-      onStatus?.('Präzise Pizza-Ersatzsuche nach deinen Filtern …');
+      onStatus?.('Weitere passende Pizza-Orte werden ergänzt …');
       for(const term of fallbackTerms(cfg)){
         if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
         try{
-          const items=await rawPhoton(term,area.center,{signal});
+          const items=await rawPhoton(term,area.center,{signal,force:true});
           for(const item of items||[]){
             const place=item?.place;
-            if(!place||!cfg.types.includes(place.type)||!evidenceAllowed(place,cfg,false))continue;
-            if(!inScope(place,area,cfg,Core.distance))continue;
-            const match=/^(node|way|relation)-(\d+)$/.exec(place.placeId||'');
-            if(!match)continue;
-            const element={type:match[1],id:Number(match[2]),lat:place.lat,lon:place.lng,tags:{...(place.tags||{}),name:place.name}};
-            found.set(place.placeId,element);
+            if(!place||!inScope(place,area,cfg,Core.distance))continue;
+            const element=fallbackElement(item,term,cfg);
+            if(!element)continue;
+            const key=element.type+'-'+element.id;
+            if(!found.has(key))found.set(key,element);
           }
-          if(found.size>=8)break;
+          if(found.size>=12)break;
         }catch(error){
           if(signal?.aborted)throw error;
           this.lastErrors=this.lastErrors||[];
           this.lastErrors.push({source:'photon.komoot.io',message:error.message,detail:error.detail||''});
-          break;
         }
       }
       return [...found.values()];
     };
 
+    const rawOverpass=service.overpass.bind(service);
+    service.overpass=async function(query,options={}){
+      const result=await rawOverpass(query,options);
+      const area=parseArea(query);
+      if(!area||result?.source==='photon.komoot.io')return result;
+      let count=0;
+      try{count=PD.fromOverpass(result?.data?.elements||[]).length;}catch{}
+      if(count>=10)return result;
+      try{
+        const extra=await this.nearbyFallback(query,options);
+        if(!extra.length)return result;
+        const elements=mergeElements(result?.data?.elements||[],extra);
+        return {data:{...(result.data||{}),elements},source:result.source+' + photon.komoot.io'};
+      }catch(error){
+        if(options.signal?.aborted)throw error;
+        return result;
+      }
+    };
+
     try{
-      const marker='pizzascan-precise-settings-search-v1';
+      const marker='pizzascan-hybrid-discovery-v2';
       if(root.localStorage&&!root.localStorage.getItem(marker)){
         root.localStorage.removeItem('pizzascan-map-cache-v3');
+        const remove=[];
+        for(let i=0;i<root.localStorage.length;i++){
+          const key=root.localStorage.key(i);
+          if(key?.startsWith('pizzascan-search-'))remove.push(key);
+        }
+        remove.forEach(key=>root.localStorage.removeItem(key));
         root.localStorage.setItem(marker,'1');
       }
     }catch{}
@@ -159,5 +220,5 @@
     else wrapAfterSearchUi();
   }
 
-  return {evidenceAllowed,explicitQueryMatches,parseArea,fallbackTerms,inScope,install};
+  return {evidenceAllowed,normalizedWords,explicitQueryMatches,parseArea,fallbackTerms,inScope,fallbackElement,mergeElements,install};
 });
