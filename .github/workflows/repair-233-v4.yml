@@ -1,0 +1,72 @@
+name: Apply deterministic PizzaScan 2.3.3 repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-233-v4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Apply v3 app repair plus deterministic privacy hook
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import textwrap
+
+          workflow = Path('.github/workflows/repair-233-v3.yml').read_text(encoding='utf-8')
+          marker = "          python3 - <<'PY'\n"
+          start = workflow.index(marker) + len(marker)
+          end = workflow.index("\n          PY", start)
+          code = textwrap.dedent(workflow[start:end])
+          exec(compile(code, 'repair-233-v3-extracted.py', 'exec'), {})
+
+          # google-reviews.js previously waited for DOMContentLoaded to wrap showPrivacy.
+          # privacy-233.js is itself a later wrapper, so expose patchPrivacy and invoke it
+          # explicitly after privacy-233 installs its wrapper. This removes the race.
+          gp = Path('web/google-reviews.js')
+          text = gp.read_text(encoding='utf-8')
+          old = "root.GoogleReviewsUI={details,settingsHtml,fetchPlace,choose,get configured(){return !!apiKey();},clearSession(){cache.clear();errors.clear();}};"
+          new = "root.GoogleReviewsUI={details,settingsHtml,fetchPlace,choose,patchPrivacy,get configured(){return !!apiKey();},clearSession(){cache.clear();errors.clear();}};"
+          if text.count(old) != 1:
+              raise SystemExit(f'google-reviews.js API export marker mismatch: {text.count(old)}')
+          gp.write_text(text.replace(old,new,1), encoding='utf-8')
+
+          pp = Path('web/privacy-233.js')
+          text = pp.read_text(encoding='utf-8')
+          old = "root.showPrivacy=showPrivacy233;\n})(globalThis);"
+          new = "root.showPrivacy=showPrivacy233;\nroot.GoogleReviewsUI?.patchPrivacy?.();\n})(globalThis);"
+          if text.count(old) != 1:
+              raise SystemExit(f'privacy-233.js hook marker mismatch: {text.count(old)}')
+          pp.write_text(text.replace(old,new,1), encoding='utf-8')
+          PY
+
+      - name: Validate repaired source and deterministic Google privacy
+        run: |
+          npm ci --ignore-scripts --no-audit
+          npm run assets
+          npm test
+          node --check web/google-reviews.js
+          node --check web/privacy-233.js
+          npx playwright install --with-deps chromium
+          npm run navigation-smoke
+
+      - name: Commit and push repaired app source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/build.gradle package.json package-lock.json web tests PRIVACY.md docs README.md store
+          git commit -m "Fix PizzaScan 2.3.3 version and activate Google reviews"
+          git pull --rebase origin main
+          git push origin HEAD:main
