@@ -7,7 +7,7 @@ android {
         applicationId 'cloud.kosch.pizzascan'
         minSdk 26
         targetSdk 36
-        versionCode 15
+        versionCode 16
         versionName '2.3.3'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -44,7 +44,7 @@ tasks.register('verifyWebAssets') {
             if (!file("../web/$name").isFile()) {
                 throw new GradleException("Missing web/$name. Run npm install and npm run assets first.")
             }
-        }
+        ]
     }
 }
 tasks.named('preBuild').configure { dependsOn 'verifyWebAssets' }
