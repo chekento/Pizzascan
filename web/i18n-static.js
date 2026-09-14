@@ -9,4 +9,6 @@ const copy={
 };
 function apply(){const l=globalThis.PizzaI18n?.language||'de';if(l==='de'||!copy[l])return;const c=copy[l],welcome=document.querySelector('#welcome h1'),notice=document.querySelector('#welcome .notice'),hint=document.querySelector('#welcome .hint'),legend=document.querySelector('.map-legend p');if(welcome)welcome.innerHTML=c.welcome;if(notice)notice.textContent=c.notice;if(hint)hint.textContent=c.hint;if(legend)legend.textContent=c.legend;document.getElementById('map')?.setAttribute('aria-label',c.mapAria);document.querySelector('.dock')?.setAttribute('aria-label',c.navAria);document.getElementById('search')?.setAttribute('aria-label',c.searchAria);document.querySelector('.brand')?.setAttribute('aria-label',c.brandAria);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});else apply();
+function loadReviewDiscovery(){if(document.querySelector('script[data-pizzascan-review-discovery]'))return;const s=document.createElement('script');s.src='review-discovery.js';s.async=false;s.dataset.pizzascanReviewDiscovery='true';s.onload=()=>{let tries=0;const refresh=()=>{tries++;try{if(typeof loadPlaces==='function'&&globalThis.PizzaScan?.ready){loadPlaces({force:true});return;}}catch{}if(tries<20)setTimeout(refresh,250);};refresh();};document.head.appendChild(s);}
+loadReviewDiscovery();
 })();
