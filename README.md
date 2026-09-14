@@ -43,6 +43,25 @@
 <a href="store/PLAY-CONSOLE.md">Google Play</a>
 </p>
 
+<details open>
+<summary><strong>🚦 Google Play Release Dashboard · 3 erledigt · 3 in Arbeit · 2 ausstehend</strong></summary>
+
+| Status | Meilenstein | Aktueller Stand |
+|---|---|---|
+| ✅ | **2.3.1 Quellstand & Repo** | Such-Fallback, Bewertungsfilter, Ratings-Links, kompakte Navigation und 5 Sprachen sind auf `main`. |
+| ✅ | **CI-Build & Android 16** | Build, Web/UI-Tests, Modelltests und Android-16-Smoke-Test sind erfolgreich. |
+| ✅ | **Öffentliche Test-APK** | `downloads/PizzaScan-2.3.1-Test.apk` liegt im Repository. |
+| 🟡 | **Echter Geräte-Abnahmetest** | Suchfix und Kernfunktionen müssen auf dem realen Android-Gerät final bestätigt werden. |
+| 🟡 | **Play-AAB & Signierung** | 2.3.1 Release-AAB wird erzeugt; finale Upload-Signierung für `cloud.kosch.pizzascan` steht aus. |
+| 🟡 | **Play Console** | Store-Assets, Datenschutz und Datensicherheitsunterlagen sind vorbereitet; Formulare noch nicht vollständig abgeschlossen. |
+| ⏳ | **Geschlossener Test** | Google Group vorbereitet; AAB-Upload, Track-Freigabe und offizieller Opt-in-Link fehlen noch. |
+| ⏳ | **Produktion** | Nach geschlossenem Test und den gegebenenfalls geltenden Play-Testanforderungen. |
+
+**Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.1` · **Stand:** 14.09.2026  
+[Detailstatus als JSON](docs/release-status.json) · [Play-Console-Checkliste](store/PLAY-CONSOLE.md) · [Testplan](store/TESTPLAN.md)
+
+</details>
+
 > **Wichtig:** Die öffentliche Downloaddatei wird vom CI-Workflow aus genau der APK veröffentlicht, die zuvor im Android-16-Emulator getestet wurde. Dadurch kann die Startseite nicht mehr versehentlich auf eine ältere Test-APK zeigen. Die Mini-Live-Demo ist zusätzlich direkt aus dem Repository ausführbar und benötigt deshalb keine aktivierte GitHub-Pages-Site.
 
 ## Neu in 2.3.1
