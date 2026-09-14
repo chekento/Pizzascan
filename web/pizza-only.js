@@ -6,7 +6,7 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-pizza-only-v2';
+const MARKER='pizzascan-pizza-only-v3';
 const PIZZA_WORD=/(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizzas)(?:[^a-z]|$)/i;
 function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase();}
 function directPizza(place){
@@ -65,6 +65,31 @@ function installAutocompleteGuard(root,PD){
     if(status)status.textContent=list.length?`${list.length} Pizza-Ort${list.length===1?'':'e'} aus der geladenen Karte · „Suchen“ prüft weitere Pizza-Orte.`:'„Suchen“ prüft weitere Pizza-Orte in der Umgebung.';
   },true);
 }
+function installUiPolicy(root){
+  try{
+    if(typeof root.filterForm==='function'&&!root.filterForm.__pizzaOnly){
+      const base=root.filterForm;
+      const wrapped=function(...args){
+        let html=base(...args);
+        html=html.replace('Karte & Restaurantsuche','Karte & Pizza-Orte');
+        html=html.replace(/<label class="check"><input id="filter-italian"[^>]*><span>Auch italienische Restaurants anzeigen, deren Pizza-Angebot noch nicht bestätigt ist<\/span><\/label>/,'<input id="filter-italian" type="checkbox" hidden>');
+        return html;
+      };
+      wrapped.__pizzaOnly=true;root.filterForm=wrapped;
+    }
+  }catch(error){console.warn('PizzaScan pizza-only filter UI guard skipped',error);}
+  try{
+    if(typeof root.detailsHtml==='function'&&!root.detailsHtml.__pizzaOnly){
+      const base=root.detailsHtml;
+      const wrapped=function(place,...args){
+        let html=base(place,...args);
+        html=html.replace('Dieser Ort passt zur Restaurantsuche. Sein Pizza-Angebot ist in den Kartendaten nicht ausdrücklich bestätigt.','Pizza-Angebot wurde aus den verfügbaren Orts- oder offenen Bewertungsdaten erkannt; in den OpenStreetMap-Ortsdaten ist es nicht ausdrücklich als Pizza getaggt.');
+        return html;
+      };
+      wrapped.__pizzaOnly=true;root.detailsHtml=wrapped;
+    }
+  }catch(error){console.warn('PizzaScan pizza-only detail wording guard skipped',error);}
+}
 function clearOldCaches(root){
   try{
     if(!root.localStorage||root.localStorage.getItem(MARKER))return;
@@ -88,7 +113,8 @@ function install(root){
   }
   installPoiSetter(root);
   installAutocompleteGuard(root,PD);
+  installUiPolicy(root);
   root.PizzaScanPizzaOnly={marker:MARKER,eligible:place=>eligible(place,root)};
 }
-return {MARKER,PIZZA_WORD,text,directPizza,reviewPizza,eligible,currentLocationItem,pizzaOnlyGroups,asVenue,wrapPoiHelper,install};
+return {MARKER,PIZZA_WORD,text,directPizza,reviewPizza,eligible,currentLocationItem,pizzaOnlyGroups,asVenue,wrapPoiHelper,installUiPolicy,install};
 });
