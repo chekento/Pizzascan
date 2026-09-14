@@ -2,9 +2,22 @@
 
 ## 2.3.4 — aktuelle Direktversion · 14.09.2026
 
-Aktueller Stand: `versionCode 25`, `versionName 2.3.4`, Android-Paket `cloud.kosch.pizzascan`.
+Aktueller Stand: `versionCode 26`, `versionName 2.3.4`, Android-Paket `cloud.kosch.pizzascan`.
 
 2.3.4 konsolidiert die POI-/Suchstabilisierung und wird als direkt installierbare **PizzaScan-2.3.4.apk** veröffentlicht. Der aktuelle App- und Dateiname enthält keinen zusätzlichen Test-Namenszusatz.
+
+### Build 26 — vollständige POI-Kategorien und Suchreparatur
+
+- Die ursprünglichen sichtbaren Kategorien sind wieder vollständig Teil von Discovery **und** manueller Suche: 🍕 Pizzeria, ☕ Café, 🍔 Imbiss, 🚚 Foodtruck, 🤖 Pizzaautomat und 🍽️ Weitere Orte.
+- Kategorien werden semantisch über OSM-Tags gesucht: Ein Café benötigt nicht das Wort „Café“ im Namen, ein Imbiss nicht „Imbiss“ und ein Foodtruck nicht „Foodtruck“.
+- Normale benannte Restaurants, Takeaway, Food Courts, Bars, Pubs und Biergärten werden als **🍽️ Weitere Orte** klassifiziert, solange kein bestätigtes Pizza-Signal vorliegt. Sie werden nicht mehr pauschal als Pizzeria dargestellt.
+- Pizzaautomaten werden ausdrücklich über `vending=pizza`, `vending:pizza=yes` und entsprechende Vending-Merkmale abgefragt.
+- Mobile Gastronomie (`food_truck`, `mobile=yes`) wird ausdrücklich berücksichtigt.
+- ⭐ **Gemerkt**, ✓ **Besucht** und 📍 **Dein Standort** sind jetzt lokale Suchzustände: Die Suche kann diese lokalen Daten direkt aufrufen, ohne sie fälschlich an externe POI-Dienste zu senden.
+- Der Photon-Fallback ergänzt Restaurants/Cafés/Foodtrucks jetzt entsprechend ihrer tatsächlichen Kategorie und erfindet für generische Treffer keine Pizza-Eigenschaft mehr.
+- Antworten mit weniger als 18 rohen POIs gelten als potenziell unvollständig. Recovery über zusätzliche Overpass-Endpunkte zielt auf bis zu 30 rohe Kandidaten, bevor Photon ergänzend verwendet wird.
+- Der Discovery-Cache-Marker wurde erhöht; bestehende Installationen bauen einmalig Karten-/Suchcache und breite Default-Filter neu auf.
+- Neue Regressionstests prüfen alle sechs POI-Kategorien sowie Gemerkt/Besucht/Standort und verhindern, dass künftige Feature-Filter die Basissuche erneut verengen.
 
 ### Präzise Suche und POIs
 
@@ -12,7 +25,7 @@ Aktueller Stand: `versionCode 25`, `versionName 2.3.4`, Android-Paket `cloud.kos
 - Standardmäßig: 10 km, alle Place-Typen, keine Mindestbewertung, kein „nur geöffnet“, keine automatische Ausblendung besuchter Orte.
 - Benannte `restaurant`, `fast_food`, `cafe`, `food_truck`, `takeaway`, `food_court`, `bar`, `pub` und `biergarten` werden unabhängig von der Küche als Kandidaten berücksichtigt.
 - Eine ausdrücklich abgesendete Restaurant-/POI-Suche wird zusätzlich direkt gegen OpenStreetMap/Overpass abgeglichen.
-- Der neue POI-Abgleich bewertet Name, Adresse, Ortsbezug, OSM-Identität und Entfernung; identische OSM-Objekte werden dedupliziert und exakte Namens-/Ortskombinationen werden priorisiert.
+- Der POI-Abgleich bewertet Kategorie, Name, Adresse, Ortsbezug, OSM-Identität und Entfernung; identische OSM-Objekte werden dedupliziert und exakte Namens-/Ortskombinationen werden priorisiert.
 - Suchvarianten wie `Pizza Max Ahrensburg` werden in sichere, regex-escaped Namensvarianten zerlegt, ohne rohe Benutzereingaben als Overpass-RegEx zu übernehmen.
 - Die direkte POI-Suche ist auf den gewählten Suchradius bzw. maximal 10 km um den Kartenmittelpunkt begrenzt.
 - Photon bleibt für Vorschläge und Orts-/Adresssuche aktiv; bei ausdrücklich abgesendeten Suchanfragen kann kontrolliert Nominatim als Fallback dienen.
@@ -21,7 +34,7 @@ Aktueller Stand: `versionCode 25`, `versionName 2.3.4`, Android-Paket `cloud.kos
 
 ### APK und Packaging
 
-- Neuer `direct`-Build: nicht debuggable, gleicher Paketname wie die App (`cloud.kosch.pizzascan`), installierbar signiert und ohne `.lang1`-/`-lang1`-Namenszusatz.
+- `direct`-Build: nicht debuggable, gleicher Paketname wie die App (`cloud.kosch.pizzascan`), installierbar signiert und ohne `.lang1`-/`-lang1`-Namenszusatz.
 - Veröffentlichter Dateiname: `downloads/PizzaScan-2.3.4.apk`.
 - CI prüft Signatur, Package-ID und App-Label der tatsächlich veröffentlichten APK.
 - Die Playwright-Abnahme läuft gegen die aus genau dieser APK extrahierten Web-Assets.
