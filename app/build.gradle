@@ -44,7 +44,7 @@ tasks.register('verifyWebAssets') {
             if (!file("../web/$name").isFile()) {
                 throw new GradleException("Missing web/$name. Run npm install and npm run assets first.")
             }
-        ]
+        }
     }
 }
 tasks.named('preBuild').configure { dependsOn 'verifyWebAssets' }
