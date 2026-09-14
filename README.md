@@ -2,12 +2,37 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.1</h1>
+<h1 align="center">PizzaScan 2.3.2</h1>
 <p align="center"><strong>Gute Pizza finden · offene Bewertungen filtern · Fotos lokal analysieren</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
 <p align="center">
   <img src="store/graphics/PizzaScan-Feature-EN-1024x500.png" alt="PizzaScan Feature Graphic" width="1024">
+</p>
+
+## 🚀 Direkt testen
+
+<table>
+<tr>
+<td align="center" width="50%">
+<h3>📱 Android · technische Vorab-APK</h3>
+<p><strong>PizzaScan 2.3.2</strong> für direkte Geräte- und Funktionsprüfungen.</p>
+<p><a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.2-Test.apk"><strong>⬇️ PizzaScan 2.3.2 Test-APK herunterladen</strong></a></p>
+<p><sub>Paket: cloud.kosch.pizzascan.lang1 · nicht die spätere Play-Testausgabe</sub></p>
+</td>
+<td align="center" width="50%">
+<h3>🌐 Browser-Demo</h3>
+<p>Die Weboberfläche lässt sich ohne Installation ausprobieren.</p>
+<p><a href="https://raw.githack.com/chekento/Pizzascan/main/web/index.html"><strong>▶ PizzaScan 2.3.2 im Browser öffnen</strong></a></p>
+<p><sub>Technische Demo: Android-spezifische Funktionen können im Browser abweichen.</sub></p>
+</td>
+</tr>
+</table>
+
+<p align="center">
+<a href="downloads/SHA256SUMS-2.3.2.txt"><strong>SHA-256 prüfen</strong></a>
+&nbsp; · &nbsp;
+<strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html">🚦 Release-Dashboard</a></strong>
 </p>
 
 ## 🧪 Beim Google-Play-Release testen
@@ -24,25 +49,7 @@
 </tr>
 </table>
 
-> **Wichtig für Tester:** Die unten angebotene GitHub-APK ist ausschließlich eine technische Vorabversion für direkte Geräte- und Funktionsprüfungen. Sie ist **nicht** die spätere Play-Store-Testausgabe und eine Installation dieser APK zählt **nicht** als Teilnahme am geschlossenen Google-Play-Test.
-
-### Technische Vorab-APK
-
-<p align="center">
-<a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.1-Test.apk">
-<img src="store/graphics/Download-Android-APK.svg" alt="PizzaScan 2.3.1 technische Test-APK herunterladen" width="70%">
-</a>
-<br><strong>PizzaScan 2.3.1 · technische Geräteprüfung</strong><br>
-<sub>Für Entwickler-/Vorabtests. Die offizielle Tester-App folgt separat über Google Play.</sub>
-</p>
-
-<p align="center">
-<strong><a href="https://groups.google.com/g/pizzascan-beta-testers">🧪 Offizieller Tester-Gruppe beitreten</a></strong>
-&nbsp; · &nbsp;
-<strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html">🚦 Release-Dashboard</a></strong>
-&nbsp; · &nbsp;
-<a href="downloads/SHA256SUMS-2.3.1.txt">SHA-256</a>
-</p>
+> **Wichtig für Tester:** Die GitHub-APK ist ausschließlich eine technische Vorabversion für direkte Geräte- und Funktionsprüfungen. Sie ist **nicht** die spätere Play-Store-Testausgabe und eine Installation dieser APK zählt **nicht** als Teilnahme am geschlossenen Google-Play-Test.
 
 <p align="center">
 <a href="docs/Datenschutz.md">Datenschutz</a> ·
@@ -56,29 +63,30 @@
 
 | Status | Meilenstein | Aktueller Stand |
 |---|---|---|
-| ✅ | **2.3.1 Quellstand & Repo** | Such-Fallback, Bewertungsfilter, Ratings-Links, kompakte Navigation und 5 Sprachen sind auf `main`. |
-| ✅ | **CI-Build & Android 16** | Build, Web/UI-Tests, Modelltests und Android-16-Smoke-Test sind erfolgreich. |
-| ✅ | **Technische Vorab-APK** | `downloads/PizzaScan-2.3.1-Test.apk` liegt für direkte Geräteprüfung im Repository. |
-| 🟡 | **Echter Geräte-Abnahmetest** | Suchfix und Kernfunktionen müssen auf dem realen Android-Gerät final bestätigt werden. |
-| 🟡 | **Play-AAB & Signierung** | 2.3.1 Release-AAB wird erzeugt; finale Upload-Signierung für `cloud.kosch.pizzascan` steht aus. |
+| ✅ | **2.3.2 Quellstand & Repo** | Robuster Suchfallback, Karten-Recovery, Filtererhalt, Bewertungsfilter, Ratings-Links, kompakte Navigation und 5 Sprachen sind auf `main`. |
+| ✅ | **CI-Build & Android 16** | Build, Lint, Web/UI-Tests, Modelltests und Android-16-Smoke-Test sind für 2.3.2 erfolgreich. |
+| ✅ | **Technische Vorab-APK** | `downloads/PizzaScan-2.3.2-Test.apk` liegt für direkte Geräteprüfung im Repository. |
+| 🟡 | **Echter Geräte-Abnahmetest** | 2.3.2 muss auf dem realen Android-Gerät final bestätigt werden. |
+| 🟡 | **Play-AAB & Signierung** | Das 2.3.2 Release-AAB wird erzeugt und validiert; finale Upload-Signierung für `cloud.kosch.pizzascan` steht aus. |
 | 🟡 | **Play Console** | Store-Assets, Datenschutz und Datensicherheitsunterlagen sind vorbereitet; Formulare noch nicht vollständig abgeschlossen. |
-| ⏳ | **Geschlossener Google-Play-Test** | [Google Group](https://groups.google.com/g/pizzascan-beta-testers) ist vorbereitet; AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch. **Dort wird die eigentliche Tester-App ausgegeben.** |
+| ⏳ | **Geschlossener Google-Play-Test** | [Google Group](https://groups.google.com/g/pizzascan-beta-testers) ist vorbereitet; AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch. |
 | ⏳ | **Produktion** | Nach geschlossenem Test und den gegebenenfalls geltenden Play-Testanforderungen. |
 
-**Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.1` · **Stand:** 14.09.2026  
+**Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.2` · **VersionCode:** `8` · **Stand:** 14.09.2026  
 [🧪 Tester-Gruppe](https://groups.google.com/g/pizzascan-beta-testers) · [🚦 Dashboard öffnen](https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html) · [Play-Console-Checkliste](store/PLAY-CONSOLE.md) · [Testplan](store/TESTPLAN.md)
 
 </details>
 
-## Neu in 2.3.1
+## Neu in 2.3.2
 
+- 🔎 **robustere Orts-/Adresssuche:** Photon bleibt Primärdienst; bei einer ausdrücklich abgesendeten Suche greift ein Nominatim-Fallback, wenn Photon fehlschlägt **oder keinen brauchbaren Treffer liefert**.
+- ⌨️ **kein Nominatim-Autocomplete:** Suchvorschläge bleiben bei Photon; der Fallback wird nur nach bewusstem Absenden einer Suche verwendet.
+- 🔄 **Karten-Recovery:** Nach Rückkehr in die App bzw. wiederhergestellter Verbindung kann PizzaScan die Karte automatisch neu laden.
+- 🎛️ **Filter bleiben deine Filter:** die einmalige Start-Erkennung überschreibt später nicht mehr deinen selbst gewählten Suchradius oder andere Filter.
 - ⭐ **Mindestbewertung 0,0–5,0 in 0,1-Schritten**, z. B. nur Orte ab **4,6 / 5**.
 - 🌱 **Mangrove / Open Reviews** als kostenlose offene Bewertungsquelle; Orte ohne offene Bewertung separat ein-/ausblendbar.
 - ↗ **Google Maps, Tripadvisor und Yelp** als externe Portal-Suchlinks in Restaurantdetails; deren Bewertungen werden nicht kopiert.
-- 📍 **stabilere Kartenmarker** beim Zoomen und Verschieben.
-- 🔎 einblendbare **Restaurant-/Pizzeria-Suche** mit Ort-/Adresssuche.
-- 🕒 Filter wie **nur geöffnet**, Suchradius, Ortstypen und weitere Karteneinstellungen.
-- 🧭 kompakter unterer Bereich mit **Karte** und **Fotobewertung**.
+- 📍 **stabile Kartenmarker** beim Zoomen, Verschieben, Vollbild und Drehen.
 - 🌍 vollständige Oberfläche in **DE / EN / IT / ES / FR**.
 - 🤖 persistente Offline-Modellablage unter Android: ein bereits geladenes Modell bleibt nach normalem App-Neustart und Cache-Bereinigung erhalten.
 
@@ -87,6 +95,7 @@
 | Funktion | PizzaScan Android |
 |---|---|
 | 🍕 Karte | OpenStreetMap, GPS, Emoji-Marker, Pizzerien und Restaurants |
+| 🔎 Suche | Restaurant/Pizzeria, Ort und Adresse; Photon + kontrollierter Nominatim-Fallback |
 | ⭐ Bewertungen | offene Bewertungsdaten + Mindestwert-Filter |
 | 📍 Details | Adresse, Kontakt, Öffnungszeiten, externe Bewertungsportale |
 | 📷 Fotoanalyse | 25 sichtbare Kriterien, Skala 0,1–10,0 |
@@ -110,9 +119,9 @@ Die Modelle werden erst nach ausdrücklicher Bestätigung heruntergeladen und an
 
 - Android 8+ (`minSdk 26`), Target SDK 36.
 - WebView-App mit gepackten Web-Assets.
-- OpenStreetMap / Overpass, Photon, Leaflet.
-- CI-Tests für Ratings, Suche, Navigation, i18n, Marker, Runtime-Assets und lokale Modelle.
-- Android-16-Emulator-Smoke-Test vor Veröffentlichung der technischen 2.3.1-Test-APK.
+- OpenStreetMap / Overpass, Photon, kontrollierter Nominatim-Fallback, Leaflet.
+- CI-Tests für Ratings, Suche, Fallback, Karten-Recovery, Navigation, i18n, Marker, Runtime-Assets und lokale Modelle.
+- Android-16-Emulator-Smoke-Test vor Veröffentlichung der technischen 2.3.2-Test-APK.
 - Der geschlossene Release-Test wird separat über Google Play verteilt.
 
 Die vollständigen Quellen liegen unter `web/` und `app/`. Play-Store-Vorbereitung und Testplan befinden sich unter `store/`.
