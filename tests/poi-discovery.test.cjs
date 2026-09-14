@@ -2,19 +2,24 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const D=require('../web/poi-discovery.js');
 
-test('robust POI query includes every broad food category, mobile food and pizza vending',()=>{
+test('robust recovery query covers every pizza-place category without generic restaurant discovery',()=>{
   const q=D.robustQuery('around:10000,53.675,10.240');
   assert.match(q,/restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten/);
-  assert.match(q,/ristorante\|trattoria\|osteria/);
-  assert.match(q,/italian/);
-  assert.match(q,/mobile"="yes/);
+  assert.match(q,/cuisine.*pizza/);
+  assert.match(q,/name.*pizza/);
+  assert.match(q,/brand.*pizza/);
+  assert.match(q,/operator.*pizza/);
+  assert.match(q,/speciality.*pizza/);
   assert.match(q,/vending:pizza/);
   assert.match(q,/amenity"="vending_machine/);
+  assert.doesNotMatch(q,/italian|trattoria|osteria/,'Italian identity alone is not pizza evidence');
+  assert.doesNotMatch(q,/\["name"\]\(around/,'unnqualified named food venues must not be recovery results');
 });
 
-test('fallback terms explicitly cover all visible POI categories',()=>{
-  for(const term of ['pizza','pizzeria','restaurant','cafe','imbiss','food truck','pizza vending','takeaway','bar','pub','biergarten','food court'])assert.ok(D.FALLBACK_TERMS.includes(term),term);
-  assert.ok(D.FALLBACK_TARGET>=30);
+test('fallback terms explicitly search pizza variants of every visible venue category',()=>{
+  for(const term of ['pizza','pizzeria','pizza restaurant','pizza cafe','pizza imbiss','pizza fast food','pizza food truck','pizza takeaway','pizza vending','pizza bar','pizza pub','pizza biergarten','pizza bakery'])assert.ok(D.FALLBACK_TERMS.includes(term),term);
+  assert.equal(D.SPARSE_BELOW,6);
+  assert.equal(D.FALLBACK_TARGET,18);
 });
 
 test('area extraction supports radius and map bounds',()=>{
@@ -23,19 +28,32 @@ test('area extraction supports radius and map bounds',()=>{
   assert.deepEqual(D.areaInfo('53.5,10.1,53.7,10.4').center,{lat:53.6,lng:10.25});
 });
 
-test('Italian restaurant names become possible pizza candidates while pizzerias are confirmed',()=>{
-  assert.equal(D.evidence({name:'Ristorante Roma',pizzaEvidence:'search',tags:{amenity:'restaurant'}}),'possible');
-  assert.equal(D.evidence({name:'Trattoria da Luigi',pizzaEvidence:'search',tags:{amenity:'restaurant'}}),'possible');
-  assert.equal(D.evidence({name:'Osteria Bella',pizzaEvidence:'search',tags:{amenity:'restaurant'}}),'possible');
+test('only explicit pizza evidence is confirmed; Italian names alone stay unconfirmed',()=>{
+  assert.equal(D.evidence({name:'Ristorante Roma',pizzaEvidence:'search',tags:{amenity:'restaurant'}}),'search');
+  assert.equal(D.evidence({name:'Trattoria da Luigi',pizzaEvidence:'search',tags:{amenity:'restaurant'}}),'search');
+  assert.equal(D.evidence({name:'Osteria Bella',pizzaEvidence:'search',tags:{amenity:'restaurant'}}),'search');
   assert.equal(D.evidence({name:'Pizzeria Napoli',pizzaEvidence:'search',tags:{amenity:'restaurant'}}),'confirmed');
-  assert.equal(D.evidence({name:'Zum Markt',pizzaEvidence:'search',tags:{amenity:'restaurant'}}),'search');
+  assert.equal(D.evidence({name:'Cafe Nord',cuisine:'pizza',pizzaEvidence:'search',tags:{amenity:'cafe'}}),'confirmed');
 });
 
-test('thin and Photon responses trigger recovery at the higher completeness threshold',()=>{
-  assert.equal(D.isSparse({data:{elements:[1,2]},source:'overpass-api.de'}),true);
-  assert.equal(D.isSparse({data:{elements:Array.from({length:D.SPARSE_BELOW-1},(_,i)=>({id:i}))},source:'overpass-api.de'}),true);
-  assert.equal(D.isSparse({data:{elements:Array.from({length:D.SPARSE_BELOW},(_,i)=>({id:i}))},source:'overpass-api.de'}),false);
-  assert.equal(D.isSparse({data:{elements:Array.from({length:30},(_,i)=>({id:i}))},source:'photon.komoot.io'}),true);
+test('sparsity counts pizza evidence, not the number of generic food candidates',()=>{
+  const generic=Array.from({length:40},(_,i)=>({type:'node',id:i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}));
+  const pizza=Array.from({length:D.SPARSE_BELOW},(_,i)=>({type:'node',id:100+i,tags:{name:'Pizza '+i,amenity:'restaurant',cuisine:'pizza'}}));
+  assert.equal(D.pizzaCount(generic),0);
+  assert.equal(D.isSparse({data:{elements:generic},source:'overpass-api.de'}),true,'many irrelevant restaurants cannot suppress recovery');
+  assert.equal(D.isSparse({data:{elements:pizza},source:'overpass-api.de'}),false);
+  assert.equal(D.isSparse({data:{elements:pizza},source:'photon.komoot.io'}),true,'Photon remains a recovery source even when it returns enough items');
+});
+
+test('Photon category terms become pizza-tagged elements of the requested venue type',()=>{
+ const place={placeId:'node-9',name:'Kaffeeküche',lat:53.67,lng:10.24,tags:{}};
+ const cafe=D.placeToElement(place,'pizza cafe');
+ assert.equal(cafe.tags.amenity,'cafe');
+ assert.match(cafe.tags.cuisine,/pizza/);
+ assert.equal(D.elementPizza(cafe),true);
+ const vending=D.placeToElement(place,'pizza vending');
+ assert.equal(vending.tags.amenity,'vending_machine');
+ assert.equal(vending.tags['vending:pizza'],'yes');
 });
 
 test('element merge deduplicates OSM identities',()=>{
