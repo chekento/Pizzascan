@@ -5,8 +5,8 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v5';
-/* Default map discovery intentionally includes named food venues of every cuisine/category.
+const MARKER='pizzascan-broad-defaults-v6';
+/* Default map discovery intentionally includes named food venues of every PizzaScan category.
  * Pizza/Italian evidence is metadata for ranking/filtering, not a prerequisite for appearing. */
 const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const SUPPLEMENT_BELOW=4;
@@ -58,7 +58,7 @@ function expandDiscoveryQuery(query,enabled=true){
   if(!enabled)return String(query||'');
   const q=String(query||''),area=queryAreaToken(q);
   if(!area||q.includes('pizzascan-broad-discovery'))return q;
-  const extra=`/* pizzascan-broad-discovery */nwr["amenity"~"${BROAD_AMENITIES}"]["name"](${area});`;
+  const extra=`/* pizzascan-broad-discovery */nwr["amenity"~"${BROAD_AMENITIES}"]["name"](${area});nwr["amenity"~"restaurant|fast_food|cafe|food_truck"]["mobile"="yes"]["name"](${area});nwr["vending"~"pizza",i](${area});nwr["vending:pizza"="yes"](${area});`;
   return q.replace(');out body center;',`${extra});out body center;`);
 }
 function mergeElements(primary=[],extra=[]){
@@ -128,7 +128,7 @@ function install(root){
         const primary=await baseOverpass(q,options),elements=primary?.data?.elements||[];
         if(!shouldSupplement(elements)||String(primary?.source||'').includes('photon'))return primary;
         try{
-          options.onStatus?.('Weitere Pizza- und Restauranttreffer werden ergänzt …');
+          options.onStatus?.('Weitere Restaurants und POIs werden ergänzt …');
           const extra=await this.nearbyFallback(q,options);
           if(extra?.length)return {data:{...primary.data,elements:mergeElements(elements,extra)},source:[primary.source,'photon.komoot.io'].filter(Boolean).join(' + ')};
         }catch(error){if(options.signal?.aborted)throw error;}
