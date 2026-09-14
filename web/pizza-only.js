@@ -6,7 +6,7 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-pizza-only-v1';
+const MARKER='pizzascan-pizza-only-v2';
 const PIZZA_WORD=/(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizzas)(?:[^a-z]|$)/i;
 function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase();}
 function directPizza(place){
@@ -28,6 +28,7 @@ function currentLocationItem(item,query,helper){
 function pizzaOnlyGroups(groups,query,helper,root=globalThis){
   return (groups||[]).map(group=>(group||[]).filter(item=>currentLocationItem(item,query,helper)||eligible(item?.place||item,root)));
 }
+function asVenue(place){return {...place,kind:'venue',place,osmId:place.placeId};}
 function wrapPoiHelper(helper,root){
   if(!helper||helper.__pizzaOnly)return helper;
   const baseMerge=helper.mergeRanked?.bind(helper);
@@ -56,7 +57,9 @@ function installAutocompleteGuard(root,PD){
     try{if(typeof mapPool!=='undefined')pool=PD.merge(pool,mapPool||[]);}catch{}
     try{if(typeof saved!=='undefined')pool=PD.merge(pool,saved||[]);}catch{}
     let center=null;try{if(typeof mapCenter==='function')center=mapCenter();}catch{}
-    const list=PD.suggestions(pool,q,center).slice(0,8);
+    const list=PD.suggestions(pool,q,center).slice(0,8).map(asVenue);
+    /* showSearchResults/selectSearch expects venue wrappers, not raw places. Keeping
+     * that contract ensures a pizza-only autocomplete result still opens details. */
     try{root.showSearchResults?.(list,true);}catch{}
     const status=root.document.getElementById('search-status');
     if(status)status.textContent=list.length?`${list.length} Pizza-Ort${list.length===1?'':'e'} aus der geladenen Karte · „Suchen“ prüft weitere Pizza-Orte.`:'„Suchen“ prüft weitere Pizza-Orte in der Umgebung.';
@@ -87,5 +90,5 @@ function install(root){
   installAutocompleteGuard(root,PD);
   root.PizzaScanPizzaOnly={marker:MARKER,eligible:place=>eligible(place,root)};
 }
-return {MARKER,PIZZA_WORD,text,directPizza,reviewPizza,eligible,currentLocationItem,pizzaOnlyGroups,wrapPoiHelper,install};
+return {MARKER,PIZZA_WORD,text,directPizza,reviewPizza,eligible,currentLocationItem,pizzaOnlyGroups,asVenue,wrapPoiHelper,install};
 });
