@@ -1,0 +1,197 @@
+name: Repair PizzaScan 2.3.3 integration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-233.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Apply 2.3.3 integration repair
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          import re
+
+          def read(path):
+              return Path(path).read_text(encoding='utf-8')
+
+          def write(path, text):
+              Path(path).write_text(text, encoding='utf-8')
+
+          def replace_once(path, old, new):
+              text = read(path)
+              if old not in text:
+                  raise SystemExit(f'Expected text not found in {path}: {old[:120]!r}')
+              if text.count(old) != 1:
+                  raise SystemExit(f'Expected exactly one match in {path}, got {text.count(old)}: {old[:120]!r}')
+              write(path, text.replace(old, new, 1))
+
+          # Android build: keep 2.3.3 but make this corrected package a strictly newer build.
+          replace_once('app/build.gradle', 'versionCode 9', 'versionCode 10')
+          gradle = read('app/build.gradle')
+          if "versionName '2.3.3'" not in gradle:
+              raise SystemExit('Unexpected Android versionName; refusing to patch blindly.')
+
+          # NPM metadata, including the root package-lock metadata.
+          pkg = json.loads(read('package.json'))
+          pkg['version'] = '2.3.3'
+          write('package.json', json.dumps(pkg, ensure_ascii=False, indent=2) + '\n')
+
+          lock = json.loads(read('package-lock.json'))
+          lock['version'] = '2.3.3'
+          lock.setdefault('packages', {}).setdefault('', {})['version'] = '2.3.3'
+          write('package-lock.json', json.dumps(lock, ensure_ascii=False, indent=2) + '\n')
+
+          # Activate Google Reviews assets, permit the API endpoint and reviewer avatars,
+          # and expose the correct visible version.
+          index = read('web/index.html')
+          index = index.replace(
+              "img-src 'self' data: blob: https://tile.openstreetmap.org;",
+              "img-src 'self' data: blob: https://tile.openstreetmap.org https://places.googleapis.com https://*.googleusercontent.com;",
+              1,
+          )
+          index = index.replace(
+              "https://api.mangrove.reviews https://huggingface.co",
+              "https://api.mangrove.reviews https://places.googleapis.com https://huggingface.co",
+              1,
+          )
+          index = index.replace(
+              '<link rel="stylesheet" href="i18n.css">',
+              '<link rel="stylesheet" href="i18n.css"><link rel="stylesheet" href="google-reviews.css">',
+              1,
+          )
+          index = index.replace(
+              '<script defer src="privacy-ui.js"></script><script defer src="script.js"></script>',
+              '<script defer src="privacy-ui.js"></script><script defer src="google-reviews.js"></script><script defer src="script.js"></script>',
+              1,
+          )
+          index = index.replace('<script defer src="privacy-232.js"></script>', '<script defer src="privacy-233.js"></script>', 1)
+          index = index.replace('<small>2.3.2</small>', '<small>2.3.3</small>', 1)
+          for required in ('https://places.googleapis.com', 'google-reviews.css', 'google-reviews.js', 'privacy-233.js', '<small>2.3.3</small>'):
+              if required not in index:
+                  raise SystemExit(f'index.html repair incomplete: {required}')
+          write('web/index.html', index)
+
+          # Runtime API version used by the navigation/package test.
+          replace_once('web/script.js', "window.PizzaScan={version:'2.3.2'", "window.PizzaScan={version:'2.3.3'")
+
+          # Rename and update the localized search-fallback privacy supplement.
+          old_priv = Path('web/privacy-232.js')
+          priv = old_priv.read_text(encoding='utf-8')
+          priv = priv.replace('2.3.2', '2.3.3').replace('privacy232', 'privacy233').replace('privacy-232', 'privacy-233')
+          Path('web/privacy-233.js').write_text(priv, encoding='utf-8')
+          old_priv.unlink()
+
+          # Static in-app privacy page: current version + explicit optional Places API disclosure.
+          html = read('web/privacy.html').replace('Version 2.3.2', 'Version 2.3.3').replace('Version 2.3.2</h3>', 'Version 2.3.3</h3>')
+          marker = '<h2>Rezensionsbaukasten, Export und externe Links</h2>'
+          google_html = '''<h2>Optionale Google Maps Reviews (Places API New)</h2>\n<p>Wenn du in den Einstellungen freiwillig einen eigenen Google Places API-Key hinterlegst und bei einem Restaurant ausdrücklich „Google Maps Reviews laden“ auswählst, sendet PizzaScan Name, Adresse und Koordinaten des ausgewählten Restaurants sowie die gewählte Sprache direkt an die Google Places API (New). Google erhält außerdem technisch notwendige Verbindungsdaten wie IP-Adresse sowie den verwendeten API-Key bzw. das zugehörige Cloud-Projekt. Der API-Key wird ausschließlich lokal im App-Webspeicher gespeichert und nicht an KoSch oder einen PizzaScan-Server übertragen.</p>\n<p>Google kann eine aktivierte Abrechnung für die Places API verlangen. Ohne eigenen Key findet keine Places-API-Abfrage statt; PizzaScan bleibt vollständig nutzbar und kann Google Maps weiterhin nur extern öffnen. Google liefert für diese Funktion höchstens fünf Rezensionen pro Treffer. PizzaScan speichert die abgerufenen Google-Bewertungen und Rezensionstexte nicht dauerhaft; sie verbleiben nur im Arbeitsspeicher der laufenden Sitzung. Google-Datenschutz: <a href="https://policies.google.com/privacy?hl=de" target="_blank" rel="noopener">policies.google.com/privacy</a>.</p>\n'''
+          if 'Optionale Google Maps Reviews (Places API New)' not in html:
+              if marker not in html:
+                  raise SystemExit('privacy.html insertion marker missing')
+              html = html.replace(marker, google_html + marker, 1)
+          write('web/privacy.html', html)
+
+          # Repository/GitHub Pages privacy copies.
+          google_md = '''### Optionale Google Maps Reviews (Places API New)\n\nWenn du freiwillig einen eigenen Google Places API-Key hinterlegst und für einen ausgewählten Restauranttreffer ausdrücklich **Google Maps Reviews laden** auswählst, übermittelt PizzaScan Name, Adresse und Koordinaten des Restaurants sowie die gewählte Sprache direkt an die Google Places API (New). Google erhält dabei außerdem technisch notwendige Verbindungsdaten wie die öffentliche IP-Adresse und verarbeitet den verwendeten API-Key bzw. das zugehörige Cloud-Projekt. Der Key wird ausschließlich lokal im App-Webspeicher gespeichert und nicht an KoSch oder einen PizzaScan-Server übertragen.\n\nGoogle kann für die Places API ein Cloud-Projekt mit aktivierter Abrechnung verlangen. Ohne eigenen Key findet keine Places-API-Abfrage statt; PizzaScan bleibt vollständig nutzbar und öffnet Google Maps weiterhin nur extern. Google liefert für diese Funktion höchstens fünf Rezensionen pro passenden Ort. PizzaScan speichert die abgerufenen Google-Bewertungen und Rezensionstexte nicht dauerhaft; sie verbleiben nur im Arbeitsspeicher der laufenden Sitzung. Google-Datenschutz: <https://policies.google.com/privacy?hl=de>.\n\n'''
+          for path in ('PRIVACY.md', 'docs/Datenschutz.md'):
+              p = Path(path)
+              if not p.exists():
+                  continue
+              text = p.read_text(encoding='utf-8')
+              text = text.replace('**Version:** 2.3.2', '**Version:** 2.3.3')
+              text = text.replace('Nominatim wird in 2.3.2 ', 'Nominatim wird in 2.3.3 ')
+              if 'Optionale Google Maps Reviews (Places API New)' not in text:
+                  marker_md = '## 9. Rezensionsbaukasten'
+                  if marker_md not in text:
+                      raise SystemExit(f'{path}: privacy insertion marker missing')
+                  text = text.replace(marker_md, google_md + marker_md, 1)
+              p.write_text(text, encoding='utf-8')
+
+          # VersionCode display in frontpage/status documentation.
+          for path in ('README.md', 'docs/release-dashboard.html', 'docs/release-status.json', 'store/PLAY-CONSOLE.md', 'store/TESTPLAN.md'):
+              p = Path(path)
+              if not p.exists():
+                  continue
+              text = p.read_text(encoding='utf-8')
+              text = text.replace('**VersionCode:** `9`', '**VersionCode:** `10`')
+              text = text.replace('VersionCode: 9', 'VersionCode: 10')
+              text = text.replace('VersionCode 9', 'VersionCode 10')
+              text = text.replace('"versionCode": 9', '"versionCode": 10')
+              p.write_text(text, encoding='utf-8')
+
+          # Strengthen the existing UI test. This same test is executed from the assets
+          # extracted out of the built APK, so dormant files cannot pass unnoticed again.
+          nav = read('tests/navigation-smoke.cjs')
+          old = "await page.goto(url);await until(page,()=>window.PizzaScan?.ready);await page.locator('#welcome-start').click();"
+          new = "await page.goto(url);await until(page,()=>window.PizzaScan?.ready);assert.equal(await page.evaluate(()=>Boolean(globalThis.GoogleReviewsUI)),true);const csp=await page.locator('meta[http-equiv=\\\"Content-Security-Policy\\\"]').getAttribute('content');assert.match(csp,/https:\\/\\/places\\.googleapis\\.com/);await page.locator('#welcome-start').click();"
+          if old not in nav:
+              raise SystemExit('navigation-smoke first insertion marker missing')
+          nav = nav.replace(old, new, 1)
+          old = "await page.locator('.venue-card [data-action=place]').first().click();\n   const portals=page.locator('#venue-ratings .rating-portals button');"
+          new = "await page.locator('.venue-card [data-action=place]').first().click();\n   assert.equal(await page.locator('.google-reviews-panel').count(),1);\n   const portals=page.locator('#venue-ratings .rating-portals button');"
+          if old not in nav:
+              raise SystemExit('navigation-smoke details insertion marker missing')
+          nav = nav.replace(old, new, 1)
+          old = "await page.locator('#sheet-close').click();await page.locator('#settings-open').click();assert.equal(await page.locator('#filter-min-rating').count(),1);await page.locator('#settings-save').click();"
+          new = "await page.locator('#sheet-close').click();await page.locator('#settings-open').click();assert.equal(await page.locator('#filter-min-rating').count(),1);assert.equal(await page.locator('#google-reviews-settings').count(),1);await page.locator('#settings-save').click();await page.evaluate(()=>showPrivacy());await page.locator('.google-reviews-privacy').waitFor();assert.equal(await page.locator('.google-reviews-privacy').count(),1);await page.locator('#sheet-close').click();"
+          if old not in nav:
+              raise SystemExit('navigation-smoke settings insertion marker missing')
+          nav = nav.replace(old, new, 1)
+          nav = nav.replace('three Android portal links, compact navigation, five languages', 'three Android portal links, active optional Google Reviews UI/privacy, compact navigation, five languages')
+          write('tests/navigation-smoke.cjs', nav)
+
+          # Ensure the main workflow syntax-checks the newly active integration in both web and APK jobs.
+          wf = read('.github/workflows/android.yml')
+          needle = '          node --check web/i18n-content.js\n'
+          count = wf.count(needle)
+          if count != 2:
+              raise SystemExit(f'Expected 2 workflow insertion points, found {count}')
+          wf = wf.replace(needle, needle + '          node --check web/google-reviews.js\n')
+          write('.github/workflows/android.yml', wf)
+
+          # Guard against the specific regression that caused the reported problem.
+          checks = {
+              'package.json': '"version": "2.3.3"',
+              'web/index.html': '<small>2.3.3</small>',
+              'web/script.js': "window.PizzaScan={version:'2.3.3'",
+              'web/privacy-233.js': 'Version 2.3.3',
+              'app/build.gradle': 'versionCode 10',
+          }
+          for path, token in checks.items():
+              if token not in read(path):
+                  raise SystemExit(f'Regression guard failed for {path}: {token}')
+          PY
+
+      - name: Validate repaired web app before commit
+        run: |
+          npm ci --ignore-scripts --no-audit
+          npm run assets
+          npm test
+          node --check web/google-reviews.js
+          node --check web/privacy-233.js
+          npx playwright install --with-deps chromium
+          npm run navigation-smoke
+
+      - name: Commit repaired 2.3.3 source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Activate PizzaScan 2.3.3 UI and Google reviews integration"
+          git pull --rebase origin main
+          git push origin HEAD:main
