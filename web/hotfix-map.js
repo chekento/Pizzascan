@@ -38,7 +38,7 @@ async function secureMapJson(url,options={},signal,timeout=18000){
    let error=original;
    if(timedOut){error=Error('Kartenquelle hat nicht rechtzeitig geantwortet.');error.name='TimeoutError';}
    const transient=timedOut||error?.name==='TypeError'||MAP_TRANSIENT_STATUS.has(Number(error?.status));
-   if(attempt===0&&transient){await delay(350,signal);continue;}
+   if(attempt===0&&endpoint.hostname==='photon.komoot.io'&&transient){await delay(350,signal);continue;}
    throw error;
   }finally{clearTimeout(timer);signal?.removeEventListener('abort',forwardAbort);}
  }
