@@ -44,10 +44,11 @@ test('generic restaurant searches are recognized without weakening named searche
  assert.equal(R.categoryQuery('Pizza'),false);
 });
 
-test('settings and review discovery are installed deterministically before app initialization',()=>{
+test('native transport and review discovery load deterministically before app initialization without settings-aware narrowing',()=>{
  const html=fs.readFileSync(path.join(__dirname,'../web/index.html'),'utf8');
- const map=html.indexOf('src="map-ui.js"'),hotfix=html.indexOf('src="hotfix-map.js"'),settings=html.indexOf('src="settings-search.js"'),reviews=html.indexOf('src="review-discovery.js"'),app=html.indexOf('src="script.js"');
- assert.ok(map>=0&&hotfix>map&&settings>hotfix&&reviews>settings&&app>reviews,'map hardening, settings policy and review discovery must all load before app initialization');
+ const map=html.indexOf('src="map-ui.js"'),hotfix=html.indexOf('src="hotfix-map.js"'),native=html.indexOf('src="native-overpass.js"'),reviews=html.indexOf('src="review-discovery.js"'),app=html.indexOf('src="script.js"');
+ assert.ok(map>=0&&hotfix>map&&native>hotfix&&reviews>native&&app>reviews,'map hardening, native Overpass and review discovery must load before app initialization');
+ assert.equal(html.includes('src="settings-search.js"'),false,'settings-aware narrowing must not be part of the runtime search pipeline');
  assert.equal((html.match(/src="review-discovery\.js"/g)||[]).length,1,'review discovery must have one deterministic loader');
  const staticI18n=fs.readFileSync(path.join(__dirname,'../web/i18n-static.js'),'utf8');
  assert.equal(/loadReviewDiscovery|createElement\(['"]script['"]\)/.test(staticI18n),false,'localization must not dynamically race the search stack');
