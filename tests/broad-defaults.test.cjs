@@ -50,14 +50,16 @@ test('ordinary restaurant candidates are visible by default but remain filterabl
  assert.equal(B.candidateVisible(place,{...broad,hideVisited:true},{visited:new Set(['node-1'])},()=>({state:'open'})),false);
 });
 
-test('broad discovery expands the upstream Overpass request before filtering',()=>{
+test('broad discovery includes named restaurants and every default food category regardless of cuisine',()=>{
  const base='[out:json][timeout:15];(nwr["cuisine"~"pizza|italian",i](around:10000,53.67,10.24);nwr["vending:pizza"="yes"](around:10000,53.67,10.24););out body center;';
  const expanded=B.expandDiscoveryQuery(base,true);
  assert.match(expanded,/pizzascan-broad-discovery/);
  assert.match(expanded,/amenity/);
- assert.match(expanded,/restaurant\|fast_food\|cafe/);
+ assert.match(expanded,/restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten/);
+ assert.match(expanded,/\["name"\]/,'all named venues are candidates even without pizza/Italian tags');
  assert.match(expanded,/around:10000,53\.67,10\.24/);
  assert.equal(B.expandDiscoveryQuery(base,false),base);
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v4','existing installs receive the restored broad defaults once');
 });
 
 test('only truly sparse provider results are supplemented and element ids are deduplicated',()=>{
