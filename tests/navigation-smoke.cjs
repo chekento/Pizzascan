@@ -10,7 +10,7 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
   try{
    await page.goto(url);await until(page,()=>window.PizzaScan?.ready);assert.equal(await page.evaluate(()=>Boolean(globalThis.GoogleReviewsUI)),true);assert.equal(await page.locator('link[href=\"google-reviews.css\"]').count(),1);const csp=await page.locator('meta[http-equiv=\"Content-Security-Policy\"]').getAttribute('content');assert.match(csp,/https:\/\/places\.googleapis\.com/);await page.locator('#welcome-start').click();await until(page,()=>places.length>0&&!mapLoading&&!PizzaRatingsUI.loading);
    assert.equal(await page.evaluate(()=>PizzaScan.version),version);assert.equal(await page.locator('.brand small').innerText(),version);
-   const defaults=await page.evaluate(()=>mapConfig());assert.equal(defaults.radius,10);assert.equal(defaults.onlyOpen,false);assert.equal(defaults.hideVisited,false);assert.equal(defaults.ratingsEnabled,true);assert.equal(defaults.minRating,0);assert.equal(defaults.includeUnrated,true);assert.equal(defaults.includeItalian,true);assert.equal(defaults.includeUnconfirmed,true);assert.deepEqual(defaults.types.sort(),['cafe','fast_food','food_truck','other','pizzeria','vending_pizza']);
+   const defaults=await page.evaluate(()=>mapConfig());assert.equal(defaults.radius,10);assert.equal(defaults.onlyOpen,false);assert.equal(defaults.hideVisited,false);assert.equal(defaults.ratingsEnabled,true);assert.equal(defaults.minRating,0);assert.equal(defaults.includeUnrated,false);assert.equal(defaults.includeItalian,true);assert.equal(defaults.includeUnconfirmed,true);assert.deepEqual(defaults.types.sort(),['cafe','fast_food','food_truck','other','pizzeria','vending_pizza']);
    assert.equal(await page.locator('#rating-filter-open').isVisible(),true);assert.equal(await page.locator('.app-footer a').count(),2);
    assert.deepEqual(await page.locator('.app-footer a').evaluateAll(links=>links.map(a=>a.href)),['https://kosch.cloud/','https://pizzascan.on.websim.com/']);
    const height=await page.locator('.app-bottom-bar').evaluate(e=>e.getBoundingClientRect().height);assert.ok(height<=76,'Compact bottom navigation: '+height);
@@ -38,6 +38,6 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
    assert.deepEqual(errors,[]);
   }catch(e){await page.screenshot({path:'test-results/navigation-failure-'+lang+'.png'});console.error('UI errors:',errors);throw e;}finally{await ctx.close();}
  }
- console.log(`PASS ${version} packaged UI: broad 10 km defaults with all rating scores/unrated places, saved 4.6 slider, three Android portal links, active mocked Google Reviews fetch/privacy, compact navigation, five languages`);
+ console.log(`PASS ${version} packaged UI: broad 10 km defaults with zero rating threshold (all scored and unrated places visible), saved 4.6 slider, three Android portal links, active mocked Google Reviews fetch/privacy, compact navigation, five languages`);
  }finally{await browser.close();s.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
