@@ -13,8 +13,8 @@ test('robust POI query includes generic restaurants and Italian naming conventio
 
 test('area extraction supports radius and map bounds',()=>{
   assert.equal(D.extractArea('[out:json];nwr["amenity"](around:5000,53.6,10.2);out;'),'around:5000,53.6,10.2');
-  assert.equal(D.extractArea('[out:json];nwr["amenity"](53.5,10.1,53.7,10.4);out;'),'');
-  assert.equal(D.extractArea('[out:json];(nwr["amenity"](53.5,10.1,53.7,10.4););out body center;'),'');
+  assert.equal(D.extractArea('[out:json];nwr["amenity"](53.5,10.1,53.7,10.4);out;'),'53.5,10.1,53.7,10.4');
+  assert.deepEqual(D.areaInfo('53.5,10.1,53.7,10.4').center,{lat:53.6,lng:10.25});
 });
 
 test('Italian restaurant names become possible pizza candidates while pizzerias are confirmed',()=>{
