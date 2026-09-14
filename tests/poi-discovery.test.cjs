@@ -13,13 +13,15 @@ test('robust recovery query covers every pizza-place category without generic re
   assert.match(q,/vending:pizza/);
   assert.match(q,/amenity"="vending_machine/);
   assert.doesNotMatch(q,/italian|trattoria|osteria/,'Italian identity alone is not pizza evidence');
-  assert.doesNotMatch(q,/\["name"\]\(around/,'unnqualified named food venues must not be recovery results');
+  assert.doesNotMatch(q,/\["name"\]\(around/,'unqualified named food venues must not be recovery results');
 });
 
-test('fallback terms explicitly search pizza variants of every visible venue category',()=>{
-  for(const term of ['pizza','pizzeria','pizza restaurant','pizza cafe','pizza imbiss','pizza fast food','pizza food truck','pizza takeaway','pizza vending','pizza bar','pizza pub','pizza biergarten','pizza bakery'])assert.ok(D.FALLBACK_TERMS.includes(term),term);
+test('Photon fallback has exactly one bounded pizza query per visible remote category',()=>{
+  assert.deepEqual(D.FALLBACK_TERMS,['pizzeria','pizza cafe','pizza imbiss','pizza food truck','pizza vending','pizza']);
+  assert.equal(D.FALLBACK_TERMS.length,6,'fallback must not serialize a long list of near-duplicate searches');
   assert.equal(D.SPARSE_BELOW,6);
   assert.equal(D.FALLBACK_TARGET,18);
+  assert.equal(D.MARKER,'pizzascan-poi-discovery-v5');
 });
 
 test('area extraction supports radius and map bounds',()=>{
