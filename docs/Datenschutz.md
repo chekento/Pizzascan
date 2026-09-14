@@ -1,6 +1,6 @@
 # Datenschutzerklärung für PizzaScan
 
-Stand: 14. September 2026 · Version 2.3.2 · Android-Paket `cloud.kosch.pizzascan`
+Stand: 14. September 2026 · Version 2.3.3 · Android-Paket `cloud.kosch.pizzascan`
 
 ## Verantwortlicher und Kontakt
 
@@ -22,7 +22,7 @@ Nach erfolgreichem Download speichert PizzaScan die Modelldateien im privaten pe
 
 Kartenausschnitte werden von `tile.openstreetmap.org` geladen. Restaurantdaten kommen von `overpass-api.de` und bei Bedarf `overpass.private.coffee`. Für die normale Orts-/Adresssuche, Restaurantadressabgleiche und die verzögerten Online-Suchvorschläge verwendet PizzaScan primär `photon.komoot.io` (Photon). Photon kann dabei Suchtext und Suchmittelpunkt erhalten.
 
-### Nominatim-Fallback in Version 2.3.2
+### Nominatim-Fallback in Version 2.3.3
 
 Wenn du eine Suche **ausdrücklich absendest** und Photon technisch fehlschlägt oder keinen brauchbaren Treffer liefert, kann PizzaScan als Fallback `nominatim.openstreetmap.org` verwenden. Dieser Fallback wird **nicht für Autocomplete oder bloße Texteingabe** verwendet.
 
@@ -41,6 +41,12 @@ Wenn „Offene Bewertungen laden“ eingeschaltet ist, fragt PizzaScan `api.mang
 Der lokale Bewertungs-Cache enthält nur Zahlen, Ortsbezüge, öffentliche Bewertungskennungen und die zur Vermeidung von Doppelzählungen nötigen öffentlichen Identitäten, keine Rezensionstexte oder Fotos. Er wird bei Bedarf nach 15 Minuten aktualisiert; gespeicherte Ergebnisse werden höchstens sieben Tage genutzt und bei einem Neuabruf ersetzt. Alle Daten lassen sich über Androids App-Speicher löschen. Externe Links zu Google Maps, Tripadvisor und Yelp werden erst nach Antippen geöffnet; dabei gehen die Suchangaben an den gewählten Anbieter.
 
 Hinweise der Anbieter: [Open Reviews / Mangrove](https://mangrove.reviews/terms), [Tripadvisor](https://www.tripadvisor.com/pages/privacy.html) und [Yelp](https://terms.yelp.com/privacy).
+
+### Optionale Google Maps Reviews (Places API New)
+
+Wenn du freiwillig einen eigenen Google Places API-Key hinterlegst und für einen ausgewählten Restauranttreffer ausdrücklich **Google Maps Reviews laden** auswählst, übermittelt PizzaScan Name, Adresse und Koordinaten des Restaurants sowie die gewählte Sprache direkt an die Google Places API (New). Google erhält dabei außerdem technisch notwendige Verbindungsdaten wie die öffentliche IP-Adresse und verarbeitet den verwendeten API-Key bzw. das zugehörige Cloud-Projekt. Der Key wird ausschließlich lokal im App-Webspeicher gespeichert und nicht an KoSch oder einen PizzaScan-Server übertragen.
+
+Google kann für die Places API ein Cloud-Projekt mit aktivierter Abrechnung verlangen. Ohne eigenen Key findet keine Places-API-Abfrage statt; PizzaScan bleibt vollständig nutzbar und öffnet Google Maps weiterhin nur extern. Google liefert für diese Funktion höchstens fünf Rezensionen pro passenden Ort. PizzaScan speichert die abgerufenen Google-Bewertungen und Rezensionstexte nicht dauerhaft; sie verbleiben nur im Arbeitsspeicher der laufenden Sitzung. Google-Datenschutz: <https://policies.google.com/privacy?hl=de>.
 
 ## Rezensionsbaukasten, Export und externe Links
 

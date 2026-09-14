@@ -72,7 +72,7 @@
 | ⏳ | **Geschlossener Google-Play-Test** | [Google Group](https://groups.google.com/g/pizzascan-beta-testers) ist vorbereitet; AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch. |
 | ⏳ | **Produktion** | Nach geschlossenem Test und den gegebenenfalls geltenden Play-Testanforderungen. |
 
-**Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.3` · **VersionCode:** `9` · **Stand:** 14.09.2026  
+**Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.3` · **VersionCode:** `10` · **Stand:** 14.09.2026  
 [🧪 Tester-Gruppe](https://groups.google.com/g/pizzascan-beta-testers) · [🚦 Dashboard öffnen](https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html) · [Play-Console-Checkliste](store/PLAY-CONSOLE.md) · [Testplan](store/TESTPLAN.md)
 
 </details>
