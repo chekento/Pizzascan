@@ -4,11 +4,17 @@ const elements=[
  {type:'node',id:11,lat:53.5511,lon:9.9937,tags:{name:'Pizza Anchor',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}},
  {type:'node',id:12,lat:53.5531,lon:9.9977,tags:{name:'Pizza North',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}}
 ];
+const providerElements=[...elements,
+ {type:'node',id:1901,tags:{name:'Marker guard 1',amenity:'restaurant'}},
+ {type:'node',id:1902,tags:{name:'Marker guard 2',amenity:'cafe'}},
+ {type:'node',id:1903,tags:{name:'Marker guard 3',amenity:'pub'}},
+ {type:'node',id:1904,tags:{name:'Marker guard 4',amenity:'fast_food'}}
+];
 const expected={de:'Gute Pizza. Ganz nah.',en:'Great pizza. Right nearby.',it:'Buona pizza. Proprio qui vicino.',es:'Buena pizza. Muy cerca.',fr:'Bonne pizza. Tout près.'};
 (async()=>{const {server:s,url}=await server(),browser=await chromium.launch();try{
  for(const language of Object.keys(expected)){
   const ctx=await browser.newContext({viewport:{width:393,height:851}});await ctx.addInitScript(code=>{if(!localStorage.getItem('pizzascan-language-v1'))localStorage.setItem('pizzascan-language-v1',code);},language);const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await mapFixtures(page);
-  await page.route('**/overpass-api.de/**',r=>r.fulfill({json:{elements}}));await page.route('**/overpass.private.coffee/**',r=>r.fulfill({json:{elements}}));await page.route('**/photon.komoot.io/**',r=>r.fulfill({json:{features:[]}}));
+  await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee|overpass\.osm\.jp|maps\.mail\.ru)\//,r=>r.fulfill({json:{elements:providerElements}}));await page.route('**/photon.komoot.io/**',r=>r.fulfill({json:{features:[]}}));
   await page.goto(url);await until(page,()=>PizzaScan.ready);await page.locator('#welcome-start').click();await until(page,()=>PizzaScan.diagnostics().places===2&&!PizzaScan.diagnostics().mapLoading);
   assert.equal(await page.locator('#map-view h1').innerText(),expected[language],language+' main heading');assert.equal(await page.evaluate(()=>document.documentElement.lang),language);assert.equal(await page.locator('#pizzascan-language-select').count(),0);
   await page.locator('#settings-open').click();await until(page,()=>document.getElementById('pizzascan-language-select'));assert.equal(await page.locator('#pizzascan-language-select option').count(),5);assert.equal(await page.locator('#pizzascan-language-select').inputValue(),language);await page.locator('#sheet-close').click();
