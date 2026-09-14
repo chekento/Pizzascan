@@ -133,7 +133,7 @@ jobs:
           sha256sum downloads/PizzaScan-2.3.1-Test.apk > downloads/SHA256SUMS-2.3.1.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add downloads/PizzaScan-2.3.1-Test.apk downloads/SHA256SUMS-2.3.1.txt
+          git add -f downloads/PizzaScan-2.3.1-Test.apk downloads/SHA256SUMS-2.3.1.txt
           if git diff --cached --quiet; then
             echo "Published APK already matches this build."
             exit 0
