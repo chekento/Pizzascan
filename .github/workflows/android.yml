@@ -88,20 +88,20 @@ jobs:
       - name: Verify and collect the APK
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-2.3.1-lang1-debug.apk
-          cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/PizzaScan-2.3.1-unsigned.apk
-          cp app/build/outputs/bundle/release/app-release.aab artifacts/PizzaScan-2.3.1-unsigned.aab
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/PizzaScan-2.3.2-lang1-debug.apk
+          cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/PizzaScan-2.3.2-unsigned.apk
+          cp app/build/outputs/bundle/release/app-release.aab artifacts/PizzaScan-2.3.2-unsigned.aab
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-2.3.1-lang1-debug.apk > artifacts/lang1-debug-signature.txt
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs artifacts/PizzaScan-2.3.2-lang1-debug.apk > artifacts/lang1-debug-signature.txt
           cp "$BUILD_TOOLS/lib/apksigner.jar" artifacts/apksigner.jar
-          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.3.1-lang1-debug.apk > artifacts/lang1-debug-apk-info.txt
-          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.3.1-unsigned.apk > artifacts/apk-info.txt
-          sha256sum artifacts/PizzaScan-2.3.1-lang1-debug.apk > artifacts/LANG1-SHA256.txt
-          sha256sum artifacts/PizzaScan-2.3.1-unsigned.* > artifacts/SHA256SUMS.txt
+          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.3.2-lang1-debug.apk > artifacts/lang1-debug-apk-info.txt
+          "$BUILD_TOOLS/aapt" dump badging artifacts/PizzaScan-2.3.2-unsigned.apk > artifacts/apk-info.txt
+          sha256sum artifacts/PizzaScan-2.3.2-lang1-debug.apk > artifacts/LANG1-SHA256.txt
+          sha256sum artifacts/PizzaScan-2.3.2-unsigned.* > artifacts/SHA256SUMS.txt
           curl --fail --location --retry 2 --output artifacts/bundletool.jar https://github.com/google/bundletool/releases/download/1.18.3/bundletool-all-1.18.3.jar
           echo 'a099cfa1543f55593bc2ed16a70a7c67fe54b1747bb7301f37fdfd6d91028e29  artifacts/bundletool.jar' | sha256sum -c -
-          java -jar artifacts/bundletool.jar validate --bundle=artifacts/PizzaScan-2.3.1-unsigned.aab > artifacts/bundle-validation.txt
-          java -jar artifacts/bundletool.jar dump manifest --bundle=artifacts/PizzaScan-2.3.1-unsigned.aab > artifacts/bundle-manifest.xml
+          java -jar artifacts/bundletool.jar validate --bundle=artifacts/PizzaScan-2.3.2-unsigned.aab > artifacts/bundle-validation.txt
+          java -jar artifacts/bundletool.jar dump manifest --bundle=artifacts/PizzaScan-2.3.2-unsigned.aab > artifacts/bundle-manifest.xml
           cp package-lock.json artifacts/package-lock.json
           tar -czf artifacts/web-bundle.tar.gz web
       - name: Upload APK for private final signing
@@ -129,16 +129,16 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p downloads
-          cp app/build/outputs/apk/debug/app-debug.apk downloads/PizzaScan-2.3.1-Test.apk
-          sha256sum downloads/PizzaScan-2.3.1-Test.apk > downloads/SHA256SUMS-2.3.1.txt
+          cp app/build/outputs/apk/debug/app-debug.apk downloads/PizzaScan-2.3.2-Test.apk
+          sha256sum downloads/PizzaScan-2.3.2-Test.apk > downloads/SHA256SUMS-2.3.2.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f downloads/PizzaScan-2.3.1-Test.apk downloads/SHA256SUMS-2.3.1.txt
+          git add -f downloads/PizzaScan-2.3.2-Test.apk downloads/SHA256SUMS-2.3.2.txt
           if git diff --cached --quiet; then
             echo "Published APK already matches this build."
             exit 0
           fi
-          git commit -m "Publish PizzaScan 2.3.1 test APK [skip ci]"
+          git commit -m "Publish PizzaScan 2.3.2 test APK [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
       - name: Upload test evidence
