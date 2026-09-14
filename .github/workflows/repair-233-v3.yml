@@ -1,0 +1,168 @@
+name: Apply PizzaScan 2.3.3 repaired app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-233-v3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Apply repaired PizzaScan 2.3.3 source
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          def read(path): return Path(path).read_text(encoding='utf-8')
+          def write(path, text): Path(path).write_text(text, encoding='utf-8')
+          def require(text, token, where):
+              if token not in text: raise SystemExit(f'{where}: expected {token!r}')
+          def replace_once(path, old, new):
+              text=read(path)
+              if text.count(old)!=1: raise SystemExit(f'{path}: expected one {old!r}, found {text.count(old)}')
+              write(path,text.replace(old,new,1))
+
+          # Corrected 2.3.3 is a newer Android build even though the public version name stays 2.3.3.
+          replace_once('app/build.gradle','versionCode 9','versionCode 10')
+          require(read('app/build.gradle'),"versionName '2.3.3'",'app/build.gradle')
+          replace_once('app/build.gradle',"'review-ui.js', 'privacy-ui.js', 'privacy.html'","'review-ui.js', 'privacy-ui.js', 'privacy-233.js', 'privacy.html'")
+
+          # Align package metadata used by UI tests and npm.
+          pkg=json.loads(read('package.json'))
+          pkg['version']='2.3.3'
+          write('package.json',json.dumps(pkg,ensure_ascii=False,indent=2)+'\n')
+          lock=json.loads(read('package-lock.json'))
+          lock['version']='2.3.3'
+          lock.setdefault('packages',{}).setdefault('',{})['version']='2.3.3'
+          write('package-lock.json',json.dumps(lock,ensure_ascii=False,indent=2)+'\n')
+
+          # Wire Google Reviews into the actual page and correct the visible release number.
+          index=read('web/index.html')
+          replacements=[
+            ("img-src 'self' data: blob: https://tile.openstreetmap.org;","img-src 'self' data: blob: https://tile.openstreetmap.org https://places.googleapis.com https://*.googleusercontent.com;"),
+            ("https://api.mangrove.reviews https://huggingface.co","https://api.mangrove.reviews https://places.googleapis.com https://huggingface.co"),
+            ('<link rel="stylesheet" href="i18n.css">','<link rel="stylesheet" href="i18n.css"><link rel="stylesheet" href="google-reviews.css">'),
+            ('<script defer src="privacy-ui.js"></script><script defer src="script.js"></script>','<script defer src="privacy-ui.js"></script><script defer src="google-reviews.js"></script><script defer src="script.js"></script>'),
+            ('<script defer src="privacy-232.js"></script>','<script defer src="privacy-233.js"></script>'),
+            ('<small>2.3.2</small>','<small>2.3.3</small>'),
+          ]
+          for old,new in replacements:
+              if index.count(old)!=1: raise SystemExit(f'web/index.html: expected one {old!r}, found {index.count(old)}')
+              index=index.replace(old,new,1)
+          write('web/index.html',index)
+
+          # Runtime version used inside the app must agree with Android/package metadata.
+          replace_once('web/script.js',"window.PizzaScan={version:'2.3.2'","window.PizzaScan={version:'2.3.3'")
+
+          # Versioned localized in-app privacy supplement.
+          old=Path('web/privacy-232.js')
+          priv=old.read_text(encoding='utf-8')
+          priv=priv.replace('2.3.2','2.3.3').replace('privacy232','privacy233').replace('privacy-232','privacy-233')
+          Path('web/privacy-233.js').write_text(priv,encoding='utf-8')
+          old.unlink()
+
+          google_html='''<h2>Optionale Google Maps Reviews (Places API New)</h2>\n<p>Wenn du in den Einstellungen freiwillig einen eigenen Google Places API-Key hinterlegst und bei einem Restaurant ausdrücklich „Google Maps Reviews laden“ auswählst, sendet PizzaScan Name, Adresse und Koordinaten des ausgewählten Restaurants sowie die gewählte Sprache direkt an die Google Places API (New). Google erhält außerdem technisch notwendige Verbindungsdaten wie IP-Adresse sowie den verwendeten API-Key bzw. das zugehörige Cloud-Projekt. Der API-Key wird ausschließlich lokal im App-Webspeicher gespeichert und nicht an KoSch oder einen PizzaScan-Server übertragen.</p>\n<p>Google kann eine aktivierte Abrechnung für die Places API verlangen. Ohne eigenen Key findet keine Places-API-Abfrage statt; PizzaScan bleibt vollständig nutzbar und kann Google Maps weiterhin nur extern öffnen. Google liefert für diese Funktion höchstens fünf Rezensionen pro Treffer. PizzaScan speichert die abgerufenen Google-Bewertungen und Rezensionstexte nicht dauerhaft; sie verbleiben nur im Arbeitsspeicher der laufenden Sitzung. Google-Datenschutz: <a href="https://policies.google.com/privacy?hl=de" target="_blank" rel="noopener">policies.google.com/privacy</a>.</p>\n'''
+          html=read('web/privacy.html').replace('2.3.2','2.3.3')
+          marker='<h2>Rezensionsbaukasten, Export und externe Links</h2>'
+          if 'Optionale Google Maps Reviews (Places API New)' not in html:
+              require(html,marker,'web/privacy.html')
+              html=html.replace(marker,google_html+marker,1)
+          write('web/privacy.html',html)
+
+          google_md='''### Optionale Google Maps Reviews (Places API New)\n\nWenn du freiwillig einen eigenen Google Places API-Key hinterlegst und für einen ausgewählten Restauranttreffer ausdrücklich **Google Maps Reviews laden** auswählst, übermittelt PizzaScan Name, Adresse und Koordinaten des Restaurants sowie die gewählte Sprache direkt an die Google Places API (New). Google erhält dabei außerdem technisch notwendige Verbindungsdaten wie die öffentliche IP-Adresse und verarbeitet den verwendeten API-Key bzw. das zugehörige Cloud-Projekt. Der Key wird ausschließlich lokal im App-Webspeicher gespeichert und nicht an KoSch oder einen PizzaScan-Server übertragen.\n\nGoogle kann für die Places API ein Cloud-Projekt mit aktivierter Abrechnung verlangen. Ohne eigenen Key findet keine Places-API-Abfrage statt; PizzaScan bleibt vollständig nutzbar und öffnet Google Maps weiterhin nur extern. Google liefert für diese Funktion höchstens fünf Rezensionen pro passenden Ort. PizzaScan speichert die abgerufenen Google-Bewertungen und Rezensionstexte nicht dauerhaft; sie verbleiben nur im Arbeitsspeicher der laufenden Sitzung. Google-Datenschutz: <https://policies.google.com/privacy?hl=de>.\n\n'''
+          for path in ('PRIVACY.md','docs/Datenschutz.md'):
+              p=Path(path)
+              text=p.read_text(encoding='utf-8').replace('2.3.2','2.3.3')
+              if 'Optionale Google Maps Reviews (Places API New)' not in text:
+                  markers=['## 9. Rezensionsbaukasten','## Rezensionsbaukasten, Export und externe Links']
+                  privacy_marker=next((m for m in markers if m in text),None)
+                  if not privacy_marker: raise SystemExit(f'{path}: no review-builder privacy marker found')
+                  text=text.replace(privacy_marker,google_md+privacy_marker,1)
+              p.write_text(text,encoding='utf-8')
+
+          # Keep frontpage/release documentation aligned with the corrected Android build.
+          for path in ('README.md','docs/release-dashboard.html','docs/release-status.json','store/PLAY-CONSOLE.md','store/TESTPLAN.md'):
+              p=Path(path)
+              if not p.exists(): continue
+              text=p.read_text(encoding='utf-8')
+              for old,new in [
+                ('**VersionCode:** `9`','**VersionCode:** `10`'),
+                ('VersionCode: 9','VersionCode: 10'),
+                ('VersionCode 9','VersionCode 10'),
+                ('"versionCode": 9','"versionCode": 10'),
+                ('"version_code": 9','"version_code": 10')
+              ]:
+                  text=text.replace(old,new)
+              p.write_text(text,encoding='utf-8')
+
+          # Strengthen the existing navigation test. The normal Android workflow already runs this
+          # test again against assets extracted from the actual built APK.
+          nav=read('tests/navigation-smoke.cjs')
+          init_marker="await ctx.addInitScript(language=>{localStorage.setItem('pizzascan-language-v1',language);window.openedReviewPortals=[];window.PizzaScanNative={postMessage(raw){const p=JSON.parse(raw);if(p.type==='open')window.openedReviewPortals.push(p.url);setTimeout(()=>window.PizzaScanBridge?.reply({id:p.id,value:p.type==='modelStats'?{models:[],bytes:0}:'ok'}),0);}};},lang);"
+          mock_route="await page.route('https://places.googleapis.com/**',async route=>{const req=route.request(),body=JSON.parse(req.postData()||'{}'),center=body.locationBias?.circle?.center||{latitude:0,longitude:0},name=String(body.textQuery||'PizzaScan Test').split(',')[0];await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({places:[{id:'mock-google-place',displayName:{text:name},formattedAddress:String(body.textQuery||name),location:center,rating:4.8,userRatingCount:321,reviews:[],googleMapsUri:'https://www.google.com/maps'}]})});});"
+          if nav.count(init_marker)!=1: raise SystemExit('navigation-smoke init marker mismatch')
+          nav=nav.replace(init_marker,init_marker+mock_route,1)
+
+          old="await page.goto(url);await until(page,()=>window.PizzaScan?.ready);await page.locator('#welcome-start').click();"
+          new="await page.goto(url);await until(page,()=>window.PizzaScan?.ready);assert.equal(await page.evaluate(()=>Boolean(globalThis.GoogleReviewsUI)),true);assert.equal(await page.locator('link[href=\\\"google-reviews.css\\\"]').count(),1);const csp=await page.locator('meta[http-equiv=\\\"Content-Security-Policy\\\"]').getAttribute('content');assert.match(csp,/https:\\/\\/places\\.googleapis\\.com/);await page.locator('#welcome-start').click();"
+          if nav.count(old)!=1: raise SystemExit('navigation-smoke startup marker mismatch')
+          nav=nav.replace(old,new,1)
+
+          old="await page.locator('.venue-card [data-action=place]').first().click();\n   const portals=page.locator('#venue-ratings .rating-portals button');"
+          new="await page.evaluate(()=>localStorage.setItem('pizzascan-google-places-key-v1','AIzaSyPizzaScanMockKey123456789012345'));await page.locator('.venue-card [data-action=place]').first().click();\n   assert.equal(await page.locator('.google-reviews-panel').count(),1);await page.locator('[data-google-action=load]').click();await page.locator('.google-rating').waitFor();assert.match(await page.locator('.google-rating').innerText(),/4\\.8/);\n   const portals=page.locator('#venue-ratings .rating-portals button');"
+          if nav.count(old)!=1: raise SystemExit('navigation-smoke details marker mismatch')
+          nav=nav.replace(old,new,1)
+
+          old="await page.locator('#sheet-close').click();await page.locator('#settings-open').click();assert.equal(await page.locator('#filter-min-rating').count(),1);await page.locator('#settings-save').click();"
+          new="await page.locator('#sheet-close').click();await page.locator('#settings-open').click();assert.equal(await page.locator('#filter-min-rating').count(),1);assert.equal(await page.locator('#google-reviews-settings').count(),1);await page.locator('#settings-save').click();await page.evaluate(()=>showPrivacy());await page.locator('.google-reviews-privacy').waitFor();assert.equal(await page.locator('.google-reviews-privacy').count(),1);await page.locator('#sheet-close').click();"
+          if nav.count(old)!=1: raise SystemExit('navigation-smoke settings marker mismatch')
+          nav=nav.replace(old,new,1)
+          nav=nav.replace('three Android portal links, compact navigation, five languages','three Android portal links, active mocked Google Reviews fetch/privacy, compact navigation, five languages')
+          write('tests/navigation-smoke.cjs',nav)
+
+          # Explicit regression guards for the issue the user observed.
+          guards=[
+            ('package.json','"version": "2.3.3"'),
+            ('package-lock.json','"version": "2.3.3"'),
+            ('web/index.html','<small>2.3.3</small>'),
+            ('web/index.html','google-reviews.js'),
+            ('web/index.html','google-reviews.css'),
+            ('web/index.html','https://places.googleapis.com'),
+            ('web/script.js',"window.PizzaScan={version:'2.3.3'"),
+            ('web/privacy-233.js','Version 2.3.3'),
+            ('web/privacy.html','Optionale Google Maps Reviews (Places API New)'),
+            ('app/build.gradle','versionCode 10'),
+          ]
+          for path,token in guards: require(read(path),token,path)
+          PY
+
+      - name: Validate repaired source before committing
+        run: |
+          npm ci --ignore-scripts --no-audit
+          npm run assets
+          npm test
+          node --check web/google-reviews.js
+          node --check web/privacy-233.js
+          npx playwright install --with-deps chromium
+          npm run navigation-smoke
+
+      - name: Commit and push repaired app source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/build.gradle package.json package-lock.json web tests PRIVACY.md docs README.md store
+          git commit -m "Fix PizzaScan 2.3.3 runtime version and activate Google reviews"
+          git pull --rebase origin main
+          git push origin HEAD:main
