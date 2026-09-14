@@ -24,6 +24,7 @@ jobs:
           npm run assets
           npm test
           node --check web/search-ui.js
+          node --check web/poi-search.js
           node --check web/i18n.js
           node --check web/i18n-extra.js
           node --check web/i18n-shim.js
@@ -65,6 +66,7 @@ jobs:
           node --check web/hotfix-map.js
           node --check web/persistent-model-ui.js
           node --check web/search-ui.js
+          node --check web/poi-search.js
           node --check web/i18n.js
           node --check web/i18n-extra.js
           node --check web/i18n-shim.js
@@ -79,23 +81,28 @@ jobs:
       - name: Build APK, instrumented tests and Android lint
         run: |
           node scripts/download-test-photo.cjs
-          gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug assembleRelease bundleRelease lintRelease
-      - name: Test the web UI extracted from the actual APK
+          gradle --no-daemon assembleDebug assembleDebugAndroidTest lintDebug assembleDirect lintDirect assembleRelease bundleRelease lintRelease
+      - name: Test the web UI extracted from the published APK
         run: |
           npx playwright install --with-deps chromium
-          python3 -m zipfile -e app/build/outputs/apk/debug/app-debug.apk test-results/packaged-apk
+          python3 -m zipfile -e app/build/outputs/apk/direct/app-direct.apk test-results/packaged-apk
           PIZZASCAN_WEB_ROOT=test-results/packaged-apk/assets npm run navigation-smoke
       - name: Verify and collect the APK
         run: |
           VERSION=$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -1)
           test -n "$VERSION"
           mkdir -p artifacts
+          cp app/build/outputs/apk/direct/app-direct.apk "artifacts/PizzaScan-${VERSION}.apk"
           cp app/build/outputs/apk/debug/app-debug.apk "artifacts/PizzaScan-${VERSION}-lang1-debug.apk"
           cp app/build/outputs/apk/release/app-release-unsigned.apk "artifacts/PizzaScan-${VERSION}-unsigned.apk"
           cp app/build/outputs/bundle/release/app-release.aab "artifacts/PizzaScan-${VERSION}-unsigned.aab"
           BUILD_TOOLS=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "artifacts/PizzaScan-${VERSION}.apk" > artifacts/direct-apk-signature.txt
+          "$BUILD_TOOLS/aapt" dump badging "artifacts/PizzaScan-${VERSION}.apk" > artifacts/direct-apk-info.txt
+          grep -q "package: name='cloud.kosch.pizzascan'" artifacts/direct-apk-info.txt
+          grep -q "application-label:'PizzaScan'" artifacts/direct-apk-info.txt
+          sha256sum "artifacts/PizzaScan-${VERSION}.apk" > artifacts/DIRECT-SHA256.txt
           "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "artifacts/PizzaScan-${VERSION}-lang1-debug.apk" > artifacts/lang1-debug-signature.txt
-          cp "$BUILD_TOOLS/lib/apksigner.jar" artifacts/apksigner.jar
           "$BUILD_TOOLS/aapt" dump badging "artifacts/PizzaScan-${VERSION}-lang1-debug.apk" > artifacts/lang1-debug-apk-info.txt
           "$BUILD_TOOLS/aapt" dump badging "artifacts/PizzaScan-${VERSION}-unsigned.apk" > artifacts/apk-info.txt
           sha256sum "artifacts/PizzaScan-${VERSION}-lang1-debug.apk" > artifacts/LANG1-SHA256.txt
@@ -126,23 +133,28 @@ jobs:
           arch: x86_64
           profile: pixel_6
           disable-animations: true
-          script: gradle --no-daemon connectedDebugAndroidTest
-      - name: Publish tested APK to downloads
+          script: |
+            gradle --no-daemon connectedDebugAndroidTest
+            adb install -r app/build/outputs/apk/direct/app-direct.apk
+            adb shell monkey -p cloud.kosch.pizzascan -c android.intent.category.LAUNCHER 1
+            sleep 4
+            adb shell pidof cloud.kosch.pizzascan
+      - name: Publish verified APK to downloads
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           VERSION=$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -1)
           test -n "$VERSION"
           mkdir -p downloads
-          cp app/build/outputs/apk/debug/app-debug.apk "downloads/PizzaScan-${VERSION}-Test.apk"
-          sha256sum "downloads/PizzaScan-${VERSION}-Test.apk" > "downloads/SHA256SUMS-${VERSION}.txt"
+          cp app/build/outputs/apk/direct/app-direct.apk "downloads/PizzaScan-${VERSION}.apk"
+          sha256sum "downloads/PizzaScan-${VERSION}.apk" > "downloads/SHA256SUMS-${VERSION}.txt"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f "downloads/PizzaScan-${VERSION}-Test.apk" "downloads/SHA256SUMS-${VERSION}.txt"
+          git add -f "downloads/PizzaScan-${VERSION}.apk" "downloads/SHA256SUMS-${VERSION}.txt"
           if git diff --cached --quiet; then
             echo "Published APK already matches this build."
             exit 0
           fi
-          git commit -m "Publish PizzaScan ${VERSION} test APK [skip ci]"
+          git commit -m "Publish PizzaScan ${VERSION} APK [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
       - name: Upload test evidence
