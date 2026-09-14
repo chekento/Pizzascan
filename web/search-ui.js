@@ -2,10 +2,11 @@
 'use strict';
 (()=>{
  let autocompleteTimer=null,autocompleteAbort=null,autocompleteRevision=0;
- let fallbackFrame=null,fallbackFrameReady=null,fallbackNext=null,fallbackSequence=0;
+ let fallbackFrame=null,fallbackFrameReady=null,fallbackNext=null,fallbackSequence=0,poiHelperPromise=null;
  const fallbackPending=new Map();
  const byId=id=>document.getElementById(id);
  const POI_ENDPOINTS=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter','https://overpass.osm.jp/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+ function poiHelpers(){if(globalThis.PizzaPoiSearch)return Promise.resolve(globalThis.PizzaPoiSearch);if(poiHelperPromise)return poiHelperPromise;poiHelperPromise=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='poi-search.js';script.async=true;script.onload=()=>globalThis.PizzaPoiSearch?resolve(globalThis.PizzaPoiSearch):reject(Error('POI-Suchmodul konnte nicht initialisiert werden'));script.onerror=()=>reject(Error('POI-Suchmodul konnte nicht geladen werden'));document.head.appendChild(script);});return poiHelperPromise;}
  function currentCenter(){try{return mapCenter();}catch{return {lat:53.5511,lng:9.9937};}}
  function inFullscreen(){try{return !!mapFullscreen;}catch{return document.body.classList.contains('map-fullscreen');}}
  function closeAutocomplete(clearStatus=true){clearTimeout(autocompleteTimer);clearTimeout(searchTimer);autocompleteAbort?.abort();autocompleteAbort=null;try{showSearchResults([]);}catch{}if(clearStatus&&byId('search-status'))byId('search-status').textContent='';}
@@ -22,9 +23,9 @@
  function ensureFallbackFrame(){if(fallbackFrameReady)return fallbackFrameReady;fallbackFrameReady=new Promise((resolve,reject)=>{fallbackFrame=document.createElement('iframe');fallbackFrame.hidden=true;fallbackFrame.setAttribute('aria-hidden','true');fallbackFrame.tabIndex=-1;fallbackFrame.src='geocoder-proxy.html';const timer=setTimeout(()=>reject(Error('Fallback-Ortsdienst konnte nicht vorbereitet werden')),5000);fallbackFrame.onload=()=>{clearTimeout(timer);resolve(fallbackFrame.contentWindow);};fallbackFrame.onerror=()=>{clearTimeout(timer);reject(Error('Fallback-Ortsdienst konnte nicht geladen werden'));};document.body.appendChild(fallbackFrame);});return fallbackFrameReady;}
  function fallbackRequest(query,center,signal){const key='pizzascan-search-fallback-v1-'+PlaceData.text(query)+'|'+center.lat.toFixed(2)+'|'+center.lng.toFixed(2),stored=placeService.read(key);if(stored&&Date.now()-stored.time<86400000&&Array.isArray(stored.items))return Promise.resolve(stored.items);return ensureFallbackFrame().then(target=>new Promise((resolve,reject)=>{if(signal?.aborted)return reject(new DOMException('Abgebrochen','AbortError'));const id='geo-'+Date.now()+'-'+(++fallbackSequence),timer=setTimeout(()=>{fallbackPending.delete(id);reject(Error('Fallback-Ortssuche hat zu lange gedauert'));},18000);const abort=()=>{clearTimeout(timer);fallbackPending.delete(id);reject(new DOMException('Abgebrochen','AbortError'));};signal?.addEventListener('abort',abort,{once:true});fallbackPending.set(id,{resolve:rows=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);try{const items=fallbackItems(rows);placeService.write(key,{time:Date.now(),items});resolve(items);}catch(error){reject(error);}},reject:error=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);reject(error);}});target.postMessage({type:'pizzascan-geocode',id,query,language:(document.documentElement.lang||'de').slice(0,2)},location.origin);}));}
  function installFallback(){addEventListener('message',event=>{if(event.origin!==location.origin||!fallbackFrame||event.source!==fallbackFrame.contentWindow)return;const message=event.data||{};if(message.type!=='pizzascan-geocode-result')return;const pending=fallbackPending.get(message.id);if(!pending)return;fallbackPending.delete(message.id);message.ok?pending.resolve(message.data):pending.reject(Error(message.error||'Fallback-Suche fehlgeschlagen'));});const originalPhoton=placeService.photon.bind(placeService);placeService.photon=async function(query,center,options={}){const token=fallbackNext&&fallbackNext.query===query&&Date.now()-fallbackNext.time<6000?fallbackNext:null;if(token)fallbackNext=null;try{const items=await originalPhoton(query,center,options);if(token&&!options.signal?.aborted&&Array.isArray(items)&&items.length===0){const status=byId('search-status');if(status)status.textContent='Primäre Ortssuche ohne Treffer · alternative OpenStreetMap-Suche läuft …';return fallbackRequest(query,center,options.signal);}return items;}catch(error){if(!token||options.signal?.aborted)throw error;const status=byId('search-status');if(status)status.textContent='Primäre Ortssuche nicht erreichbar · alternative OpenStreetMap-Suche läuft …';return fallbackRequest(query,center,options.signal);}};}
- async function directPoiSearch(query,center,signal){
+ async function directPoiSearch(query,center,signal,helper){
   const cfg=typeof mapConfig==='function'?mapConfig():{radius:10};
-  const overpass=PizzaPoiSearch?.buildQuery(query,center,cfg.radius||10);if(!overpass)return [];
+  const overpass=helper.buildQuery(query,center,cfg.radius||10);if(!overpass)return [];
   let lastError=null;
   for(const endpoint of POI_ENDPOINTS){
    if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
@@ -45,10 +46,11 @@
   const local=PlaceData.suggestions([...places,...saved,...mapPool],q,center).map(p=>({...p,kind:'venue',place:p,osmId:p.placeId}));showSearchResults(local,true);
   fallbackNext={query:q,time:Date.now()};
   try{
-   const [geoResult,poiResult]=await Promise.allSettled([placeService.photon(q,center,{signal:ctl.signal}),directPoiSearch(q,center,ctl.signal)]);
+   const helper=await poiHelpers();if(revision!==searchRevision||ctl.signal.aborted)return;
+   const [geoResult,poiResult]=await Promise.allSettled([placeService.photon(q,center,{signal:ctl.signal}),directPoiSearch(q,center,ctl.signal,helper)]);
    if(revision!==searchRevision||ctl.signal.aborted)return;
    const geo=geoResult.status==='fulfilled'?geoResult.value:[],poi=poiResult.status==='fulfilled'?poiResult.value:[];
-   const combined=PizzaPoiSearch.mergeRanked([local,poi,geo],q,center,PizzaCore.distance);
+   const combined=helper.mergeRanked([local,poi,geo],q,center,PizzaCore.distance);
    showSearchResults(combined);decorate(combined);
    const venueCount=combined.filter(x=>x.kind==='venue'||x.place).length;
    byId('search-status').textContent=combined.length?`${combined.length} genaue Treffer · ${venueCount} POI${venueCount===1?'':'s'} · nach Namens-, Adress- und Ortsübereinstimmung sortiert.`:'Keine passende POI-/Ort-Übereinstimmung. Ergänze Restaurantname und Stadt oder verschiebe die Karte.';
@@ -63,7 +65,7 @@
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.classList.contains('search-panel-collapsed')&&!document.querySelector('#sheet[open]')){event.preventDefault();closeSearch();}});
   const oldSelect=selectSearch;selectSearch=function(index){const out=oldSelect(index);closeSearch();return out;};
   toggleFullscreenSearch=function(){const opening=!document.body.classList.contains('fs-search-open');if(opening)openSearch();else closeSearch();};
-  installFallback();globalThis.searchCity=preciseSearch;form.onsubmit=preciseSearch;
+  installFallback();globalThis.searchCity=preciseSearch;form.onsubmit=preciseSearch;poiHelpers().catch(()=>{});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
  globalThis.PizzaScanSearchUI={open:openSearch,close:closeSearch,autocomplete:remoteAutocomplete,submit:preciseSearch,directPoiSearch,fromNominatim:fallbackItems};
