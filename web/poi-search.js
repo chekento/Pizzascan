@@ -52,13 +52,24 @@ function key(item){
 function score(item,query,center,distance){
   const p=item?.place||item||{},name=text(item?.name||p.name),address=text(item?.address||p.address),q=text(query),words=tokens(query),hay=(name+' '+address).trim();
   if(!name)return -1;
-  let s=item?.kind==='venue'||p?.placeId?700:0;
-  if(name===q)s+=10000;
-  else if(q.startsWith(name+' '))s+=9200;
-  else if(name.startsWith(q+' '))s+=9000;
-  else if(name.includes(q))s+=8200;
-  let hits=0,nameHits=0;
-  for(const word of words){if(hay.includes(word))hits++;if(name.includes(word))nameHits++;}
+  const isGeneric=genericOnly(query);
+  let exact=false,s=item?.kind==='venue'||p?.placeId?700:0;
+  if(name===q){s+=10000;exact=true;}
+  else if(q.startsWith(name+' ')){s+=9200;exact=true;}
+  else if(name.startsWith(q+' ')){s+=9000;exact=true;}
+  else if(name.includes(q)){s+=8200;exact=true;}
+  let hits=0,nameHits=0,meaningfulHits=0;
+  for(const word of words){
+    const inHay=hay.includes(word),inName=name.includes(word);
+    if(inHay)hits++;
+    if(inName)nameHits++;
+    if(!GENERIC.has(word)&&inHay)meaningfulHits++;
+  }
+  const meaningfulWords=words.filter(word=>!GENERIC.has(word));
+  if(!isGeneric&&!exact){
+    if(meaningfulWords.length&&meaningfulHits===0)return -1;
+    if(!meaningfulWords.length&&hits===0)return -1;
+  }
   if(words.length){const coverage=hits/words.length;s+=Math.round(4200*coverage)+nameHits*250;if(hits===words.length)s+=1500;}
   if(item?.osmId||p?.placeId)s+=300;
   if(typeof distance==='function'&&center&&Number.isFinite(p.lat??item?.lat)&&Number.isFinite(p.lng??item?.lng)){
