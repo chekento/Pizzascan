@@ -33,6 +33,8 @@
 <strong><a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.1-Test.apk">⬇ PizzaScan-2.3.1-Test.apk herunterladen</a></strong>
 &nbsp; · &nbsp;
 <strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/index.html">🌐 Mini Live öffnen</a></strong>
+&nbsp; · &nbsp;
+<strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html">🚦 Release-Dashboard</a></strong>
 </p>
 
 <p align="center">
@@ -58,7 +60,7 @@
 | ⏳ | **Produktion** | Nach geschlossenem Test und den gegebenenfalls geltenden Play-Testanforderungen. |
 
 **Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.1` · **Stand:** 14.09.2026  
-[Detailstatus als JSON](docs/release-status.json) · [Play-Console-Checkliste](store/PLAY-CONSOLE.md) · [Testplan](store/TESTPLAN.md)
+[🚦 Dashboard maximierbar öffnen](https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html) · [Detailstatus als JSON](docs/release-status.json) · [Play-Console-Checkliste](store/PLAY-CONSOLE.md) · [Testplan](store/TESTPLAN.md)
 
 </details>
 
