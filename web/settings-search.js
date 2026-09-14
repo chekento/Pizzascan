@@ -25,7 +25,8 @@
 
   function fallbackTerms(cfg){
     const types=new Set(Array.isArray(cfg?.types)?cfg.types:[]),terms=[];
-    if(types.has('pizzeria')||types.size===0)terms.push('pizza','pizzeria');
+    if(types.size===0)return [];
+    if(types.has('pizzeria'))terms.push('pizza','pizzeria');
     if(types.has('cafe'))terms.push('pizza cafe');
     if(types.has('fast_food'))terms.push('pizza fast food');
     if(types.has('food_truck'))terms.push('pizza food truck');
