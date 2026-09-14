@@ -56,6 +56,14 @@ function categoryQuery(categories,area,pattern=''){
   }
   return out;
 }
+function exactNameQuery(area,pattern){
+  if(!pattern)return '';
+  return `nwr["amenity"~"${FOOD_AMENITIES}"]["name"~"${pattern}",i](${area});`+
+    `nwr["amenity"~"${FOOD_AMENITIES}"]["brand"~"${pattern}",i](${area});`+
+    `nwr["amenity"~"${FOOD_AMENITIES}"]["operator"~"${pattern}",i](${area});`+
+    `nwr["shop"~"deli|bakery|convenience"]["name"~"${pattern}",i](${area});`+
+    `nwr["amenity"="vending_machine"]["name"~"${pattern}",i](${area});`;
+}
 function buildQuery(query,center,radiusKm=10){
   const lat=Number(center?.lat),lng=Number(center?.lng),radius=Math.round(Math.max(.5,Math.min(10,Number(radiusKm)||10))*1000);
   if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat<-90||lat>90||lng<-180||lng>180)return '';
@@ -64,16 +72,14 @@ function buildQuery(query,center,radiusKm=10){
   const meaningful=tokens(q).filter(word=>!GENERIC.has(word));
   if(states.length&&!categories.length&&!meaningful.length)return '';
   const pattern=variants(q).map(escapeRegex).join('|');
-  if(categories.length){const body=categoryQuery(categories,area,meaningful.length?pattern:'');return body?`[out:json][timeout:15];(${body});out body center;`:'';}
+  if(categories.length){
+    let body=categoryQuery(categories,area,meaningful.length?pattern:'');
+    if(meaningful.length)body+=exactNameQuery(area,pattern);
+    return body?`[out:json][timeout:15];(${body});out body center;`:'';
+  }
   if(genericOnly(q))return `[out:json][timeout:15];(nwr["amenity"~"${FOOD_AMENITIES}"]["name"](${area});nwr["vending"~"pizza",i](${area});nwr["vending:pizza"="yes"](${area}););out body center;`;
   if(!pattern)return '';
-  return `[out:json][timeout:15];(`+
-    `nwr["amenity"~"${FOOD_AMENITIES}"]["name"~"${pattern}",i](${area});`+
-    `nwr["amenity"~"${FOOD_AMENITIES}"]["brand"~"${pattern}",i](${area});`+
-    `nwr["amenity"~"${FOOD_AMENITIES}"]["operator"~"${pattern}",i](${area});`+
-    `nwr["shop"~"deli|bakery|convenience"]["name"~"${pattern}",i](${area});`+
-    `nwr["amenity"="vending_machine"]["name"~"${pattern}",i](${area});`+
-    `);out body center;`;
+  return `[out:json][timeout:15];(${exactNameQuery(area,pattern)});out body center;`;
 }
 function key(item){
   const p=item?.place||item;
@@ -117,5 +123,5 @@ function mergeRanked(groups,query,center,distance){
   return [...map.values()].map(item=>({item,score:score(item,query,center,distance)})).filter(x=>x.score>=0).sort((a,b)=>b.score-a.score||String(a.item.name||'').localeCompare(String(b.item.name||''))).slice(0,40).map(x=>x.item);
 }
 
-return {FOOD_AMENITIES,GENERIC,text,tokens,variants,categoryIntent,stateIntent,genericOnly,categoryQuery,buildQuery,matchesCategory,matchesState,score,mergeRanked};
+return {FOOD_AMENITIES,GENERIC,text,tokens,variants,categoryIntent,stateIntent,genericOnly,categoryQuery,exactNameQuery,buildQuery,matchesCategory,matchesState,score,mergeRanked};
 });
