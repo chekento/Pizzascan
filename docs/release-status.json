@@ -1,6 +1,6 @@
 {
   "updated": "2026-09-14",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "stage": "Pre-closed-test",
   "completed": 3,
   "total": 8,
@@ -10,39 +10,39 @@
   "items": [
     {
       "id": "source",
-      "label": "2.3.1 Quellstand & Repo",
+      "label": "2.3.2 Quellstand & Repo",
       "status": "done",
-      "note": "Aktueller main-Stand enthält Such-Fallback, Bewertungsfilter, Ratings-Links und die 5-sprachige Oberfläche."
+      "note": "Aktueller main-Stand enthält den robusten Photon→Nominatim-Fallback für ausdrücklich abgesendete Ortssuchen, Karten-Recovery nach Netz-/App-Rückkehr, erhaltene Nutzerfilter, Bewertungsfilter, Ratings-Links und die 5-sprachige Oberfläche."
     },
     {
       "id": "ci",
       "label": "CI-Build & Android-16-Test",
       "status": "done",
-      "note": "Build, Web/UI-Tests, lokale Modelltests und Android-16-Smoke-Test sind erfolgreich durchgelaufen."
+      "note": "Build, Lint, Web/UI-Tests, Suche/Map/Rating-Regressionstests, lokale Modelltests und Android-16-Smoke-Test sind für 2.3.2 erfolgreich durchgelaufen."
     },
     {
       "id": "apk",
-      "label": "Technische 2.3.1-Vorab-APK",
+      "label": "Technische 2.3.2-Vorab-APK",
       "status": "done",
-      "note": "downloads/PizzaScan-2.3.1-Test.apk ist für direkte Geräte- und Funktionsprüfung im Repository vorhanden; sie ist nicht die offizielle Play-Testausgabe."
+      "note": "downloads/PizzaScan-2.3.2-Test.apk ist für direkte Geräte- und Funktionsprüfung im Repository vorhanden; sie verwendet das Testpaket cloud.kosch.pizzascan.lang1 und ist nicht die offizielle Play-Testausgabe."
     },
     {
       "id": "deviceqa",
       "label": "Echter Geräte-Abnahmetest",
       "status": "in_progress",
-      "note": "Der neue Orts-Suchfallback und die Kernfunktionen müssen noch auf dem realen Android-Gerät final bestätigt werden."
+      "note": "Die 2.3.2-Kernfunktionen einschließlich Orts-Suchfallback, Karten-Recovery, Filtererhalt, Standort, Ratings und Offline-KI müssen auf dem realen Android-Gerät final bestätigt werden."
     },
     {
       "id": "aab",
       "label": "Google-Play-AAB & Signierung",
       "status": "in_progress",
-      "note": "Das 2.3.1 Release-AAB wird erzeugt; finale Upload-Signierung für cloud.kosch.pizzascan steht noch aus."
+      "note": "Der CI-Workflow erzeugt und validiert ein 2.3.2 Release-AAB. Die finale Upload-Signierung für cloud.kosch.pizzascan steht noch aus; das CI-Bundle ist nicht als fertig signiertes Play-Paket zu behandeln."
     },
     {
       "id": "console",
       "label": "Play-Console-Eintrag & Erklärungen",
       "status": "in_progress",
-      "note": "Store-Grafiken, Datenschutz- und Datensicherheitsunterlagen sind vorbereitet; die Console-Formulare sind noch nicht vollständig abgeschlossen."
+      "note": "Store-Grafiken, Datenschutz- und Datensicherheitsunterlagen sind vorbereitet und werden auf 2.3.2 abgeglichen; die Console-Formulare sind noch nicht vollständig abgeschlossen."
     },
     {
       "id": "closedtest",
