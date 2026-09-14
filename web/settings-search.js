@@ -189,7 +189,7 @@
       if(!area||result?.source==='photon.komoot.io')return result;
       let count=0;
       try{count=PD.fromOverpass(result?.data?.elements||[]).length;}catch{}
-      if(count>=10)return result;
+      if(count>=6)return result;
       try{
         const extra=await this.nearbyFallback(query,options);
         if(!extra.length)return result;
