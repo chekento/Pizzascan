@@ -1,4 +1,4 @@
-/* Resilient POI recovery for sparse map responses. Loaded after broad-defaults.js. */
+/* Resilient pizza-place recovery for sparse map responses. Loaded after broad-defaults.js. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -6,16 +6,16 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-poi-discovery-v3';
+const MARKER='pizzascan-poi-discovery-v4';
 const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
-const ITALIAN_NAMES='pizza|pizzeria|pizzaria|ristorante|trattoria|osteria|italian|italiano|italiana|italienisch|napoli|napoletan';
-const FALLBACK_TERMS=['pizza','pizzeria','restaurant','cafe','imbiss','fast food','food truck','pizza vending','ristorante','trattoria','osteria','takeaway','bar','pub','biergarten','food court'];
+const PIZZA_WORDS='pizza|pizzeria|pizzaria|pizzerie';
+const FALLBACK_TERMS=['pizza','pizzeria','pizza restaurant','pizza cafe','pizza imbiss','pizza fast food','pizza food truck','pizza takeaway','pizza vending','pizza bar','pizza pub','pizza biergarten','pizza bakery'];
 const RECOVERY_PROVIDERS=[
   'https://overpass.osm.jp/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
 ];
-const SPARSE_BELOW=18;
-const FALLBACK_TARGET=30;
+const SPARSE_BELOW=6;
+const FALLBACK_TARGET=18;
 
 function extractArea(query){
   const q=String(query||'');
@@ -32,17 +32,25 @@ function areaInfo(area){
   const south=Number(m[1]),west=Number(m[2]),north=Number(m[3]),east=Number(m[4]);
   return {center:{lat:(south+north)/2,lng:(west+east)/2},radius:10,bounds:{south,west,north,east}};
 }
+function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function pizzaTags(tags={}){
+  if(tags['vending:pizza']==='yes')return true;
+  const hay=text([tags.name,tags.cuisine,tags.brand,tags.operator,tags.speciality,tags.vending,tags.product,tags.products].filter(Boolean).join(' '));
+  return /(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizzas)(?:[^a-z]|$)/i.test(hay);
+}
+function elementPizza(element){return !!element&&pizzaTags(element.tags||{});}
+function pizzaCount(elements){return (elements||[]).filter(elementPizza).length;}
 
 function robustQuery(area){
   if(!area)return '';
   return `[out:json][timeout:20];(`+
-    `nwr["amenity"~"${FOOD_AMENITIES}"]["name"](${area});`+
-    `nwr["amenity"~"${FOOD_AMENITIES}"]["cuisine"~"pizza|pizzeria|italian|italiano|italiana|pasta",i](${area});`+
-    `nwr["amenity"~"${FOOD_AMENITIES}"]["name"~"${ITALIAN_NAMES}",i](${area});`+
-    `nwr["amenity"~"${FOOD_AMENITIES}"]["brand"~"${ITALIAN_NAMES}",i](${area});`+
-    `nwr["amenity"~"${FOOD_AMENITIES}"]["operator"~"${ITALIAN_NAMES}",i](${area});`+
-    `nwr["amenity"~"restaurant|fast_food|cafe|food_truck"]["mobile"="yes"]["name"](${area});`+
-    `nwr["shop"~"deli|bakery|convenience"]["name"~"pizza|pizzeria|pizzaria",i](${area});`+
+    `nwr["amenity"~"${FOOD_AMENITIES}"]["cuisine"~"${PIZZA_WORDS}",i](${area});`+
+    `nwr["amenity"~"${FOOD_AMENITIES}"]["name"~"${PIZZA_WORDS}",i](${area});`+
+    `nwr["amenity"~"${FOOD_AMENITIES}"]["brand"~"${PIZZA_WORDS}",i](${area});`+
+    `nwr["amenity"~"${FOOD_AMENITIES}"]["operator"~"${PIZZA_WORDS}",i](${area});`+
+    `nwr["amenity"~"${FOOD_AMENITIES}"]["speciality"~"${PIZZA_WORDS}",i](${area});`+
+    `nwr["shop"~"deli|bakery|convenience"]["name"~"${PIZZA_WORDS}",i](${area});`+
+    `nwr["shop"~"deli|bakery|convenience"]["product"~"${PIZZA_WORDS}",i](${area});`+
     `nwr["amenity"="vending_machine"]["vending"~"pizza",i](${area});`+
     `nwr["vending"~"pizza",i](${area});nwr["vending:pizza"="yes"](${area});`+
     `);out body center;`;
@@ -56,23 +64,29 @@ function mergeElements(...groups){
   }
   return [...out.values()];
 }
-
-function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
-function evidence(place){
-  const t=place?.tags||{};
-  const hay=text([place?.name,place?.cuisine,t.brand,t.operator,t.speciality,t.vending].filter(Boolean).join(' '));
-  if(/pizza|pizzeria|pizzaria/.test(hay)||t['vending:pizza']==='yes')return 'confirmed';
-  if(/italian|italiano|italiana|italienisch|ristorante|trattoria|osteria|napoli|napoletan/.test(hay))return 'possible';
-  return place?.pizzaEvidence||'search';
-}
+function evidence(place){return place&&pizzaTags({...place.tags,name:place.name,cuisine:place.cuisine})?'confirmed':place?.pizzaEvidence||'search';}
 function isSparse(result){
-  const n=result?.data?.elements?.length||0,source=String(result?.source||'').toLowerCase();
-  return n<SPARSE_BELOW||source.includes('photon');
+  const elements=result?.data?.elements||[],source=String(result?.source||'').toLowerCase();
+  return pizzaCount(elements)<SPARSE_BELOW||source.includes('photon');
 }
-function placeToElement(place){
+function placeToElement(place,term='pizza'){
   const m=/^(node|way|relation)-(\d+)$/.exec(place?.placeId||'');
   if(!m||!Number.isFinite(place?.lat)||!Number.isFinite(place?.lng))return null;
-  return {type:m[1],id:Number(m[2]),lat:place.lat,lon:place.lng,tags:{...(place.tags||{}),name:place.name||place.tags?.name||''}};
+  const t=text(term),tags={...(place.tags||{}),name:place.name||place.tags?.name||''};
+  if(/vending|automat/.test(t)){tags.amenity='vending_machine';tags.vending='pizza';tags['vending:pizza']='yes';}
+  else{
+    if(/cafe/.test(t))tags.amenity='cafe';
+    else if(/food truck/.test(t)){tags.amenity='food_truck';tags.mobile='yes';}
+    else if(/imbiss|fast food/.test(t))tags.amenity='fast_food';
+    else if(/takeaway/.test(t))tags.amenity='takeaway';
+    else if(/biergarten/.test(t))tags.amenity='biergarten';
+    else if(/ pub/.test(' '+t))tags.amenity='pub';
+    else if(/ bar/.test(' '+t))tags.amenity='bar';
+    else if(/bakery/.test(t)){delete tags.amenity;tags.shop='bakery';}
+    else if(!tags.amenity)tags.amenity='restaurant';
+    tags.cuisine=[tags.cuisine,'pizza'].filter(Boolean).join(';');
+  }
+  return {type:m[1],id:Number(m[2]),lat:place.lat,lon:place.lng,tags};
 }
 function inside(info,p){
   if(info?.bounds){const b=info.bounds;return p.lat>=b.south&&p.lat<=b.north&&(b.west<=b.east?p.lng>=b.west&&p.lng<=b.east:p.lng>=b.west||p.lng<=b.east);}
@@ -86,11 +100,11 @@ async function recoverProviders(service,query,options={},seed=[]){
   for(const endpoint of RECOVERY_PROVIDERS){
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
     try{
-      options.onStatus?.('Zusätzliche Restaurant-, Café-, Imbiss- und Pizzaquellen werden abgefragt …');
+      options.onStatus?.('Zusätzliche Pizza-Orte werden abgefragt …');
       const data=await service.json(endpoint,{method:'POST',body:new URLSearchParams({data:rq})},options.signal,12000);
       if(Array.isArray(data?.elements)&&!data.remark&&data.elements.length){
         elements=mergeElements(elements,data.elements);sources.push(new URL(endpoint).hostname);
-        if(elements.length>=FALLBACK_TARGET)break;
+        if(pizzaCount(elements)>=FALLBACK_TARGET)break;
       }
     }catch(error){if(options.signal?.aborted)throw error;}
   }
@@ -100,15 +114,15 @@ async function recoverProviders(service,query,options={},seed=[]){
 async function recoverPhoton(service,query,options={},seed=[]){
   const info=areaInfo(extractArea(query));if(!info)return seed;
   let elements=mergeElements(seed);
-  options.onStatus?.('Fehlende Restaurant- und POI-Kategorien werden ergänzt …');
+  options.onStatus?.('Weitere Pizza-Orte werden über die Fallback-Suche ergänzt …');
   for(const term of FALLBACK_TERMS){
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
     try{
       const items=await service.photon(term,info.center,{signal:options.signal});
       const extra=[];
-      for(const item of items||[]){const p=item?.place;if(p&&inside(info,p)){const e=placeToElement(p);if(e)extra.push(e);}}
+      for(const item of items||[]){const p=item?.place;if(p&&inside(info,p)){const e=placeToElement(p,term);if(e&&elementPizza(e))extra.push(e);}}
       elements=mergeElements(elements,extra);
-      if(elements.length>=FALLBACK_TARGET)break;
+      if(pizzaCount(elements)>=FALLBACK_TARGET)break;
     }catch(error){if(options.signal?.aborted)throw error;}
   }
   return elements;
@@ -128,7 +142,7 @@ function install(root){
   if(!PD.fromOverpass.__poiDiscovery){
     const base=PD.fromOverpass.bind(PD);
     PD.fromOverpass=function(elements,options={}){
-      return base(elements,{allowNamed:true,...options}).map(p=>{
+      return base(elements,options).map(p=>{
         const next=evidence(p);return next===p.pizzaEvidence?p:root.PizzaCore.place({...p,pizzaEvidence:next});
       });
     };
@@ -144,19 +158,19 @@ function install(root){
         const seed=primary?.data?.elements||[];
         const recovered=await recoverProviders(service,query,options,seed);
         let elements=recovered.elements;
-        if(elements.length<FALLBACK_TARGET)elements=await recoverPhoton(service,query,options,elements);
+        if(pizzaCount(elements)<FALLBACK_TARGET)elements=await recoverPhoton(service,query,options,elements);
         if(elements.length){
-          const sources=[primary?.source,...recovered.sources,elements.length>recovered.elements.length?'photon.komoot.io':''].filter(Boolean);
+          const sources=[primary?.source,...recovered.sources,pizzaCount(elements)>pizzaCount(recovered.elements)?'photon.komoot.io':''].filter(Boolean);
           return {data:{...(primary?.data||{}),elements},source:[...new Set(sources)].join(' + ')};
         }
         if(primary)return primary;
-        throw primaryError||Error('Keine Restaurant- oder POI-Datenquelle erreichbar.');
+        throw primaryError||Error('Keine Pizza-Ort-Datenquelle erreichbar.');
       };
       wrapped.__poiDiscovery=true;service.overpass=wrapped;
     }
-  }catch(error){console.warn('PizzaScan POI discovery recovery skipped',error);}
+  }catch(error){console.warn('PizzaScan pizza-place discovery recovery skipped',error);}
   root.PizzaScanPoiDiscovery={marker:MARKER,terms:FALLBACK_TERMS.slice(),providers:RECOVERY_PROVIDERS.slice()};
 }
 
-return {MARKER,FOOD_AMENITIES,ITALIAN_NAMES,FALLBACK_TERMS,RECOVERY_PROVIDERS,SPARSE_BELOW,FALLBACK_TARGET,extractArea,areaInfo,robustQuery,mergeElements,evidence,isSparse,install};
+return {MARKER,FOOD_AMENITIES,PIZZA_WORDS,FALLBACK_TERMS,RECOVERY_PROVIDERS,SPARSE_BELOW,FALLBACK_TARGET,extractArea,areaInfo,text,pizzaTags,elementPizza,pizzaCount,robustQuery,mergeElements,evidence,isSparse,placeToElement,install};
 });
