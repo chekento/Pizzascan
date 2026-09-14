@@ -1,13 +1,14 @@
-/* Broad-by-default discovery policy. Find everything first; filters narrow only when the user explicitly chooses them. */
+/* Broad map configuration without exposing generic food venues as PizzaScan results. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v6';
-/* Default map discovery intentionally includes named food venues of every PizzaScan category.
- * Pizza/Italian evidence is metadata for ranking/filtering, not a prerequisite for appearing. */
+const MARKER='pizzascan-broad-defaults-v7';
+/* Generic named food venues may still be fetched internally by review-discovery so
+ * public review evidence can prove a pizza offer. They are never visible merely
+ * because they are a restaurant/café/imbiss. */
 const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const SUPPLEMENT_BELOW=4;
 
@@ -20,7 +21,7 @@ function normalizeConfig(base={},raw={},types={}){
     onlyOpen:has('onlyOpen')?raw.onlyOpen===true:false,
     unknownHours:has('unknownHours')?raw.unknownHours===true:false,
     includeItalian:has('includeItalian')?raw.includeItalian!==false:true,
-    includeUnconfirmed:has('includeUnconfirmed')?raw.includeUnconfirmed!==false:true,
+    includeUnconfirmed:has('includeUnconfirmed')?raw.includeUnconfirmed===true:false,
     radius:has('radius')&&[0,1,3,5,10].includes(Number(raw.radius))?Number(raw.radius):10,
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,
     ratingsEnabled:has('ratingsEnabled')?raw.ratingsEnabled!==false:true,
@@ -35,7 +36,7 @@ function broadMigration(previous={},types={}){
     onlyOpen:false,
     unknownHours:false,
     includeItalian:true,
-    includeUnconfirmed:true,
+    includeUnconfirmed:false,
     radius:10,
     hideVisited:false,
     ratingsEnabled:true,
@@ -44,11 +45,9 @@ function broadMigration(previous={},types={}){
   };
 }
 function candidateVisible(place,cfg,context={},hours=()=>({state:'unknown'})){
-  if(!place||place.pizzaEvidence!=='search'||cfg?.includeUnconfirmed===false)return false;
-  if(!Array.isArray(cfg?.types)||!cfg.types.includes(place.type))return false;
-  if(cfg.onlyOpen){const state=hours(place).state;if(state!=='open'&&!(cfg.unknownHours&&state==='unknown'))return false;}
-  if(cfg.hideVisited&&context.visited?.has(place.placeId))return false;
-  return true;
+  /* Search-only/generic candidates must be promoted by explicit pizza evidence in
+   * pizza-only.js or review-discovery.js. Broad defaults never surface them. */
+  return false;
 }
 function queryAreaToken(query){
   const m=String(query||'').match(/\]\((around:[^)]+|-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?)\);/);
@@ -58,7 +57,7 @@ function expandDiscoveryQuery(query,enabled=true){
   if(!enabled)return String(query||'');
   const q=String(query||''),area=queryAreaToken(q);
   if(!area||q.includes('pizzascan-broad-discovery'))return q;
-  const extra=`/* pizzascan-broad-discovery */nwr["amenity"~"${BROAD_AMENITIES}"]["name"](${area});nwr["amenity"~"restaurant|fast_food|cafe|food_truck"]["mobile"="yes"]["name"](${area});nwr["vending"~"pizza",i](${area});nwr["vending:pizza"="yes"](${area});`;
+  const extra=`/* pizzascan-broad-discovery */nwr["amenity"~"${BROAD_AMENITIES}"]["name"](${area});nwr["amenity"~"restaurant|fast_food|cafe|food_truck"]["mobile"="yes"]["name"](${area});`;
   return q.replace(');out body center;',`${extra});out body center;`);
 }
 function mergeElements(primary=[],extra=[]){
@@ -101,7 +100,7 @@ function install(root){
     const baseQuery=PD.query.bind(PD);
     PD.query=function(center,radius,bounds){
       const cfg=currentConfig();
-      return expandDiscoveryQuery(baseQuery(center,radius,bounds),cfg.includeUnconfirmed!==false);
+      return expandDiscoveryQuery(baseQuery(center,radius,bounds),cfg.includeUnconfirmed===true);
     };
     PD.query.__pizzaBroadDefaults=true;
   }
@@ -109,7 +108,7 @@ function install(root){
     const baseFromOverpass=PD.fromOverpass.bind(PD);
     PD.fromOverpass=function(elements,options={}){
       const cfg=currentConfig();
-      return baseFromOverpass(elements,{allowNamed:cfg.includeUnconfirmed!==false,...options});
+      return baseFromOverpass(elements,{allowNamed:cfg.includeUnconfirmed===true,...options});
     };
     PD.fromOverpass.__pizzaBroadDefaults=true;
   }
@@ -128,7 +127,7 @@ function install(root){
         const primary=await baseOverpass(q,options),elements=primary?.data?.elements||[];
         if(!shouldSupplement(elements)||String(primary?.source||'').includes('photon'))return primary;
         try{
-          options.onStatus?.('Weitere Restaurants und POIs werden ergänzt …');
+          options.onStatus?.('Weitere Pizza-Orte werden ergänzt …');
           const extra=await this.nearbyFallback(q,options);
           if(extra?.length)return {data:{...primary.data,elements:mergeElements(elements,extra)},source:[primary.source,'photon.komoot.io'].filter(Boolean).join(' + ')};
         }catch(error){if(options.signal?.aborted)throw error;}
