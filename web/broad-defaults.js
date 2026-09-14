@@ -5,7 +5,9 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v2';
+const MARKER='pizzascan-broad-defaults-v3';
+const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court';
+const SUPPLEMENT_BELOW=12;
 
 function allTypes(types){return Object.keys(types||{});}
 function normalizeConfig(base={},raw={},types={}){
@@ -46,6 +48,31 @@ function candidateVisible(place,cfg,context={},hours=()=>({state:'unknown'})){
   if(cfg.hideVisited&&context.visited?.has(place.placeId))return false;
   return true;
 }
+function queryAreaToken(query){
+  const m=String(query||'').match(/\]\((around:[^)]+|-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?)\);/);
+  return m?.[1]||'';
+}
+function expandDiscoveryQuery(query,enabled=true){
+  if(!enabled)return String(query||'');
+  const q=String(query||''),area=queryAreaToken(q);
+  if(!area||q.includes('pizzascan-broad-discovery'))return q;
+  const extra=`/* pizzascan-broad-discovery */nwr["amenity"~"${BROAD_AMENITIES}"]["name"](${area});`;
+  return q.replace(');out body center;',`${extra});out body center;`);
+}
+function mergeElements(primary=[],extra=[]){
+  const result=new Map();
+  for(const element of [...(primary||[]),...(extra||[])]){
+    if(!element||!element.type||element.id==null)continue;
+    result.set(`${element.type}-${element.id}`,element);
+  }
+  return [...result.values()];
+}
+function shouldSupplement(elements,min=SUPPLEMENT_BELOW){return !Array.isArray(elements)||elements.length<min;}
+function currentConfig(){
+  try{if(typeof mapConfig==='function')return mapConfig();}catch{}
+  try{if(typeof settings!=='undefined')return settings?.filters||{};}catch{}
+  return {};
+}
 function install(root){
   const PD=root.PizzaPlaces;if(!PD)return;
   let migrated=false;
@@ -68,6 +95,22 @@ function install(root){
       wrapped.__pizzaBroadDefaults=true;wrapped.__pizzaBroadDefaultsInner=baseMapConfig;mapConfig=wrapped;
     }
   }catch{}
+  if(!PD.query.__pizzaBroadDefaults){
+    const baseQuery=PD.query.bind(PD);
+    PD.query=function(center,radius,bounds){
+      const cfg=currentConfig();
+      return expandDiscoveryQuery(baseQuery(center,radius,bounds),cfg.includeUnconfirmed!==false);
+    };
+    PD.query.__pizzaBroadDefaults=true;
+  }
+  if(!PD.fromOverpass.__pizzaBroadDefaults){
+    const baseFromOverpass=PD.fromOverpass.bind(PD);
+    PD.fromOverpass=function(elements,options={}){
+      const cfg=currentConfig();
+      return baseFromOverpass(elements,{allowNamed:cfg.includeUnconfirmed!==false,...options});
+    };
+    PD.fromOverpass.__pizzaBroadDefaults=true;
+  }
   if(!PD.filter.__pizzaBroadDefaults){
     const baseFilter=PD.filter.bind(PD);
     PD.filter=function(list,cfg,context,hours){
@@ -76,7 +119,25 @@ function install(root){
     };
     PD.filter.__pizzaBroadDefaults=true;
   }
+  try{
+    if(typeof placeService!=='undefined'&&placeService&&!placeService.overpass.__pizzaBroadDefaults){
+      const baseOverpass=placeService.overpass.bind(placeService);
+      const wrappedOverpass=async function(q,options={}){
+        const primary=await baseOverpass(q,options),elements=primary?.data?.elements||[];
+        if(!shouldSupplement(elements)||String(primary?.source||'').includes('photon'))return primary;
+        try{
+          options.onStatus?.('Weitere Pizza- und Restauranttreffer werden ergänzt …');
+          const extra=await this.nearbyFallback(q,options);
+          if(extra?.length)return {data:{...primary.data,elements:mergeElements(elements,extra)},source:[primary.source,'photon.komoot.io'].filter(Boolean).join(' + ')};
+        }catch(error){if(options.signal?.aborted)throw error;}
+        return primary;
+      };
+      wrappedOverpass.__pizzaBroadDefaults=true;
+      placeService.overpass=wrappedOverpass.bind(placeService);
+      placeService.overpass.__pizzaBroadDefaults=true;
+    }
+  }catch(error){console.warn('PizzaScan discovery supplement skipped',error);}
   root.PizzaScanBroadPolicy={marker:MARKER,defaults:()=>normalizeConfig({}, {}, PD.TYPES)};
 }
-return {MARKER,allTypes,normalizeConfig,broadMigration,candidateVisible,install};
+return {MARKER,BROAD_AMENITIES,SUPPLEMENT_BELOW,allTypes,normalizeConfig,broadMigration,candidateVisible,queryAreaToken,expandDiscoveryQuery,mergeElements,shouldSupplement,install};
 });
