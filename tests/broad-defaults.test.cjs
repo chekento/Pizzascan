@@ -8,7 +8,7 @@ test('fresh installs default to all place types and all rating scores',()=>{
  assert.deepEqual(cfg.types,Object.keys(TYPES));
  assert.equal(cfg.radius,10);
  assert.equal(cfg.onlyOpen,false);
- assert.equal(cfg.unknownHours,true);
+ assert.equal(cfg.unknownHours,false);
  assert.equal(cfg.includeItalian,true);
  assert.equal(cfg.includeUnconfirmed,true);
  assert.equal(cfg.hideVisited,false);
@@ -34,6 +34,7 @@ test('migration resets only discovery filters and preserves unrelated choices',(
  assert.equal(next.autoSearch,true);
  assert.deepEqual(next.types,Object.keys(TYPES));
  assert.equal(next.onlyOpen,false);
+ assert.equal(next.unknownHours,false);
  assert.equal(next.minRating,0);
  assert.equal(next.includeUnrated,true);
  assert.equal(next.includeUnconfirmed,true);
@@ -45,6 +46,6 @@ test('ordinary restaurant candidates are visible by default but remain filterabl
  const broad=B.normalizeConfig({}, {}, TYPES);
  assert.equal(B.candidateVisible(place,broad,{visited:new Set()},()=>({state:'unknown'})),true);
  assert.equal(B.candidateVisible(place,{...broad,includeUnconfirmed:false},{visited:new Set()},()=>({state:'open'})),false);
- assert.equal(B.candidateVisible(place,{...broad,onlyOpen:true,unknownHours:false},{visited:new Set()},()=>({state:'unknown'})),false);
+ assert.equal(B.candidateVisible(place,{...broad,onlyOpen:true},{visited:new Set()},()=>({state:'unknown'})),false);
  assert.equal(B.candidateVisible(place,{...broad,hideVisited:true},{visited:new Set(['node-1'])},()=>({state:'open'})),false);
 });
