@@ -5,6 +5,8 @@
   "completed": 3,
   "total": 8,
   "summary": "3 erledigt · 3 in Arbeit · 2 ausstehend",
+  "tester_group": "https://groups.google.com/g/pizzascan-beta-testers",
+  "distribution_note": "Die eigentliche Tester-App wird später ausschließlich über den geschlossenen Google-Play-Test und dessen offiziellen Opt-in-Link ausgegeben. Die GitHub-APK ist nur für technische Vorab- und Geräteprüfungen bestimmt und zählt nicht als Teilnahme am Play-Test.",
   "items": [
     {
       "id": "source",
@@ -20,21 +22,21 @@
     },
     {
       "id": "apk",
-      "label": "Öffentliche 2.3.1-Test-APK",
+      "label": "Technische 2.3.1-Vorab-APK",
       "status": "done",
-      "note": "downloads/PizzaScan-2.3.1-Test.apk ist im Repository vorhanden."
+      "note": "downloads/PizzaScan-2.3.1-Test.apk ist für direkte Geräte- und Funktionsprüfung im Repository vorhanden; sie ist nicht die offizielle Play-Testausgabe."
     },
     {
       "id": "deviceqa",
       "label": "Echter Geräte-Abnahmetest",
       "status": "in_progress",
-      "note": "Der neue Orts-Suchfallback muss noch auf dem realen Android-Gerät final bestätigt werden."
+      "note": "Der neue Orts-Suchfallback und die Kernfunktionen müssen noch auf dem realen Android-Gerät final bestätigt werden."
     },
     {
       "id": "aab",
       "label": "Google-Play-AAB & Signierung",
       "status": "in_progress",
-      "note": "Das 2.3.1 Release-AAB wird bereits erzeugt; finale Upload-Signierung für cloud.kosch.pizzascan steht noch aus."
+      "note": "Das 2.3.1 Release-AAB wird erzeugt; finale Upload-Signierung für cloud.kosch.pizzascan steht noch aus."
     },
     {
       "id": "console",
@@ -44,9 +46,9 @@
     },
     {
       "id": "closedtest",
-      "label": "Geschlossener Test / Google Group",
+      "label": "Geschlossener Google-Play-Test",
       "status": "pending",
-      "note": "Testergruppe ist vorbereitet; AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch."
+      "note": "Die Google Group ist vorbereitet. AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch. Über diesen Play-Link wird die eigentliche Tester-App verteilt."
     },
     {
       "id": "production",
