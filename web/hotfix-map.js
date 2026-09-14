@@ -1,7 +1,7 @@
 /* PizzaScan map hardening: trusted HTTPS map data, bounded retries, first-load recovery + stable touch popups. */
 'use strict';
 const FIRST_DISCOVERY_KEY='pizzascan-first-map-discovery-v1';
-const MAP_TRUSTED_HOSTS=new Set(['overpass-api.de','overpass.private.coffee','photon.komoot.io']);
+const MAP_TRUSTED_HOSTS=new Set(['overpass-api.de','overpass.private.coffee','overpass.osm.jp','maps.mail.ru','photon.komoot.io']);
 const MAP_TRANSIENT_STATUS=new Set([408,425,429,500,502,503,504]);
 const MAP_MAX_JSON_BYTES=8*1024*1024;
 let popupPlaceId='',pendingAutoRefresh=false,hotfixFirstLoad=true,backgroundSince=0,recoveryTimer=null;
@@ -37,8 +37,7 @@ async function secureMapJson(url,options={},signal,timeout=18000){
    if(signal?.aborted)throw abortError();
    let error=original;
    if(timedOut){error=Error('Kartenquelle hat nicht rechtzeitig geantwortet.');error.name='TimeoutError';}
-   const retryHttp=endpoint.hostname==='photon.komoot.io'&&MAP_TRANSIENT_STATUS.has(Number(error?.status));
-   const transient=timedOut||error?.name==='TypeError'||retryHttp;
+   const transient=timedOut||error?.name==='TypeError'||MAP_TRANSIENT_STATUS.has(Number(error?.status));
    if(attempt===0&&transient){await delay(350,signal);continue;}
    throw error;
   }finally{clearTimeout(timer);signal?.removeEventListener('abort',forwardAbort);}
