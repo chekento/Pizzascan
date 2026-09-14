@@ -3,13 +3,25 @@ const P=require('../web/places.js');
 const center={lat:53.5511,lng:9.9937};
 const element=(id,tags={},type='node')=>({type,id,lat:center.lat+id/100000,lon:center.lng,tags:{name:'Pizza '+id,amenity:'restaurant',cuisine:'pizza',...tags}});
 const good=data=>({ok:true,status:200,json:async()=>data});
-const bad={ok:false,status:503};
+const bad={ok:false,status:503,text:async()=>''};
 const memory=()=>{const m=new Map();return {getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k),key:i=>[...m.keys()][i],get length(){return m.size;}};};
-test('Original food categories and Italian candidates return with explicit pizza evidence',()=>{
- const list=P.fromOverpass([element(1),element(2,{amenity:'cafe'}),element(3,{amenity:'fast_food'}),element(4,{amenity:'food_truck'}),element(5,{amenity:'vending_machine','vending:pizza':'yes'}),element(6,{amenity:'pub'}),element(7,{name:'Trattoria Roma',cuisine:'italian'}),element(8,{name:'Sushi Bar',cuisine:'japanese'}),element(9,{disused:'yes'}),element(10,{amenity:'construction'})]);
- assert.deepEqual(list.map(p=>p.type),['pizzeria','cafe','fast_food','food_truck','vending_pizza','other','pizzeria']);
- assert.equal(list[6].pizzaEvidence,'possible');assert.equal(list[0].pizzaEvidence,'confirmed');assert.equal(new Set(Object.values(P.TYPES).map(x=>x.emoji)).size,6);
- assert.match(P.query(center,3),/italian/);assert.match(P.query(center,3),/around:3000/);assert.match(P.query(center,3),/vending:pizza/);assert.match(P.query(center,3),/out body center;/,'Node coordinates and way centers must both be requested');
+test('All six remote map categories normalize explicitly and generic restaurants become Weitere Orte',()=>{
+ const list=P.fromOverpass([element(1),element(2,{amenity:'cafe'}),element(3,{amenity:'fast_food'}),element(4,{amenity:'food_truck'}),element(5,{amenity:'vending_machine','vending:pizza':'yes'}),element(6,{amenity:'pub'}),element(7,{name:'Trattoria Roma',cuisine:'italian'}),element(8,{name:'Sushi Bar',cuisine:'japanese'}),element(9,{disused:'yes'}),element(10,{amenity:'construction'})],{allowNamed:true});
+ assert.deepEqual(list.map(p=>p.type),['pizzeria','cafe','fast_food','food_truck','vending_pizza','other','other','other']);
+ assert.equal(list[6].pizzaEvidence,'possible');assert.equal(list[0].pizzaEvidence,'confirmed');assert.equal(list[7].pizzaEvidence,'search');assert.equal(new Set(Object.values(P.TYPES).map(x=>x.emoji)).size,6);
+ const q=P.query(center,3);assert.match(q,/italian/);assert.match(q,/around:3000/);assert.match(q,/vending:pizza/);assert.match(q,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|bar\|pub\|biergarten\|takeaway\|food_court"\]\["name"\]/);assert.match(q,/\["mobile"="yes"\]/);assert.match(q,/out body center;/,'Node coordinates and way centers must both be requested');
+});
+test('Fallback category terms do not fabricate pizza evidence for cafés, restaurants or food trucks',()=>{
+ const base={place:{placeId:'node-42',name:'Neutraler Ort',lat:53.55,lng:10,tags:{name:'Neutraler Ort'}}};
+ const cafe=P.normalize(P.photonElement(base,'cafe'),{allowNamed:true});
+ const truck=P.normalize(P.photonElement(base,'food truck'),{allowNamed:true});
+ const restaurant=P.normalize(P.photonElement(base,'restaurant'),{allowNamed:true});
+ const vending=P.normalize(P.photonElement(base,'pizza vending'),{allowNamed:true});
+ assert.equal(cafe.type,'cafe');assert.equal(cafe.pizzaEvidence,'search');
+ assert.equal(truck.type,'food_truck');assert.equal(truck.pizzaEvidence,'search');
+ assert.equal(restaurant.type,'other');assert.equal(restaurant.pizzaEvidence,'search');
+ assert.equal(vending.type,'vending_pizza');assert.equal(vending.pizzaEvidence,'confirmed');
+ assert.ok(['pizza','pizzeria','restaurant','cafe','imbiss','food truck','pizza vending','takeaway','bar','biergarten'].every(x=>P.fallbackTerms.includes(x)));
 });
 test('Contact, address, dietary, accessibility and menu fields survive refresh and storage',()=>{
  const full=P.normalize(element(1,{'addr:street':'Straße','addr:housenumber':'12','addr:postcode':'22926','addr:city':'Ahrensburg','contact:phone':'+49 123','contact:website':'example.org','website:menu':'https://example.org/menu',opening_hours:'24/7',wheelchair:'yes','diet:vegan':'yes',delivery:'yes','payment:cash':'yes'}));
@@ -24,6 +36,11 @@ test('Only-open filter rejects unknown and closed places unless explicitly inclu
  const list=P.fromOverpass([element(1),element(2),element(3),element(4,{name:'Italia',cuisine:'italian'})]);const states={'node-1':'open','node-2':'closed','node-3':'unknown','node-4':'open'},hours=p=>({state:states[p.placeId]});
  const config={...P.defaults,onlyOpen:true};assert.deepEqual(P.filter(list,config,{},hours).map(p=>p.placeId),['node-1','node-4']);assert.equal(P.filter(list,{...config,unknownHours:true},{},hours).length,3);assert.equal(P.filter(list,{...config,includeItalian:false},{},hours).length,1);assert.equal(P.filter(list,{...config,hideVisited:true},{visited:new Set(['node-1'])},hours).length,1);assert.equal(P.filter(list,{...config,types:[]},{},hours).length,0);
 });
+test('Generic named restaurants remain visible even when Italian candidates are disabled',()=>{
+ const generic=P.normalize(element(88,{name:'Sushi Haus',cuisine:'japanese'}),{allowNamed:true});
+ assert.equal(generic.type,'other');assert.equal(generic.pizzaEvidence,'search');
+ assert.deepEqual(P.filter([generic],{...P.defaults,includeItalian:false},{},()=>({state:'unknown'})).map(p=>p.placeId),['node-88']);
+});
 test('Radius bounds and viewport handle zero coordinates and international date line',()=>{
  assert.equal(P.within({lat:0,lng:0},{lat:0,lng:0},1),true);assert.equal(P.within({lat:0,lng:.1},{lat:0,lng:0},1),false);assert.equal(P.within({lat:0,lng:-179},{},0,{south:-1,north:1,west:178,east:-178}),true);assert.throws(()=>P.detailQuery('node-2;out;'));assert.equal(P.detailQuery('way-12').includes('way(12)'),true);
 });
@@ -31,7 +48,7 @@ test('A clean first request falls back on failure and remembers the working prov
  const called=[],service=new P.Service(async url=>{called.push(url);return url===P.providers[0]?bad:good({elements:[element(1)]});},memory());const result=await service.overpass(P.query(center,3));assert.equal(result.source,new URL(P.providers[1]).hostname);assert.equal(result.data.elements.length,1);assert.equal(called.length,2);await service.overpass(P.query(center,3));assert.equal(called.length,3);assert.equal(called[2],P.providers[1]);
 });
 test('Partial server results and total outages do not become zero-match successes',async()=>{
- let calls=0;const service=new P.Service(async()=>{calls++;return calls===1?good({remark:'runtime error: timed out',elements:[]}):bad;},memory());await assert.rejects(service.overpass('query'),/Beide Kartenquellen/);assert.equal(calls,2);
+ let calls=0;const service=new P.Service(async()=>{calls++;return calls===1?good({remark:'runtime error: timed out',elements:[]}):bad;},memory());await assert.rejects(service.overpass('query'),/Kartenquellen/);assert.equal(calls,2);
 });
 test('Cancellation cannot start a fallback or overwrite results of a newer search',async()=>{
  let calls=0;const ctl=new AbortController(),service=new P.Service(async(url,o)=>{calls++;return new Promise((_,reject)=>o.signal.addEventListener('abort',()=>reject(new DOMException('Stopped','AbortError')),{once:true}));},memory());const promise=service.overpass('query',{signal:ctl.signal});ctl.abort();await assert.rejects(promise);assert.equal(calls,1);
@@ -44,5 +61,5 @@ test('Detail address matching uses exact OSM identity, never a different branch'
  for(const [id,expected] of [[1,'Hamburger Straße 42, 22926 Ahrensburg'],[2,'']]){const s=new P.Service(async url=>url.includes('photon')?good(geo(id)):good({elements:[element(1,{name:'Pizza Max',phone:'+49 123',opening_hours:'24/7'})]}),memory());const r=await s.details(base);assert.equal(r.place.address,expected);assert.equal(r.place.phone,'+49 123');assert.equal(r.place.openingHours,'24/7');assert.equal(r.place.name,'Pizza Max');if(id===1)assert.equal(r.place.state,'Schleswig-Holstein');}
 });
 test('Submitted search cache avoids repeat remote lookup and preserves venue identity',async()=>{
- let calls=0;const s=new P.Service(async()=>{calls++;return good({features:[{geometry:{coordinates:[9.99,53.55]},properties:{name:'Roma',osm_type:'W',osm_id:99,osm_key:'amenity',osm_value:'restaurant'}}]});},memory());const a=await s.photon('Roma',center),b=await s.photon('Roma',center);assert.equal(calls,1);assert.equal(a[0].kind,'venue');assert.equal(b[0].place.placeId,'way-99');assert.equal(b[0].place.pizzaEvidence,'search');
+ let calls=0;const s=new P.Service(async()=>{calls++;return good({features:[{geometry:{coordinates:[9.99,53.55]},properties:{name:'Roma',osm_type:'W',osm_id:99,osm_key:'amenity',osm_value:'restaurant'}}]});},memory());const a=await s.photon('Roma',center),b=await s.photon('Roma',center);assert.equal(calls,1);assert.equal(a[0].kind,'venue');assert.equal(b[0].place.placeId,'way-99');assert.equal(b[0].place.pizzaEvidence,'search');assert.equal(b[0].place.type,'other');
 });
