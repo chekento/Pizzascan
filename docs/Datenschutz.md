@@ -1,6 +1,6 @@
 # Datenschutzerklärung für PizzaScan
 
-Stand: 13. September 2026 · Version 2.3.0 · Android-Paket cloud.kosch.pizzascan
+Stand: 14. September 2026 · Version 2.3.2 · Android-Paket `cloud.kosch.pizzascan`
 
 ## Verantwortlicher und Kontakt
 
@@ -18,17 +18,25 @@ Zur Wahl stehen CLIP ViT-B/32 und CLIP ViT-B/16 von OpenAI sowie SigLIP Base Pat
 
 Nach erfolgreichem Download speichert PizzaScan die Modelldateien im privaten persistenten App-Speicher von Android. Dasselbe Modell wird nach App-Neustarts und nach normalem Leeren des App-Caches wiederverwendet und muss nicht bei jedem Start erneut heruntergeladen werden. Ein Modell wird erst durch die ausdrückliche Funktion zum Entfernen heruntergeladener Modelle, durch „App-Daten löschen“ oder durch Deinstallation entfernt.
 
-## Karte, Restaurant- und Standortsuche
+## Karte, Restaurant-, Orts- und Standortsuche
 
-Kartenausschnitte werden von tile.openstreetmap.org geladen. Restaurantdaten kommen von overpass-api.de und bei Bedarf overpass.private.coffee. Suchbegriffe, Suchvorschläge und der Abgleich von Restaurantadressen können über photon.komoot.io verarbeitet werden. Diese Dienste erhalten die jeweils angefragten Kartenausschnitte, Suchmittelpunkte oder Suchtexte, bei Detailabfragen die ausgewählte OSM-Ortskennung sowie IP-Adresse und technische Verbindungsdaten. Bei Nutzung deines Standorts können Suchmittelpunkte und Suchbereiche Rückschlüsse auf deinen genauen oder ungefähren Standort ermöglichen.
+Kartenausschnitte werden von `tile.openstreetmap.org` geladen. Restaurantdaten kommen von `overpass-api.de` und bei Bedarf `overpass.private.coffee`. Für die normale Orts-/Adresssuche, Restaurantadressabgleiche und die verzögerten Online-Suchvorschläge verwendet PizzaScan primär `photon.komoot.io` (Photon). Photon kann dabei Suchtext und Suchmittelpunkt erhalten.
+
+### Nominatim-Fallback in Version 2.3.2
+
+Wenn du eine Suche **ausdrücklich absendest** und Photon technisch fehlschlägt oder keinen brauchbaren Treffer liefert, kann PizzaScan als Fallback `nominatim.openstreetmap.org` verwenden. Dieser Fallback wird **nicht für Autocomplete oder bloße Texteingabe** verwendet.
+
+An Nominatim übermittelt PizzaScan in dieser Fallback-Anfrage den eingegebenen Suchtext, die gewünschte Sprache sowie technische Abfrageparameter für das Ergebnisformat. PizzaScan fügt der Nominatim-Fallback-Anfrage **keine Standortkoordinaten bzw. keinen Suchmittelpunkt** hinzu. Wie bei jedem direkt angesprochenen Webdienst erhält Nominatim trotzdem technisch notwendige Verbindungsdaten wie die öffentliche IP-Adresse, Zeitpunkt und Client-/HTTP-Informationen. Die Fallback-Anfragen werden gedrosselt; erfolgreiche Ergebnisse werden in der App bzw. im isolierten Fallback-Kontext ungefähr 24 Stunden zwischengespeichert, um unnötige Wiederholungsanfragen zu vermeiden.
+
+Photon erhält bei seinen Suchanfragen je nach Funktion Suchtexte und einen Suchmittelpunkt. Overpass erhält Kartenausschnitte bzw. Suchbereiche und bei Detailabfragen OSM-Ortskennungen. Bei Nutzung deines Standorts können Suchmittelpunkte und Suchbereiche Rückschlüsse auf deinen genauen oder ungefähren Standort ermöglichen.
 
 GPS wird nur nach deiner Aktion oder bei zuvor aktiviertem Standortstart und vorhandener Android-Berechtigung abgefragt. Ein ungefährer Standort reicht ebenfalls. Es gibt keine Standortabfrage im Hintergrund und kein Bewegungsprofil der App. Du kannst die Berechtigung jederzeit in Android widerrufen und stattdessen einen Ort, ein Restaurant oder eine Pizzeria manuell suchen. Der letzte Kartenmittelpunkt und Kartenfilter bleiben lokal gespeichert.
 
-Informationen zu den Anbietern: [OpenStreetMap Foundation](https://osmfoundation.org/wiki/Privacy_Policy), [overpass-api.de](https://overpass-api.de/), [Private.coffee](https://private.coffee/privacy.html) und [komoot / Photon](https://www.komoot.com/privacy). Die Dienste können Verbindungsprotokolle für Betrieb und Missbrauchsschutz führen. PizzaScan steuert deren Aufbewahrungsdauer nicht und verspricht keine sofortige Löschung dieser Protokolle. Für Rechteanfragen zu solchen Protokollen wende dich auch an den jeweiligen Anbieter.
+Informationen zu den Anbietern: [OpenStreetMap Foundation](https://osmfoundation.org/wiki/Privacy_Policy), [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/), [overpass-api.de](https://overpass-api.de/), [Private.coffee](https://private.coffee/privacy.html) und [komoot / Photon](https://www.komoot.com/privacy). Die Dienste können Verbindungsprotokolle für Betrieb und Missbrauchsschutz führen. PizzaScan steuert deren Aufbewahrungsdauer nicht und verspricht keine sofortige Löschung dieser Protokolle. Für Rechteanfragen zu solchen Protokollen wende dich auch an den jeweiligen Anbieter.
 
 ## Offene Ortsbewertungen und Bewertungsfilter
 
-Wenn „Offene Bewertungen laden“ eingeschaltet ist, fragt PizzaScan api.mangrove.reviews direkt nach öffentlichen Bewertungen im Bereich geladener Orte ab. Die Open Reviews Association erhält den abgefragten Suchbereich sowie IP-Adresse und technische Verbindungsdaten. Bei standortnaher Suche kann der Bereich Rückschlüsse auf deinen Standort ermöglichen. Deine Fotos, eigenen Bewertungen und Entwürfe werden nicht übertragen. Die Funktion ist in den Einstellungen abschaltbar.
+Wenn „Offene Bewertungen laden“ eingeschaltet ist, fragt PizzaScan `api.mangrove.reviews` direkt nach öffentlichen Bewertungen im Bereich geladener Orte ab. Die Open Reviews Association erhält den abgefragten Suchbereich sowie IP-Adresse und technische Verbindungsdaten. Bei standortnaher Suche kann der Bereich Rückschlüsse auf deinen Standort ermöglichen. Deine Fotos, eigenen Bewertungen und Entwürfe werden nicht übertragen. Die Funktion ist in den Einstellungen abschaltbar.
 
 Der lokale Bewertungs-Cache enthält nur Zahlen, Ortsbezüge, öffentliche Bewertungskennungen und die zur Vermeidung von Doppelzählungen nötigen öffentlichen Identitäten, keine Rezensionstexte oder Fotos. Er wird bei Bedarf nach 15 Minuten aktualisiert; gespeicherte Ergebnisse werden höchstens sieben Tage genutzt und bei einem Neuabruf ersetzt. Alle Daten lassen sich über Androids App-Speicher löschen. Externe Links zu Google Maps, Tripadvisor und Yelp werden erst nach Antippen geöffnet; dabei gehen die Suchangaben an den gewählten Anbieter.
 
@@ -42,7 +50,7 @@ Fotoanalysen können mit Foto und Bewertungsdaten als JSON exportiert werden. Ei
 
 ## Speicher, Aufbewahrung und Löschung
 
-Fotoanalysen liegen in der lokalen IndexedDB der App; Entwürfe, Einstellungen, gemerkte Orte und Kartendaten im lokalen App-/Webspeicher. Heruntergeladene KI-Modelle liegen im privaten persistenten Android-App-Speicher und nicht im normalen Cache. Temporäre Kameradateien können im privaten App-Cache liegen und vom System gelöscht werden. Android-Cloud-Backups der App sind deaktiviert.
+Fotoanalysen liegen in der lokalen IndexedDB der App; Entwürfe, Einstellungen, gemerkte Orte, Such-/Fallback-Caches und Kartendaten im lokalen App-/Webspeicher. Heruntergeladene KI-Modelle liegen im privaten persistenten Android-App-Speicher und nicht im normalen Cache. Temporäre Kameradateien können im privaten App-Cache liegen und vom System gelöscht werden. Android-Cloud-Backups der App sind deaktiviert.
 
 Eine Fotoanalyse löschst du in ihren Details mit „Lokal löschen“, einen Rezensionsentwurf im Baukasten mit „Entwurf löschen“, Modelle in den Einstellungen mit „Heruntergeladene Modelle entfernen“. Alle App-Daten entfernst du über Android → Apps → PizzaScan → Speicher → Daten löschen oder durch Deinstallation. Außerhalb der App gespeicherte Exporte und bei Google veröffentlichte Rezensionen musst du dort separat löschen. Es existiert kein PizzaScan-Konto, das zusätzlich gelöscht werden müsste.
 
@@ -50,7 +58,7 @@ Eine Fotoanalyse löschst du in ihren Details mit „Lokal löschen“, einen Re
 
 Die Verarbeitung dient der von dir genutzten App-Funktion (Art. 6 Abs. 1 Buchst. b DSGVO); soweit eine Einwilligung erforderlich ist, beruht die optionale Standortnutzung und Modellfreigabe auf deiner Entscheidung (Art. 6 Abs. 1 Buchst. a DSGVO). Eine erteilte Freigabe kannst du für die Zukunft durch Entzug der Standortberechtigung beziehungsweise Entfernen der Modelle zurücksetzen. Die Rechtmäßigkeit vorheriger Verarbeitung bleibt davon unberührt.
 
-Karten- und Modellanfragen erfolgen verschlüsselt über HTTPS. Fotos, Entwürfe und persistente Modelldateien liegen im privaten App-Bereich unter dem Schutz des Android-Geräts. Bitte sichere dein Gerät mit einer Bildschirmsperre. Bei externen Anbietern kann eine Verarbeitung außerhalb der EU/des EWR stattfinden. Die jeweiligen Anbieter erläutern in ihren Datenschutzhinweisen Standorte, Rechtsgrundlagen und gegebenenfalls Schutzmaßnahmen für internationale Übermittlungen. Die App enthält keine Werbung und verkauft keine Daten.
+Karten-, Such- und Modellanfragen erfolgen verschlüsselt über HTTPS. Fotos, Entwürfe und persistente Modelldateien liegen im privaten App-Bereich unter dem Schutz des Android-Geräts. Bitte sichere dein Gerät mit einer Bildschirmsperre. Bei externen Anbietern kann eine Verarbeitung außerhalb der EU/des EWR stattfinden. Die jeweiligen Anbieter erläutern in ihren Datenschutzhinweisen Standorte, Rechtsgrundlagen und gegebenenfalls Schutzmaßnahmen für internationale Übermittlungen. Die App enthält keine Werbung und verkauft keine Daten.
 
 ## Deine Rechte
 
