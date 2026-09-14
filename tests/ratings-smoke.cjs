@@ -6,6 +6,7 @@ const elements=[
   {type:'node',id:103,lat:53.553,lon:9.997,tags:{name:'Pizza Above',cuisine:'pizza',opening_hours:'off'}},
   {type:'node',id:104,lat:53.554,lon:9.999,tags:{name:'Pizza Unrated',cuisine:'pizza',opening_hours:'24/7'}}
 ];
+const providerElements=[...elements,{type:'node',id:1901,tags:{name:'Non-geocoded guard one',amenity:'restaurant'}},{type:'node',id:1902,tags:{name:'Non-geocoded guard two',amenity:'restaurant'}}];
 function data(){return {reviews:[...elements.slice(0,3).map((p,i)=>({signature:String(p.id).padStart(30,'a'),kid:'reviewer-'+p.id,payload:{sub:`geo:${p.lat},${p.lon}?q=${encodeURIComponent(p.tags.name)}&u=10`,rating:[87,90,95][i],iat:Math.floor(Date.now()/1000)-3600,opinion:'UNTRUSTED REVIEW TEXT <img src=x onerror=alert(1)>',metadata:{osm_id:`node/${p.id}/2`}}})),{signature:'wrongbranch'.padStart(30,'a'),kid:'reviewer-wrong',payload:{sub:'geo:53.554,9.999?q=Pizza%20Unrated&u=10',rating:100,iat:Math.floor(Date.now()/1000)-3600,metadata:{osm_id:'node/999'}}}]};}
 const ids=page=>page.evaluate(()=>visiblePlaces().map(p=>p.placeId).sort());
 async function threshold(page,value){const slider=page.locator('#filter-min-rating');await slider.focus();await slider.press('Home');for(let i=0;i<Math.round(value*10);i++)await slider.press('ArrowRight');}
@@ -14,7 +15,7 @@ async function setup(browser,url,language='de',failure=false){
   await ctx.addInitScript(code=>{if(!localStorage.getItem('pizzascan-language-v1'))localStorage.setItem('pizzascan-language-v1',code);},language);
   const page=await ctx.newPage(),errors=[],requests=[];let calls=0;
   page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.url().startsWith('https://'))requests.push(r.url());});
-  await mapFixtures(page);await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee)\//,r=>r.fulfill({json:{elements}}));
+  await mapFixtures(page);await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee|overpass\.osm\.jp|maps\.mail\.ru)\//,r=>r.fulfill({json:{elements:providerElements}}));
   await page.route('**/api.mangrove.reviews/**',r=>{calls++;return failure?r.fulfill({status:503,json:{error:'Unavailable'}}):r.fulfill({json:data()});});
   await page.goto(url);await until(page,()=>PizzaScan.ready);await page.locator('#welcome-start').click();
   await until(page,()=>places.length===4&&!mapLoading&&!PizzaRatingsUI.loading);
