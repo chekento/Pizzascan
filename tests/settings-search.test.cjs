@@ -17,7 +17,7 @@ test('fallback terms follow enabled place types and never use generic Italian re
  const terms=S.fallbackTerms({types:['pizzeria','cafe','vending_pizza']});
  assert.deepEqual(terms,['pizza','pizzeria','pizza cafe','pizza vending machine']);
  assert.equal(terms.some(x=>/italian restaurant/i.test(x)),false);
- assert.deepEqual(S.fallbackTerms({types:[]}),['pizza','pizzeria']);
+ assert.deepEqual(S.fallbackTerms({types:[]}),[],'no enabled place types means no automatic fallback search');
 });
 
 test('radius fallback obeys the configured radius instead of expanding to five kilometres',()=>{
