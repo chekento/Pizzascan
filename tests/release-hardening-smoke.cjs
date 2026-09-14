@@ -12,7 +12,7 @@ async function untilNode(fn,timeout=5000){const end=Date.now()+timeout;while(Dat
  await page.route('**/tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:tile}));
  await page.route('**/api.mangrove.reviews/**',r=>r.fulfill({json:{reviews:[]}}));
  await page.route('**/photon.komoot.io/**',r=>r.fulfill({json:{features:[]}}));
- await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee)\//,r=>{overpassCalls++;return r.fulfill({json:{elements:emptyMode?[]:[{type:'node',id:501,lat:53.5511,lon:9.9937,tags:{name:'Recovery Pizza',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}}]}});});
+ await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee|overpass\.osm\.jp|maps\.mail\.ru)\//,r=>{overpassCalls++;return r.fulfill({json:{elements:emptyMode?[]:[{type:'node',id:501,lat:53.5511,lon:9.9937,tags:{name:'Recovery Pizza',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}}]}});});
  try{
   await page.goto(url);
   await until(page,()=>PizzaScan.ready);
