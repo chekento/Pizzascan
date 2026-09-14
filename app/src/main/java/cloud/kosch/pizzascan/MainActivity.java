@@ -37,8 +37,13 @@ import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import org.json.JSONObject;
@@ -48,6 +53,7 @@ public class MainActivity extends Activity {
     static final String ORIGIN = "https://appassets.androidplatform.net";
     static final String START_URL = ORIGIN + "/assets/index.html";
     private static final int LOCATION = 41, PICK_FILE = 42, SAVE_FILE = 43;
+    private static final int MAX_OVERPASS_BYTES = 8 * 1024 * 1024;
     private WebView web;
     private PersistentModelStore modelStore;
     private ValueCallback<Uri[]> fileCallback;
@@ -185,6 +191,51 @@ public class MainActivity extends Activity {
         return "https".equals(uri.getScheme()) && "appassets.androidplatform.net".equals(uri.getHost())
                 && (uri.getPort() == -1 || uri.getPort() == 443);
     }
+    private static boolean isAllowedOverpass(String endpoint) {
+        return "https://overpass-api.de/api/interpreter".equals(endpoint)
+                || "https://overpass.private.coffee/api/interpreter".equals(endpoint)
+                || "https://overpass.osm.jp/api/interpreter".equals(endpoint)
+                || "https://maps.mail.ru/osm/tools/overpass/api/interpreter".equals(endpoint);
+    }
+    private static String readLimited(InputStream input, int limit) throws Exception {
+        if (input == null) return "";
+        try (InputStream in = input; ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[16 * 1024];
+            int total = 0, n;
+            while ((n = in.read(buffer)) != -1) {
+                total += n;
+                if (total > limit) throw new java.io.IOException("Overpass response too large");
+                out.write(buffer, 0, n);
+            }
+            return out.toString(StandardCharsets.UTF_8.name());
+        }
+    }
+    private static String fetchOverpass(String endpoint, String query, int requestedTimeout) throws Exception {
+        if (!isAllowedOverpass(endpoint)) throw new SecurityException("Overpass endpoint not allowed");
+        if (query == null || query.isEmpty() || query.length() > 120000) throw new IllegalArgumentException("Invalid Overpass query");
+        int timeout = Math.max(5000, Math.min(14000, requestedTimeout));
+        HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
+        try {
+            connection.setRequestMethod("POST");
+            connection.setConnectTimeout(timeout);
+            connection.setReadTimeout(timeout);
+            connection.setInstanceFollowRedirects(false);
+            connection.setDoOutput(true);
+            connection.setUseCaches(false);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+            connection.setRequestProperty("User-Agent", "PizzaScan/" + BuildConfig.VERSION_NAME + " Android");
+            byte[] body = ("data=" + URLEncoder.encode(query, "UTF-8")).getBytes(StandardCharsets.UTF_8);
+            connection.setFixedLengthStreamingMode(body.length);
+            try (OutputStream output = connection.getOutputStream()) { output.write(body); }
+            int status = connection.getResponseCode();
+            String response = readLimited(status >= 200 && status < 300 ? connection.getInputStream() : connection.getErrorStream(), MAX_OVERPASS_BYTES);
+            if (status < 200 || status >= 300) throw new java.io.IOException("Overpass HTTP " + status);
+            JSONObject parsed = new JSONObject(response);
+            if (parsed.optJSONArray("elements") == null) throw new java.io.IOException("Invalid Overpass JSON");
+            return response;
+        } finally { connection.disconnect(); }
+    }
     private boolean hasLocationPermission() {
         return checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
@@ -243,6 +294,21 @@ public class MainActivity extends Activity {
                     share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     startActivity(Intent.createChooser(share, ui(R.string.share_photo)));
                     break;
+                }
+                case "overpass": {
+                    String endpoint = request.optString("endpoint");
+                    String query = request.optString("query");
+                    int timeout = request.optInt("timeout", 12000);
+                    if (!isAllowedOverpass(endpoint) || query.isEmpty()) throw new SecurityException("Invalid Overpass request");
+                    new Thread(() -> {
+                        try {
+                            String response = fetchOverpass(endpoint, query, timeout);
+                            runOnUiThread(() -> reply(request, response, null));
+                        } catch (Exception e) {
+                            runOnUiThread(() -> reply(request, "", ui(R.string.action_error) + ": " + e.getClass().getSimpleName()));
+                        }
+                    }, "pizzascan-overpass").start();
+                    return;
                 }
                 case "modelStorageStatus": {
                     reply(request, modelStore.status(request.optString("repo")).toString(), null);
