@@ -10,6 +10,8 @@ async function mapFixtures(page){
  await page.route('**/tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:tile}));
  await page.route('**/photon.komoot.io/**',r=>r.fulfill({json:{features:[{geometry:{coordinates:[9.9937,53.5511]},properties:{name:'Hamburg',osm_type:'R',osm_id:100,osm_key:'place',osm_value:'city'}}]}}));
  const elements=[{type:'way',id:1,center:{lat:53.5511,lon:9.9937},tags:{name:'Fixture Pizza One',cuisine:'pizza',opening_hours:'24/7'}},{type:'node',id:2,lat:53.552,lon:9.998,tags:{name:'Pizza <img src=x onerror=alert(1)>',cuisine:'pizza'}}];
- await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee|overpass\.osm\.jp|maps\.mail\.ru)\//,r=>r.fulfill({json:{elements}}));
+ await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee)\//,r=>r.fulfill({json:{elements}}));
+ const recoveryElements=[...elements,...Array.from({length:16},(_,i)=>({type:'node',id:9000+i,tags:{name:'Non-geocoded recovery fixture '+i,amenity:'restaurant'}}))];
+ await page.route(/https:\/\/(overpass\.osm\.jp|maps\.mail\.ru)\//,r=>r.fulfill({json:{elements:recoveryElements}}));
 }
 module.exports={server,until,mapFixtures};
