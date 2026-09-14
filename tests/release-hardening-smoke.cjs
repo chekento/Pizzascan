@@ -9,10 +9,14 @@ async function untilNode(fn,timeout=5000){const end=Date.now()+timeout;while(Dat
  const page=await browser.newPage({viewport:{width:393,height:851}});
  const tile=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z1SIAAAAASUVORK5CYII=','base64');
  let overpassCalls=0,emptyMode=false;
+ const place={type:'node',id:501,lat:53.5511,lon:9.9937,tags:{name:'Recovery Pizza',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}};
+ // The product treats fewer than 18 raw POIs as potentially incomplete. Keep the hardening fixture
+ // above that threshold while only one object has coordinates and therefore becomes a rendered place.
+ const providerElements=[place,...Array.from({length:29},(_,i)=>({type:'node',id:5000+i,tags:{name:'Non-geocoded release guard '+i,amenity:i%3===0?'restaurant':i%3===1?'cafe':'fast_food'}}))];
  await page.route('**/tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:tile}));
  await page.route('**/api.mangrove.reviews/**',r=>r.fulfill({json:{reviews:[]}}));
  await page.route('**/photon.komoot.io/**',r=>r.fulfill({json:{features:[]}}));
- await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee|overpass\.osm\.jp|maps\.mail\.ru)\//,r=>{overpassCalls++;return r.fulfill({json:{elements:emptyMode?[]:[{type:'node',id:501,lat:53.5511,lon:9.9937,tags:{name:'Recovery Pizza',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}}]}});});
+ await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee|overpass\.osm\.jp|maps\.mail\.ru)\//,r=>{overpassCalls++;return r.fulfill({json:{elements:emptyMode?[]:providerElements}});});
  try{
   await page.goto(url);
   await until(page,()=>PizzaScan.ready);
