@@ -2,7 +2,7 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.2</h1>
+<h1 align="center">PizzaScan 2.3.3</h1>
 <p align="center"><strong>Gute Pizza finden · offene Bewertungen filtern · Fotos lokal analysieren</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
@@ -16,21 +16,21 @@
 <tr>
 <td align="center" width="50%">
 <h3>📱 Android · technische Vorab-APK</h3>
-<p><strong>PizzaScan 2.3.2</strong> für direkte Geräte- und Funktionsprüfungen.</p>
-<p><a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.2-Test.apk"><strong>⬇️ PizzaScan 2.3.2 Test-APK herunterladen</strong></a></p>
+<p><strong>PizzaScan 2.3.3</strong> für direkte Geräte- und Funktionsprüfungen.</p>
+<p><a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.3-Test.apk"><strong>⬇️ PizzaScan 2.3.3 Test-APK herunterladen</strong></a></p>
 <p><sub>Paket: cloud.kosch.pizzascan.lang1 · nicht die spätere Play-Testausgabe</sub></p>
 </td>
 <td align="center" width="50%">
 <h3>🌐 Browser-Demo</h3>
 <p>Die Weboberfläche lässt sich ohne Installation ausprobieren.</p>
-<p><a href="https://raw.githack.com/chekento/Pizzascan/main/web/index.html"><strong>▶ PizzaScan 2.3.2 im Browser öffnen</strong></a></p>
+<p><a href="https://raw.githack.com/chekento/Pizzascan/main/web/index.html"><strong>▶ PizzaScan 2.3.3 im Browser öffnen</strong></a></p>
 <p><sub>Technische Demo: Android-spezifische Funktionen können im Browser abweichen.</sub></p>
 </td>
 </tr>
 </table>
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.2.txt"><strong>SHA-256 prüfen</strong></a>
+<a href="downloads/SHA256SUMS-2.3.3.txt"><strong>SHA-256 prüfen</strong></a>
 &nbsp; · &nbsp;
 <strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html">🚦 Release-Dashboard</a></strong>
 </p>
@@ -63,21 +63,21 @@
 
 | Status | Meilenstein | Aktueller Stand |
 |---|---|---|
-| ✅ | **2.3.2 Quellstand & Repo** | Robuster Suchfallback, Karten-Recovery, Filtererhalt, Bewertungsfilter, Ratings-Links, kompakte Navigation und 5 Sprachen sind auf `main`. |
-| ✅ | **CI-Build & Android 16** | Build, Lint, Web/UI-Tests, Modelltests und Android-16-Smoke-Test sind für 2.3.2 erfolgreich. |
-| ✅ | **Technische Vorab-APK** | `downloads/PizzaScan-2.3.2-Test.apk` liegt für direkte Geräteprüfung im Repository. |
-| 🟡 | **Echter Geräte-Abnahmetest** | 2.3.2 muss auf dem realen Android-Gerät final bestätigt werden. |
-| 🟡 | **Play-AAB & Signierung** | Das 2.3.2 Release-AAB wird erzeugt und validiert; finale Upload-Signierung für `cloud.kosch.pizzascan` steht aus. |
+| ✅ | **2.3.3 Quellstand & Repo** | Robuster Suchfallback, Karten-Recovery, Filtererhalt, Bewertungsfilter, Ratings-Links, kompakte Navigation, 5 Sprachen und optionale Google-Maps-Reviews sind auf `main`. |
+| ✅ | **CI-Build & Android 16** | Build, Lint, Web/UI-Tests, Modelltests und Android-16-Smoke-Test sind für 2.3.3 erfolgreich. |
+| ✅ | **Technische Vorab-APK** | `downloads/PizzaScan-2.3.3-Test.apk` wird aus dem aktuellen 2.3.3-Build für direkte Geräteprüfung veröffentlicht. |
+| 🟡 | **Echter Geräte-Abnahmetest** | 2.3.3 muss auf dem realen Android-Gerät final bestätigt werden. |
+| 🟡 | **Play-AAB & Signierung** | Das 2.3.3 Release-AAB wird erzeugt und validiert; finale Upload-Signierung für `cloud.kosch.pizzascan` steht aus. |
 | 🟡 | **Play Console** | Store-Assets, Datenschutz und Datensicherheitsunterlagen sind vorbereitet; Formulare noch nicht vollständig abgeschlossen. |
 | ⏳ | **Geschlossener Google-Play-Test** | [Google Group](https://groups.google.com/g/pizzascan-beta-testers) ist vorbereitet; AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch. |
 | ⏳ | **Produktion** | Nach geschlossenem Test und den gegebenenfalls geltenden Play-Testanforderungen. |
 
-**Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.2` · **VersionCode:** `8` · **Stand:** 14.09.2026  
+**Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.3` · **VersionCode:** `9` · **Stand:** 14.09.2026  
 [🧪 Tester-Gruppe](https://groups.google.com/g/pizzascan-beta-testers) · [🚦 Dashboard öffnen](https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html) · [Play-Console-Checkliste](store/PLAY-CONSOLE.md) · [Testplan](store/TESTPLAN.md)
 
 </details>
 
-## Neu in 2.3.2
+## Neu in 2.3.3
 
 - 🔎 **robustere Orts-/Adresssuche:** Photon bleibt Primärdienst; bei einer ausdrücklich abgesendeten Suche greift ein Nominatim-Fallback, wenn Photon fehlschlägt **oder keinen brauchbaren Treffer liefert**.
 - ⌨️ **kein Nominatim-Autocomplete:** Suchvorschläge bleiben bei Photon; der Fallback wird nur nach bewusstem Absenden einer Suche verwendet.
@@ -86,6 +86,7 @@
 - ⭐ **Mindestbewertung 0,0–5,0 in 0,1-Schritten**, z. B. nur Orte ab **4,6 / 5**.
 - 🌱 **Mangrove / Open Reviews** als kostenlose offene Bewertungsquelle; Orte ohne offene Bewertung separat ein-/ausblendbar.
 - ↗ **Google Maps, Tripadvisor und Yelp** als externe Portal-Suchlinks in Restaurantdetails; deren Bewertungen werden nicht kopiert.
+- 🗺️ **optionale Google-Maps-Reviews:** mit einem eigenen Google-Places-API-Key können reale Google-Bewertungen und bis zu fünf Rezensionen gezielt geladen werden; ohne Key bleibt PizzaScan vollständig nutzbar und öffnet Google Maps extern.
 - 📍 **stabile Kartenmarker** beim Zoomen, Verschieben, Vollbild und Drehen.
 - 🌍 vollständige Oberfläche in **DE / EN / IT / ES / FR**.
 - 🤖 persistente Offline-Modellablage unter Android: ein bereits geladenes Modell bleibt nach normalem App-Neustart und Cache-Bereinigung erhalten.
@@ -107,7 +108,7 @@
 
 Unter **Einstellungen → Offene Ortsbewertungen → Mindestbewertung** wird der gewünschte Grenzwert gesetzt. Der Filter wirkt auf Karte und Liste. Bei `0` ist er deaktiviert. Bei aktivem Grenzwert können Orte ohne bekannte offene Bewertung bewusst zusätzlich eingeblendet werden.
 
-Die offenen Daten stammen aus **Mangrove / Open Reviews**. Google Maps, Tripadvisor und Yelp werden nur als externe Links geöffnet. Details zu Quelle, Lizenz und Berechnung: [docs/Offene-Bewertungen.md](docs/Offene-Bewertungen.md).
+Die offenen Daten stammen aus **Mangrove / Open Reviews**. Google Maps, Tripadvisor und Yelp werden als externe Links geöffnet. Zusätzlich kann optional ein eigener Google-Places-API-Key verwendet werden, um Google-Maps-Ratingdaten und bis zu fünf Rezensionen explizit abzurufen. Für die Google Places API kann ein Google-Cloud-Projekt mit aktivierter Abrechnung erforderlich sein; diese Integration ist optional und keine Voraussetzung für die Nutzung von PizzaScan. Details zu Quelle, Lizenz und Berechnung: [docs/Offene-Bewertungen.md](docs/Offene-Bewertungen.md).
 
 ## Fotoanalyse
 
@@ -121,7 +122,7 @@ Die Modelle werden erst nach ausdrücklicher Bestätigung heruntergeladen und an
 - WebView-App mit gepackten Web-Assets.
 - OpenStreetMap / Overpass, Photon, kontrollierter Nominatim-Fallback, Leaflet.
 - CI-Tests für Ratings, Suche, Fallback, Karten-Recovery, Navigation, i18n, Marker, Runtime-Assets und lokale Modelle.
-- Android-16-Emulator-Smoke-Test vor Veröffentlichung der technischen 2.3.2-Test-APK.
+- Android-16-Emulator-Smoke-Test vor Veröffentlichung der technischen 2.3.3-Test-APK.
 - Der geschlossene Release-Test wird separat über Google Play verteilt.
 
 Die vollständigen Quellen liegen unter `web/` und `app/`. Play-Store-Vorbereitung und Testplan befinden sich unter `store/`.
