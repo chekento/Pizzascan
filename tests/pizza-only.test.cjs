@@ -41,7 +41,7 @@ test('search groups remove generic venues and generic geocoder locations',()=>{
  const helper={stateIntent:q=>/standort/i.test(q)?['location']:[]};
  const groups=[[
   {kind:'venue',name:'Pizza Uno',place:place(1,'pizzeria','Pizza Uno','pizza')},
-  {kind:'venue',name:'Café ohne Pizza',place:place(2,'cafe','Café ohne Pizza','coffee_shop')},
+  {kind:'venue',name:'Kaffeeküche',place:place(2,'cafe','Kaffeeküche','coffee_shop')},
   {kind:'location',name:'Ahrensburg',address:'Schleswig-Holstein'},
   {kind:'location',name:'Dein Standort',searchStates:['location']}
  ]];
