@@ -6,11 +6,28 @@
 })(globalThis,function(){
   'use strict';
 
+  const genericSearchWords=new Set(['restaurant','restaurants','ristorante','trattoria','pizzeria','pizzerias','pizzaria','pizza','cafe','cafes','imbiss','fast','food']);
+
   function evidenceAllowed(place,cfg,explicit=false){
     const evidence=place?.pizzaEvidence||'';
     if(evidence==='confirmed')return true;
     if(evidence==='possible')return !!cfg?.includeItalian;
     return explicit&&evidence==='search';
+  }
+
+  function normalizedWords(value){
+    return String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  }
+
+  function explicitQueryMatches(place,query){
+    const words=normalizedWords(query);
+    if(!words.length)return true;
+    const normalized=normalizedWords(String(place?.name||'')+' '+String(place?.address||'')).join(' ');
+    const asksPizza=words.some(w=>w==='pizza'||w==='pizzeria'||w==='pizzaria');
+    if(asksPizza&&place?.pizzaEvidence==='search'&&!/(^| )(pizza|pizzeria|pizzaria)( |$)/.test(normalized))return false;
+    const meaningful=words.filter(w=>!genericSearchWords.has(w));
+    if(meaningful.length)return meaningful.every(w=>normalized.includes(w));
+    return words.some(w=>normalized.includes(w));
   }
 
   function parseArea(query){
@@ -70,15 +87,7 @@
       if(cfg.radius>0&&Core.distance(center,place)>cfg.radius+0.02)return false;
       if(cfg.radius===0&&scope.bounds&&!inScope(place,scope,cfg,Core.distance))return false;
       if(cfg.ratingsEnabled&&cfg.minRating>0&&!ratingPass(place,cfg))return false;
-      if(place.pizzaEvidence==='search'&&explicit){
-        const q=String(query||'').trim();
-        if(q.length>=2){
-          const hay=String(place.name||'')+' '+String(place.address||'');
-          const words=q.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
-          const normalized=hay.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-          if(words.length&&!words.every(w=>normalized.includes(w)))return false;
-        }
-      }
+      if(place.pizzaEvidence==='search'&&explicit&&!explicitQueryMatches(place,query))return false;
       return true;
     }
 
@@ -150,5 +159,5 @@
     else wrapAfterSearchUi();
   }
 
-  return {evidenceAllowed,parseArea,fallbackTerms,inScope,install};
+  return {evidenceAllowed,explicitQueryMatches,parseArea,fallbackTerms,inScope,install};
 });
