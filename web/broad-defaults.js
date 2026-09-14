@@ -7,7 +7,7 @@
 'use strict';
 const MARKER='pizzascan-broad-defaults-v3';
 const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court';
-const SUPPLEMENT_BELOW=12;
+const SUPPLEMENT_BELOW=4;
 
 function allTypes(types){return Object.keys(types||{});}
 function normalizeConfig(base={},raw={},types={}){
