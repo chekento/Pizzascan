@@ -11,8 +11,9 @@ const {server,until}=require('./helpers.cjs');
  await page.route('**/tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:tile}));
  await page.route('**/api.mangrove.reviews/**',r=>r.fulfill({json:{reviews:[]}}));
  await page.route(/https:\/\/(overpass-api\.de|overpass\.private\.coffee)\//,r=>r.fulfill({json:{elements:[place]}}));
- // Keep POI recovery deterministic and prevent it from consuming the Photon calls that this test reserves for submitted geocoding.
- const recovery=[place,...Array.from({length:17},(_,i)=>({type:'node',id:8000+i,tags:{name:'Non-geocoded recovery fixture '+i,amenity:'restaurant'}}))];
+ // Keep POI recovery deterministic and prevent it from consuming Photon calls reserved for submitted geocoding.
+ // Thirty raw elements satisfy the product completeness target; only the first has coordinates and is rendered.
+ const recovery=[place,...Array.from({length:29},(_,i)=>({type:'node',id:8000+i,tags:{name:'Non-geocoded recovery fixture '+i,amenity:'restaurant'}}))];
  await page.route(/https:\/\/(overpass\.osm\.jp|maps\.mail\.ru)\//,r=>r.fulfill({json:{elements:recovery}}));
  await page.route('**/photon.komoot.io/**',r=>{photonCalls++;const q=new URL(r.request().url()).searchParams.get('q')||'';if(q.toLowerCase().includes('ahrensburg'))return r.fulfill({status:404,contentType:'text/html',headers:{'access-control-allow-origin':'*'},body:'<h1>404 Not Found</h1>'});return r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},json:{features:[]}});});
  await page.route('**/nominatim.openstreetmap.org/**',r=>{nominatimCalls++;const q=new URL(r.request().url()).searchParams.get('q')||'';const bargteheide=q.toLowerCase().includes('bargteheide');return r.fulfill({status:200,contentType:'application/json',headers:{'access-control-allow-origin':'*'},json:[{place_id:bargteheide?100:99,lat:bargteheide?'53.7286':'53.6759',lon:bargteheide?'10.2663':'10.2393',osm_type:'relation',osm_id:bargteheide?2703417:2400214,category:'place',type:'town',name:bargteheide?'Bargteheide':'Ahrensburg',display_name:(bargteheide?'Bargteheide':'Ahrensburg')+', Stormarn, Schleswig-Holstein, Deutschland',address:{town:bargteheide?'Bargteheide':'Ahrensburg',county:'Stormarn',state:'Schleswig-Holstein',country:'Deutschland',country_code:'de'}}]});});
