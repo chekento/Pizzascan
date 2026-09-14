@@ -87,9 +87,10 @@ function key(item){
 }
 function matchesCategory(item,query){
   const intents=categoryIntent(query);if(!intents.length)return true;
-  const p=item?.place||item||{};if(item?.kind==='location'&&!p?.placeId)return true;
+  const p=item?.place||item||{};
+  if(item?.kind==='location'&&!p?.placeId)return false;
   const type=p.type||item?.type||'',hay=text([p.name,p.cuisine,p.pizzaEvidence,p.tags?.vending,p.tags?.speciality].filter(Boolean).join(' '));
-  return intents.some(intent=>intent==='cafe'?type==='cafe':intent==='fast_food'?type==='fast_food':intent==='food_truck'?type==='food_truck':intent==='vending_pizza'?type==='vending_pizza':intent==='pizza'?(p.pizzaEvidence==='confirmed'||type==='vending_pizza'||/pizza|pizzeria|pizzaria/.test(hay)):intent==='other'?['pizzeria','other','fast_food','food_truck','cafe'].includes(type):true);
+  return intents.some(intent=>intent==='cafe'?type==='cafe':intent==='fast_food'?type==='fast_food':intent==='food_truck'?type==='food_truck':intent==='vending_pizza'?type==='vending_pizza':intent==='pizza'?(p.pizzaEvidence==='confirmed'||type==='vending_pizza'||/pizza|pizzeria|pizzaria/.test(hay)):intent==='other'?['pizzeria','other'].includes(type):true);
 }
 function matchesState(item,query){const intents=stateIntent(query);if(!intents.length)return true;const states=new Set(item?.searchStates||[]);return intents.some(x=>states.has(x));}
 function score(item,query,center,distance){
