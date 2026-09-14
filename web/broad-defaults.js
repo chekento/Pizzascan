@@ -5,7 +5,7 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v1';
+const MARKER='pizzascan-broad-defaults-v2';
 
 function allTypes(types){return Object.keys(types||{});}
 function normalizeConfig(base={},raw={},types={}){
@@ -21,7 +21,7 @@ function normalizeConfig(base={},raw={},types={}){
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,
     ratingsEnabled:has('ratingsEnabled')?raw.ratingsEnabled!==false:true,
     minRating:has('minRating')&&Number.isFinite(Number(raw.minRating))?Math.max(0,Math.min(5,Number(raw.minRating))):0,
-    includeUnrated:has('includeUnrated')?raw.includeUnrated!==false:true
+    includeUnrated:has('includeUnrated')?raw.includeUnrated===true:false
   };
 }
 function broadMigration(previous={},types={}){
@@ -36,7 +36,7 @@ function broadMigration(previous={},types={}){
     hideVisited:false,
     ratingsEnabled:true,
     minRating:0,
-    includeUnrated:true
+    includeUnrated:false
   };
 }
 function candidateVisible(place,cfg,context={},hours=()=>({state:'unknown'})){
