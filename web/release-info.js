@@ -20,6 +20,7 @@
   const jumps=body.querySelector('.settings-jumps');if(jumps&&!document.getElementById('jump-release')){const b=document.createElement('button');b.id='jump-release';b.className='secondary';b.textContent=t.jump;b.onclick=()=>info.scrollIntoView({block:'start'});jumps.appendChild(b);}
   return true;
  }
- function install(){const body=document.getElementById('sheet-body');if(!body)return;new MutationObserver(()=>decorate()).observe(body,{childList:true,subtree:true});new MutationObserver(()=>{const info=document.getElementById('pizzascan-release-info');if(info){info.outerHTML=html(lang());decorate();}}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});decorate();}
- const api={RELEASE,COPY,html,decorate,install};root.PizzaReleaseInfo=api;if(typeof module==='object'&&module.exports)module.exports=api;if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();}
+ function syncVersion(){if(root.PizzaScan)root.PizzaScan.version=RELEASE.version;const badge=document.querySelector('.brand small');if(badge)badge.textContent=RELEASE.version;}
+ function install(){syncVersion();const body=document.getElementById('sheet-body');if(!body)return;new MutationObserver(()=>decorate()).observe(body,{childList:true,subtree:true});new MutationObserver(()=>{const info=document.getElementById('pizzascan-release-info');if(info){info.outerHTML=html(lang());decorate();}}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});decorate();}
+ const api={RELEASE,COPY,html,decorate,syncVersion,install};root.PizzaReleaseInfo=api;if(typeof module==='object'&&module.exports)module.exports=api;if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();}
 })(typeof window!=='undefined'?window:globalThis);
