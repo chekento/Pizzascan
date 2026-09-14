@@ -21,7 +21,7 @@
 <br><strong>Android-Testversion 2.3.1</strong>
 </td>
 <td width="50%" align="center">
-<a href="https://chekento.github.io/Pizzascan/">
+<a href="https://raw.githack.com/chekento/Pizzascan/main/docs/index.html">
 <img src="store/graphics/Open-Mini-Live.svg" alt="PizzaScan Mini Live öffnen" width="100%">
 </a>
 <br><strong>Mini Live im Browser</strong>
@@ -32,7 +32,7 @@
 <p align="center">
 <strong><a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.1-Test.apk">⬇ PizzaScan-2.3.1-Test.apk herunterladen</a></strong>
 &nbsp; · &nbsp;
-<strong><a href="https://chekento.github.io/Pizzascan/">🌐 Mini Live öffnen</a></strong>
+<strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/index.html">🌐 Mini Live öffnen</a></strong>
 </p>
 
 <p align="center">
@@ -43,7 +43,7 @@
 <a href="store/PLAY-CONSOLE.md">Google Play</a>
 </p>
 
-> **Wichtig:** Die öffentliche Downloaddatei wird vom CI-Workflow aus genau der APK veröffentlicht, die zuvor im Android-16-Emulator getestet wurde. Dadurch kann die Startseite nicht mehr versehentlich auf eine ältere Test-APK zeigen.
+> **Wichtig:** Die öffentliche Downloaddatei wird vom CI-Workflow aus genau der APK veröffentlicht, die zuvor im Android-16-Emulator getestet wurde. Dadurch kann die Startseite nicht mehr versehentlich auf eine ältere Test-APK zeigen. Die Mini-Live-Demo ist zusätzlich direkt aus dem Repository ausführbar und benötigt deshalb keine aktivierte GitHub-Pages-Site.
 
 ## Neu in 2.3.1
 
