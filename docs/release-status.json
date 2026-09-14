@@ -1,0 +1,58 @@
+{
+  "updated": "2026-09-14",
+  "version": "2.3.1",
+  "stage": "Pre-closed-test",
+  "completed": 3,
+  "total": 8,
+  "summary": "3 erledigt · 3 in Arbeit · 2 ausstehend",
+  "items": [
+    {
+      "id": "source",
+      "label": "2.3.1 Quellstand & Repo",
+      "status": "done",
+      "note": "Aktueller main-Stand enthält Such-Fallback, Bewertungsfilter, Ratings-Links und die 5-sprachige Oberfläche."
+    },
+    {
+      "id": "ci",
+      "label": "CI-Build & Android-16-Test",
+      "status": "done",
+      "note": "Build, Web/UI-Tests, lokale Modelltests und Android-16-Smoke-Test sind erfolgreich durchgelaufen."
+    },
+    {
+      "id": "apk",
+      "label": "Öffentliche 2.3.1-Test-APK",
+      "status": "done",
+      "note": "downloads/PizzaScan-2.3.1-Test.apk ist im Repository vorhanden."
+    },
+    {
+      "id": "deviceqa",
+      "label": "Echter Geräte-Abnahmetest",
+      "status": "in_progress",
+      "note": "Der neue Orts-Suchfallback muss noch auf dem realen Android-Gerät final bestätigt werden."
+    },
+    {
+      "id": "aab",
+      "label": "Google-Play-AAB & Signierung",
+      "status": "in_progress",
+      "note": "Das 2.3.1 Release-AAB wird bereits erzeugt; finale Upload-Signierung für cloud.kosch.pizzascan steht noch aus."
+    },
+    {
+      "id": "console",
+      "label": "Play-Console-Eintrag & Erklärungen",
+      "status": "in_progress",
+      "note": "Store-Grafiken, Datenschutz- und Datensicherheitsunterlagen sind vorbereitet; die Console-Formulare sind noch nicht vollständig abgeschlossen."
+    },
+    {
+      "id": "closedtest",
+      "label": "Geschlossener Test / Google Group",
+      "status": "pending",
+      "note": "Testergruppe ist vorbereitet; AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch."
+    },
+    {
+      "id": "production",
+      "label": "Produktionszugang & Veröffentlichung",
+      "status": "pending",
+      "note": "Startet nach erfolgreichem geschlossenen Test und den gegebenenfalls geltenden Play-Testanforderungen."
+    }
+  ]
+}
