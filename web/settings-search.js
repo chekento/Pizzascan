@@ -163,7 +163,7 @@
       for(const term of fallbackTerms(cfg)){
         if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
         try{
-          const items=await rawPhoton(term,area.center,{signal,force:true});
+          const items=await rawPhoton(term,area.center,{signal});
           for(const item of items||[]){
             const place=item?.place;
             if(!place||!inScope(place,area,cfg,Core.distance))continue;
