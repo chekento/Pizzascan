@@ -16,7 +16,7 @@
   <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.4.apk"><strong>⬇️ PizzaScan 2.3.4 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.4 · Build 25 · Android 8+ · Paket cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.4 · Build 26 · Android 8+ · Paket cloud.kosch.pizzascan</strong></p>
 
 Die aktuelle Direkt-APK trägt in App, Dateiname und Android-Paket nur den Namen **PizzaScan**. Sie enthält die vollständige Karten-/POI-Suche, Ratingfilter, Restaurantdetails, Review Builder, fünf Sprachen und die lokale Fotoanalyse. Die veröffentlichte APK wird in CI signaturgeprüft, aus der tatsächlich gebauten APK heraus UI-getestet und zusätzlich auf Android 16 installiert und gestartet.
 
@@ -34,9 +34,21 @@ Die aktuelle Direkt-APK trägt in App, Dateiname und Android-Paket nur den Namen
 
 PizzaScan trennt **Discovery** und **Filterung** strikt. Zuerst werden gastronomische POIs geladen und normalisiert; erst danach wirken Öffnungs-, Typ- und Bewertungsfilter. Dadurch verschwinden Restaurants nicht mehr schon während der Datenerfassung wegen alter Filterzustände.
 
-Bei einer ausdrücklich abgesendeten Suche wird nicht nur Autocomplete verwendet. PizzaScan gleicht den Suchbegriff zusätzlich direkt gegen OpenStreetMap/Overpass ab, vergleicht **Name, Adresse, OSM-Identität und Entfernung**, dedupliziert gleiche POIs anhand ihrer OSM-ID und sortiert exakte Namens-/Ortsübereinstimmungen nach vorn. Photon bleibt für Orts-/Adresssuche und Vorschläge erhalten; bei einer abgesendeten Suche kann kontrolliert Nominatim als Fallback einspringen.
+**Build 26 stellt alle ursprünglich vorgesehenen Suchgruppen wieder vollständig her:**
 
-Beispiele wie **„Pizza Max Ahrensburg“**, ein genauer Restaurantname, eine Pizzeria, ein Ristorante oder eine Adresse werden dadurch deutlich gezielter behandelt als eine reine Kategorie- oder Freitextsuche.
+- 🍕 **Pizzeria** – bestätigte Pizza-/Pizzeria-Orte und Pizzaautomaten werden anhand der OSM-Merkmale erkannt.
+- ☕ **Café** – sucht semantisch nach `amenity=cafe`, auch wenn „Café“ nicht im Namen steht.
+- 🍔 **Imbiss** – sucht nach `fast_food` / Schnellrestaurant, unabhängig vom Namen.
+- 🚚 **Foodtruck** – berücksichtigt `food_truck` und mobile Gastronomie.
+- 🤖 **Pizzaautomat** – fragt Pizza-Vending-Tags ausdrücklich ab.
+- 🍽️ **Weitere Orte** – normale Restaurants, Takeaway, Food Courts, Bars, Pubs und Biergärten bleiben eigene Kandidaten und werden nicht fälschlich als Pizzeria umetikettiert.
+- ⭐ **Gemerkt** – durchsucht die auf dem Gerät gemerkten Orte.
+- ✓ **Besucht** – durchsucht lokal bestätigte/bewertete besuchte Orte.
+- 📍 **Dein Standort** – die gesetzte GPS-Position ist über die Suche direkt erreichbar.
+
+Bei einer ausdrücklich abgesendeten Suche wird nicht nur Autocomplete verwendet. PizzaScan gleicht den Suchbegriff zusätzlich direkt gegen OpenStreetMap/Overpass ab, vergleicht **Kategorie, Name, Adresse, OSM-Identität und Entfernung**, dedupliziert gleiche POIs anhand ihrer OSM-ID und sortiert exakte Namens-/Ortsübereinstimmungen nach vorn. Photon bleibt für Orts-/Adresssuche und Vorschläge erhalten; bei einer abgesendeten Suche kann kontrolliert Nominatim als Fallback einspringen.
+
+Beispiele wie **„Pizza Max Ahrensburg“**, **„Café“**, **„Imbiss“**, **„Foodtruck“**, **„Pizzaautomat“**, **„Restaurant“**, **„Gemerkt“**, **„Besucht“** oder **„Mein Standort“** werden damit jeweils passend zu ihrer Bedeutung behandelt statt nur als freie Namenssuche.
 
 ## 🗺️ Karten-Discovery
 
@@ -48,9 +60,10 @@ Standardmäßig startet PizzaScan breit:
 - kein „nur geöffnet“-Filter
 - besuchte Orte werden nicht automatisch ausgeblendet
 - benannte Restaurants, Fast Food, Cafés, Foodtrucks, Takeaway, Food Courts, Bars, Pubs und Biergärten werden als Kandidaten berücksichtigt
+- Pizzaautomaten werden über `vending=pizza` / `vending:pizza=yes` berücksichtigt
 - Pizza-/Pizzeria-/Ristorante-/Trattoria-/Osteria-/Italian-Signale dienen zur Einordnung, nicht als versteckter Default-Ausschluss
 
-Primär werden OpenStreetMap/Overpass-Daten verwendet. Bei dünnen oder ausgefallenen Antworten existieren zusätzliche Overpass-Recovery-Pfade und Photon-Ergänzung. Android verwendet für Overpass einen nativen HTTPS-Transport mit fester Host-Allowlist.
+Primär werden OpenStreetMap/Overpass-Daten verwendet. Antworten mit weniger als 18 rohen POIs gelten nun als potenziell unvollständig und werden über zusätzliche Overpass-Quellen ergänzt; die Recovery zielt auf bis zu 30 rohe Kandidaten, bevor Photon als Ergänzung eingesetzt wird. Der Photon-Fallback erfindet bei normalen Restaurants, Cafés oder Foodtrucks keine Pizza-Eigenschaft mehr. Android verwendet für Overpass einen nativen HTTPS-Transport mit fester Host-Allowlist.
 
 ## ⭐ Bewertungen und Restaurantdetails
 
@@ -71,7 +84,7 @@ Die Fotoanalyse verwendet 25 sichtbare Kriterien und 100 simulierte Gewichtungsp
 
 | Version | Status | Download |
 |---|---|---|
-| **2.3.4 · Build 25** | aktuelle Direktversion | [⬇️ PizzaScan-2.3.4.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.4.apk) |
+| **2.3.4 · Build 26** | aktuelle Direktversion | [⬇️ PizzaScan-2.3.4.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.4.apk) |
 | 2.3.3 | Archiv / Regression | [Archiv öffnen](downloads/README.md) |
 | 2.3.2 | Archiv / Regression | [Archiv öffnen](downloads/README.md) |
 | 2.3.1 | Archiv / Regression | [Archiv öffnen](downloads/README.md) |
