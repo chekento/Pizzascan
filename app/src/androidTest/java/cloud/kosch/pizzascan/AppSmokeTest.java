@@ -50,7 +50,6 @@ public class AppSmokeTest {
             SystemClock.sleep(300);
             String fullscreenBounds = js(scenario, "JSON.stringify({active:PizzaScan.diagnostics().mapFullscreen,rect:document.getElementById('map').getBoundingClientRect().toJSON(),width:innerWidth,height:innerHeight,dpr:devicePixelRatio})");
             System.out.println("PizzaScan fullscreen bounds: " + fullscreenBounds);
-            // Android CSS pixels can be fractional at non-integer screen densities.
             assertEquals(fullscreenBounds, "true", js(scenario, "(()=>{const r=document.getElementById('map').getBoundingClientRect();return PizzaScan.diagnostics().mapFullscreen&&Math.abs(r.x)<1&&Math.abs(r.y)<1&&Math.abs(r.width-innerWidth)<1&&Math.abs(r.height-innerHeight)<1;})()"));
             assertEquals("true", js(scenario, "PizzaScan.back()"));
             assertEquals("false", js(scenario, "PizzaScan.diagnostics().mapFullscreen"));
@@ -80,14 +79,13 @@ public class AppSmokeTest {
             js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});");
             assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && document.getElementById('review-rating').value === '7.8'"));
             js(scenario, "PizzaScan.back();");
-
         }
     }
     @Test public void ratingsAndCompactNavigationAreInTheInstalledApk() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click();navigate('map');");
-            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.1' && document.querySelector('.brand small').textContent==='2.3.1'"));
+            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.2' && document.querySelector('.brand small').textContent==='2.3.2'"));
             assertEquals("true", js(scenario, "document.querySelector('.app-bottom-bar').getBoundingClientRect().height<=76 && document.querySelectorAll('.app-footer a').length===2"));
             js(scenario, "document.getElementById('rating-filter-open').click();");
             assertEquals("true", js(scenario, "document.getElementById('filter-min-rating').step==='0.1' && document.getElementById('filter-min-rating').getBoundingClientRect().height>0"));
