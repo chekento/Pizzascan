@@ -10,52 +10,41 @@
   <img src="store/graphics/PizzaScan-Feature-EN-1024x500.png" alt="PizzaScan Feature Graphic" width="1024">
 </p>
 
-## Direkt starten
+## 🧪 Beim Google-Play-Release testen
 
 <table>
 <tr>
 <td align="center">
-<h3>🧪 PizzaScan Beta-Test · Tester für den Google-Play-Release gesucht</h3>
-<p><strong>Hilf mit, PizzaScan für den Release zu testen.</strong><br>Trete zuerst der offiziellen Tester-Gruppe bei. Sobald der geschlossene Google-Play-Test freigeschaltet ist, erhältst du dort den offiziellen Opt-in-/Testlink.</p>
+<h3>PizzaScan Beta Testers</h3>
+<p><strong>Die eigentliche Tester-Version wird nicht über GitHub verteilt.</strong></p>
+<p>Für den offiziellen Release-Test wird PizzaScan über den <strong>geschlossenen Google-Play-Test</strong> ausgegeben. Tritt zuerst der offiziellen Google Group bei. Sobald der Play-Test freigeschaltet ist, wird dort der <strong>offizielle Google-Play-Opt-in-/Testlink</strong> bereitgestellt.</p>
 <p><a href="https://groups.google.com/g/pizzascan-beta-testers"><strong>👉 PizzaScan Beta Testers auf Google Groups beitreten</strong></a></p>
-<p><sub>1. Google Group beitreten → 2. Testversion installieren → 3. Beim geschlossenen Play-Test teilnehmen und Feedback geben.</sub></p>
+<p><sub>Google Group beitreten → offiziellen Play-Testlink erhalten → über Google Play teilnehmen und installieren → Feedback geben.</sub></p>
 </td>
 </tr>
 </table>
 
-<table>
-<tr>
-<td width="50%" align="center">
-<strong>🧪 Als Tester dabei?</strong><br>
-<a href="https://groups.google.com/g/pizzascan-beta-testers">Google Group öffnen</a><br><br>
-<a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.1-Test.apk">
-<img src="store/graphics/Download-Android-APK.svg" alt="PizzaScan 2.3.1 APK herunterladen" width="100%">
-</a>
-<br><strong>Android-Testversion 2.3.1</strong><br>
-<sub>Die GitHub-APK dient zum direkten Gerätetest. Der offizielle geschlossene Play-Test folgt über die Tester-Gruppe.</sub>
-</td>
-<td width="50%" align="center">
-<a href="https://raw.githack.com/chekento/Pizzascan/main/docs/index.html">
-<img src="store/graphics/Open-Mini-Live.svg" alt="PizzaScan Mini Live öffnen" width="100%">
-</a>
-<br><strong>Mini Live im Browser</strong><br><br>
-<strong><a href="https://groups.google.com/g/pizzascan-beta-testers">🧪 Release-Tester werden</a></strong>
-</td>
-</tr>
-</table>
+> **Wichtig für Tester:** Die unten angebotene GitHub-APK ist ausschließlich eine technische Vorabversion für direkte Geräte- und Funktionsprüfungen. Sie ist **nicht** die spätere Play-Store-Testausgabe und eine Installation dieser APK zählt **nicht** als Teilnahme am geschlossenen Google-Play-Test.
+
+### Technische Vorab-APK
 
 <p align="center">
-<strong><a href="https://groups.google.com/g/pizzascan-beta-testers">🧪 Beta-Test beitreten</a></strong>
-&nbsp; · &nbsp;
-<strong><a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.1-Test.apk">⬇ PizzaScan-2.3.1-Test.apk herunterladen</a></strong>
-&nbsp; · &nbsp;
-<strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/index.html">🌐 Mini Live öffnen</a></strong>
-&nbsp; · &nbsp;
-<strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html">🚦 Release-Dashboard</a></strong>
+<a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.1-Test.apk">
+<img src="store/graphics/Download-Android-APK.svg" alt="PizzaScan 2.3.1 technische Test-APK herunterladen" width="70%">
+</a>
+<br><strong>PizzaScan 2.3.1 · technische Geräteprüfung</strong><br>
+<sub>Für Entwickler-/Vorabtests. Die offizielle Tester-App folgt separat über Google Play.</sub>
 </p>
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.1.txt">SHA-256</a> ·
+<strong><a href="https://groups.google.com/g/pizzascan-beta-testers">🧪 Offizieller Tester-Gruppe beitreten</a></strong>
+&nbsp; · &nbsp;
+<strong><a href="https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html">🚦 Release-Dashboard</a></strong>
+&nbsp; · &nbsp;
+<a href="downloads/SHA256SUMS-2.3.1.txt">SHA-256</a>
+</p>
+
+<p align="center">
 <a href="docs/Datenschutz.md">Datenschutz</a> ·
 <a href="docs/Offene-Bewertungen.md">Offene Bewertungen</a> ·
 <a href="store/TESTPLAN.md">Testplan</a> ·
@@ -69,19 +58,17 @@
 |---|---|---|
 | ✅ | **2.3.1 Quellstand & Repo** | Such-Fallback, Bewertungsfilter, Ratings-Links, kompakte Navigation und 5 Sprachen sind auf `main`. |
 | ✅ | **CI-Build & Android 16** | Build, Web/UI-Tests, Modelltests und Android-16-Smoke-Test sind erfolgreich. |
-| ✅ | **Öffentliche Test-APK** | `downloads/PizzaScan-2.3.1-Test.apk` liegt im Repository. |
+| ✅ | **Technische Vorab-APK** | `downloads/PizzaScan-2.3.1-Test.apk` liegt für direkte Geräteprüfung im Repository. |
 | 🟡 | **Echter Geräte-Abnahmetest** | Suchfix und Kernfunktionen müssen auf dem realen Android-Gerät final bestätigt werden. |
 | 🟡 | **Play-AAB & Signierung** | 2.3.1 Release-AAB wird erzeugt; finale Upload-Signierung für `cloud.kosch.pizzascan` steht aus. |
 | 🟡 | **Play Console** | Store-Assets, Datenschutz und Datensicherheitsunterlagen sind vorbereitet; Formulare noch nicht vollständig abgeschlossen. |
-| ⏳ | **Geschlossener Test** | [Google Group](https://groups.google.com/g/pizzascan-beta-testers) ist öffentlich verlinkt; AAB-Upload, Track-Freigabe und offizieller Opt-in-Link fehlen noch. |
+| ⏳ | **Geschlossener Google-Play-Test** | [Google Group](https://groups.google.com/g/pizzascan-beta-testers) ist vorbereitet; AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch. **Dort wird die eigentliche Tester-App ausgegeben.** |
 | ⏳ | **Produktion** | Nach geschlossenem Test und den gegebenenfalls geltenden Play-Testanforderungen. |
 
 **Aktuelle Phase:** `Pre-closed-test` · **Version:** `2.3.1` · **Stand:** 14.09.2026  
-[🧪 Tester-Gruppe](https://groups.google.com/g/pizzascan-beta-testers) · [🚦 Dashboard maximierbar öffnen](https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html) · [Detailstatus als JSON](docs/release-status.json) · [Play-Console-Checkliste](store/PLAY-CONSOLE.md) · [Testplan](store/TESTPLAN.md)
+[🧪 Tester-Gruppe](https://groups.google.com/g/pizzascan-beta-testers) · [🚦 Dashboard öffnen](https://raw.githack.com/chekento/Pizzascan/main/docs/release-dashboard.html) · [Play-Console-Checkliste](store/PLAY-CONSOLE.md) · [Testplan](store/TESTPLAN.md)
 
 </details>
-
-> **Wichtig:** Die öffentliche Downloaddatei wird vom CI-Workflow aus genau der APK veröffentlicht, die zuvor im Android-16-Emulator getestet wurde. Dadurch kann die Startseite nicht mehr versehentlich auf eine ältere Test-APK zeigen. Die GitHub-APK ist der direkte Gerätetest; die Teilnahme am späteren geschlossenen Google-Play-Test erfolgt separat über die PizzaScan-Beta-Tester-Gruppe und den dort bereitgestellten offiziellen Opt-in-Link.
 
 ## Neu in 2.3.1
 
@@ -106,7 +93,6 @@
 | 👥 Perspektiven | 100 simulierte Bewertungsprofile auf denselben Modellwerten |
 | 🤖 Lokale KI | CLIP B/32, CLIP B/16 oder SigLIP B/16 via ONNX/WASM |
 | ✍️ Review Builder | eigene Erfahrungen zu Essen, Service, Atmosphäre usw. |
-| 🌐 Mini Live | kleine Browserfassung ohne große Offline-KI-Modelle |
 
 ## Bewertungsfilter
 
@@ -126,8 +112,8 @@ Die Modelle werden erst nach ausdrücklicher Bestätigung heruntergeladen und an
 - WebView-App mit gepackten Web-Assets.
 - OpenStreetMap / Overpass, Photon, Leaflet.
 - CI-Tests für Ratings, Suche, Navigation, i18n, Marker, Runtime-Assets und lokale Modelle.
-- Android-16-Emulator-Smoke-Test vor Veröffentlichung der öffentlichen 2.3.1-Test-APK.
-- Der aktuelle Workflow veröffentlicht anschließend `downloads/PizzaScan-2.3.1-Test.apk` samt SHA-256-Prüfsumme.
+- Android-16-Emulator-Smoke-Test vor Veröffentlichung der technischen 2.3.1-Test-APK.
+- Der geschlossene Release-Test wird separat über Google Play verteilt.
 
 Die vollständigen Quellen liegen unter `web/` und `app/`. Play-Store-Vorbereitung und Testplan befinden sich unter `store/`.
 
