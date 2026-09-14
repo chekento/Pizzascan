@@ -6,7 +6,8 @@ const elements=[
   {type:'node',id:103,lat:53.553,lon:9.997,tags:{name:'Pizza Above',cuisine:'pizza',opening_hours:'off'}},
   {type:'node',id:104,lat:53.554,lon:9.999,tags:{name:'Pizza Unrated',cuisine:'pizza',opening_hours:'24/7'}}
 ];
-const providerElements=[...elements,{type:'node',id:1901,tags:{name:'Non-geocoded guard one',amenity:'restaurant'}},{type:'node',id:1902,tags:{name:'Non-geocoded guard two',amenity:'restaurant'}}];
+// Thirty raw elements keep this rating test above POI-recovery thresholds while only four have coordinates.
+const providerElements=[...elements,...Array.from({length:26},(_,i)=>({type:'node',id:1900+i,tags:{name:'Non-geocoded rating guard '+i,amenity:i%3===0?'restaurant':i%3===1?'cafe':'fast_food'}}))];
 function data(){return {reviews:[...elements.slice(0,3).map((p,i)=>({signature:String(p.id).padStart(30,'a'),kid:'reviewer-'+p.id,payload:{sub:`geo:${p.lat},${p.lon}?q=${encodeURIComponent(p.tags.name)}&u=10`,rating:[87,90,95][i],iat:Math.floor(Date.now()/1000)-3600,opinion:'UNTRUSTED REVIEW TEXT <img src=x onerror=alert(1)>',metadata:{osm_id:`node/${p.id}/2`}}})),{signature:'wrongbranch'.padStart(30,'a'),kid:'reviewer-wrong',payload:{sub:'geo:53.554,9.999?q=Pizza%20Unrated&u=10',rating:100,iat:Math.floor(Date.now()/1000)-3600,metadata:{osm_id:'node/999'}}}]};}
 const ids=page=>page.evaluate(()=>visiblePlaces().map(p=>p.placeId).sort());
 async function threshold(page,value){const slider=page.locator('#filter-min-rating');await slider.focus();await slider.press('Home');for(let i=0;i<Math.round(value*10);i++)await slider.press('ArrowRight');}
