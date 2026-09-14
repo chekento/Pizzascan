@@ -13,8 +13,8 @@ test('fresh installs default to all place types and all rating scores',()=>{
  assert.equal(cfg.includeUnconfirmed,true);
  assert.equal(cfg.hideVisited,false);
  assert.equal(cfg.ratingsEnabled,true);
- assert.equal(cfg.minRating,0);
- assert.equal(cfg.includeUnrated,true);
+ assert.equal(cfg.minRating,0,'zero threshold shows every score and unrated place');
+ assert.equal(cfg.includeUnrated,false,'unrated inclusion above a chosen threshold remains an explicit opt-in');
 });
 
 test('explicit user filters still narrow broad defaults',()=>{
@@ -36,7 +36,7 @@ test('migration resets only discovery filters and preserves unrelated choices',(
  assert.equal(next.onlyOpen,false);
  assert.equal(next.unknownHours,false);
  assert.equal(next.minRating,0);
- assert.equal(next.includeUnrated,true);
+ assert.equal(next.includeUnrated,false);
  assert.equal(next.includeUnconfirmed,true);
  assert.equal(next.radius,10);
 });
