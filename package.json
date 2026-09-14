@@ -4,7 +4,7 @@
   "version": "2.3.3",
   "scripts": {
     "assets": "node scripts/prepare-assets.cjs",
-    "test": "node --test tests/core.test.cjs tests/places.test.cjs tests/review.test.cjs tests/ratings.test.cjs",
+    "test": "node --test tests/core.test.cjs tests/places.test.cjs tests/nearby-fallback.test.cjs tests/review.test.cjs tests/ratings.test.cjs",
     "smoke": "node tests/model-consent.cjs && node tests/web-smoke.cjs && node tests/review-smoke.cjs",
     "models": "node tests/model-integration.cjs",
     "ratings-smoke": "node tests/ratings-smoke.cjs",
