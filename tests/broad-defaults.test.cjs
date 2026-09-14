@@ -42,7 +42,7 @@ test('migration resets only discovery filters and preserves unrelated choices',(
 });
 
 test('ordinary restaurant candidates are visible by default but remain filterable',()=>{
- const place={placeId:'node-1',type:'pizzeria',pizzaEvidence:'search'};
+ const place={placeId:'node-1',type:'other',pizzaEvidence:'search'};
  const broad=B.normalizeConfig({}, {}, TYPES);
  assert.equal(B.candidateVisible(place,broad,{visited:new Set()},()=>({state:'unknown'})),true);
  assert.equal(B.candidateVisible(place,{...broad,includeUnconfirmed:false},{visited:new Set()},()=>({state:'open'})),false);
@@ -57,16 +57,18 @@ test('broad discovery includes named restaurants and every default food category
  assert.match(expanded,/amenity/);
  assert.match(expanded,/restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten/);
  assert.match(expanded,/\["name"\]/,'all named venues are candidates even without pizza/Italian tags');
+ assert.match(expanded,/mobile"="yes/);
+ assert.match(expanded,/vending:pizza/);
  assert.match(expanded,/around:10000,53\.67,10\.24/);
  assert.equal(B.expandDiscoveryQuery(base,false),base);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v5','existing installs receive the restored broad defaults once after the search rollback');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v6','existing installs receive the complete category defaults once after the POI repair');
 });
 
 test('only truly sparse provider results are supplemented and element ids are deduplicated',()=>{
  assert.equal(B.SUPPLEMENT_BELOW,4);
  assert.equal(B.shouldSupplement([{id:1},{id:2},{id:3}]),true);
  assert.equal(B.shouldSupplement([{id:1},{id:2},{id:3},{id:4}]),false);
- assert.equal(B.shouldSupplement(Array.from({length:7},(_,i)=>({id:i}))),false,'normal map responses do not trigger extra Photon traffic');
+ assert.equal(B.shouldSupplement(Array.from({length:7},(_,i)=>({id:i}))),false,'normal map responses do not trigger the base Photon supplement; POI recovery has its own higher completeness threshold');
  const merged=B.mergeElements([{type:'node',id:1,tags:{name:'A'}},{type:'node',id:2}], [{type:'node',id:1,tags:{name:'A newer'}},{type:'way',id:3}]);
  assert.equal(merged.length,3);
  assert.equal(merged.find(x=>x.type==='node'&&x.id===1).tags.name,'A newer');
