@@ -60,9 +60,11 @@ test('broad discovery expands the upstream Overpass request before filtering',()
  assert.equal(B.expandDiscoveryQuery(base,false),base);
 });
 
-test('thin provider results are supplemented and element ids are deduplicated',()=>{
- assert.equal(B.shouldSupplement([{id:1}],12),true);
- assert.equal(B.shouldSupplement(Array.from({length:12},(_,i)=>({id:i})),12),false);
+test('only truly sparse provider results are supplemented and element ids are deduplicated',()=>{
+ assert.equal(B.SUPPLEMENT_BELOW,4);
+ assert.equal(B.shouldSupplement([{id:1},{id:2},{id:3}]),true);
+ assert.equal(B.shouldSupplement([{id:1},{id:2},{id:3},{id:4}]),false);
+ assert.equal(B.shouldSupplement(Array.from({length:7},(_,i)=>({id:i}))),false,'normal map responses do not trigger extra Photon traffic');
  const merged=B.mergeElements([{type:'node',id:1,tags:{name:'A'}},{type:'node',id:2}], [{type:'node',id:1,tags:{name:'A newer'}},{type:'way',id:3}]);
  assert.equal(merged.length,3);
  assert.equal(merged.find(x=>x.type==='node'&&x.id===1).tags.name,'A newer');
