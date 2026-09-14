@@ -6,10 +6,13 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-poi-discovery-v4';
+const MARKER='pizzascan-poi-discovery-v5';
 const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const PIZZA_WORDS='pizza|pizzeria|pizzaria|pizzerie';
-const FALLBACK_TERMS=['pizza','pizzeria','pizza restaurant','pizza cafe','pizza imbiss','pizza fast food','pizza food truck','pizza takeaway','pizza vending','pizza bar','pizza pub','pizza biergarten','pizza bakery'];
+/* One bounded Photon phrase per visible remote category. The general `pizza` query
+ * covers "Weitere Orte" while Overpass above remains the precise primary source
+ * for takeaway, food courts, bars, pubs, beer gardens, bakeries etc. */
+const FALLBACK_TERMS=['pizzeria','pizza cafe','pizza imbiss','pizza food truck','pizza vending','pizza'];
 const RECOVERY_PROVIDERS=[
   'https://overpass.osm.jp/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
