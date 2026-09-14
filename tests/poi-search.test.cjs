@@ -36,13 +36,18 @@ test('every legend POI category has an explicit submitted-search query',()=>{
 });
 
 test('category intent filters local venues by semantic type rather than name substring',()=>{
- const items=[venue(1,'cafe','Kaffeeküche'),venue(2,'fast_food','Döner Ecke'),venue(3,'food_truck','Rolling Kitchen'),venue(4,'vending_pizza','24/7 Box','confirmed'),venue(5,'other','Sakura'),venue(6,'pizzeria','Roma','confirmed')];
+ const location={name:'Ahrensburg',address:'Schleswig-Holstein',kind:'location',lat:53.67,lng:10.24};
+ const items=[venue(1,'cafe','Kaffeeküche'),venue(2,'fast_food','Döner Ecke'),venue(3,'food_truck','Rolling Kitchen'),venue(4,'vending_pizza','24/7 Box','confirmed'),venue(5,'other','Sakura'),venue(6,'pizzeria','Roma','confirmed'),location];
  assert.deepEqual(Poi.mergeRanked([items],'Café',center,distance).map(x=>x.osmId),['node-1']);
  assert.deepEqual(Poi.mergeRanked([items],'Imbiss',center,distance).map(x=>x.osmId),['node-2']);
  assert.deepEqual(Poi.mergeRanked([items],'Foodtruck',center,distance).map(x=>x.osmId),['node-3']);
  assert.deepEqual(Poi.mergeRanked([items],'Pizzaautomat',center,distance).map(x=>x.osmId),['node-4']);
  assert.deepEqual(Poi.mergeRanked([items],'Pizza',center,distance).map(x=>x.osmId).sort(),['node-4','node-6']);
- assert.ok(Poi.mergeRanked([items],'Restaurant',center,distance).some(x=>x.osmId==='node-5'));
+ const restaurants=Poi.mergeRanked([items],'Restaurant',center,distance);
+ assert.ok(restaurants.some(x=>x.osmId==='node-5'));
+ assert.ok(restaurants.some(x=>x.osmId==='node-6'));
+ assert.ok(!restaurants.some(x=>x.osmId==='node-1'),'Café remains a separate category');
+ assert.ok(!restaurants.some(x=>x.kind==='location'),'category searches never admit unrelated geocoder locations');
 });
 
 test('saved, visited and current location are searchable local states',()=>{
@@ -64,6 +69,7 @@ test('exact name plus city outranks partial and unrelated results',()=>{
  const ranked=Poi.mergeRanked([items],'Pizza Max Ahrensburg',center,distance);
  assert.equal(ranked[0].osmId,'node-1');
  assert.ok(ranked.findIndex(x=>x.osmId==='node-2')>0);
+ assert.ok(!ranked.some(x=>x.kind==='location'));
 });
 
 test('OSM identity deduplicates the same POI across sources',()=>{
