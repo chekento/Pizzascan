@@ -15,7 +15,7 @@ const {server,until}=require('./helpers.cjs');
    placeService.fetcher=async (requestUrl,options)=>{
     calls.push({url:requestUrl,method:options.method,credentials:options.credentials,referrerPolicy:options.referrerPolicy,redirect:options.redirect,cache:options.cache,accept:options.headers?.Accept});
     attempts++;
-    if(attempts===1)return {ok:false,status:503,url:requestUrl,redirected:false,headers:{get:name=>name==='content-type'?'application/json':name==='content-length'?'60':''},text:async()=>''};
+    if(attempts===1)throw new TypeError('simulated transport failure');
     return {ok:true,status:200,url:requestUrl,redirected:false,headers:{get:name=>name==='content-type'?'application/json':name==='content-length'?'60':''},json:async()=>({elements:[]})};
    };
    const blocked=[];
@@ -26,7 +26,7 @@ const {server,until}=require('./helpers.cjs');
    return {blocked,calls,payload,hosts:PizzaMapNetwork.trustedHosts,health:PizzaMapNetwork.health(),safe:PizzaMapNetwork.safeUrl('https://photon.komoot.io/api/')};
   });
   assert.deepEqual(result.blocked,[true,true],'HTTP and untrusted map hosts must be blocked');
-  assert.equal(result.calls.length,2,'Transient 503 must receive exactly one bounded retry');
+  assert.equal(result.calls.length,2,'Transient transport failure must receive exactly one bounded retry');
   assert.deepEqual(result.payload,{elements:[]});
   for(const call of result.calls){
    assert.equal(call.url,'https://overpass-api.de/api/interpreter');
@@ -45,6 +45,6 @@ const {server,until}=require('./helpers.cjs');
   assert.match(manifest,/android:usesCleartextTraffic="false"/,'Android must reject cleartext traffic');
   const proxy=fs.readFileSync(path.join(root,'web/geocoder-proxy.js'),'utf8');
   assert.match(proxy,/credentials:'omit'/);assert.match(proxy,/referrerPolicy:'no-referrer'/);assert.match(proxy,/redirect:'error'/);assert.match(proxy,/nominatim\.openstreetmap\.org/);
-  console.log('PASS secure map network: HTTPS allowlist, no credentials/referrer, redirect blocking, bounded retry, Android cleartext block');
+  console.log('PASS secure map network: HTTPS allowlist, no credentials/referrer, redirect blocking, bounded transport retry, Android cleartext block');
  }finally{await browser.close();s.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
