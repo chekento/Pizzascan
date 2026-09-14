@@ -5,8 +5,10 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v3';
-const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court';
+const MARKER='pizzascan-broad-defaults-v4';
+/* Default map discovery intentionally includes named food venues of every cuisine/category.
+ * Pizza/Italian evidence is metadata for ranking/filtering, not a prerequisite for appearing. */
+const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const SUPPLEMENT_BELOW=4;
 
 function allTypes(types){return Object.keys(types||{});}
