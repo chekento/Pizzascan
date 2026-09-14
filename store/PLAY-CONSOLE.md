@@ -1,16 +1,18 @@
-# PizzaScan 2.3.0 für Google Play vorbereiten
+# PizzaScan 2.3.1 für Google Play vorbereiten
 
-Stand: 13. September 2026. Das Entwicklerkonto ist bereits verifiziert. Dieser Leitfaden bereitet den kommenden Test vor; es wurde noch keine Version in Play Console hochgeladen oder veröffentlicht.
+Stand: 14. September 2026. Das Entwicklerkonto ist bereits verifiziert. PizzaScan befindet sich in der Phase **Pre-closed-test**: Der aktuelle 2.3.1-Quellstand baut erfolgreich, die öffentliche Test-APK ist vorhanden und der Android-16-Smoke-Test ist grün. Ein signiertes Google-Play-AAB wurde noch nicht in Play Console hochgeladen oder veröffentlicht.
+
+Aktueller Status: [Release-Dashboard](../docs/release-dashboard.html) · [Statusdaten](../docs/release-status.json)
 
 ## Aktueller Stand
 
-Die signierte **PizzaScan-2.3.0-Test.apk** enthält stabile Kartenmarker, fünf Sprachen, die freigegebenen Grafiken und den neuen Filter für kostenlose offene Ortsbewertungen. Sie dient zunächst zur Geräteprüfung. Ergebnisse und noch offene Prüfungen: [VERIFICATION-2.3.0.md](../docs/VERIFICATION-2.3.0.md).
+Die signierte **PizzaScan-2.3.1-Test.apk** unter `downloads/` enthält stabile Kartenmarker, fünf Sprachen, den Mindestbewertungsfilter, offene Mangrove/Open-Reviews-Daten, externe Google-Maps/Tripadvisor/Yelp-Links, die kompakte Karten/Fotobewertungs-Navigation und den neuen Fallback für die Orts-/Adresssuche. Sie dient zur finalen Geräteprüfung.
 
-**Ein neues Play-Bundle mit diesen Änderungen ist noch nicht erstellt.** Das frühere 2.2.0-AAB enthält den Bewertungsfilter nicht. Nach dem Gerätetest wird das aktuelle Release-Bundle gebaut und mit dem passenden Upload-Schlüssel signiert. Die Test-APK ist kein Play-Uploadpaket.
+Der CI-Workflow erzeugt außerdem ein **PizzaScan-2.3.1-unsigned.aab** und ein unsigned Release-APK. Das Bundle wird technisch validiert, ist aber noch **nicht mit dem finalen Upload-Schlüssel für Google Play signiert**. Die Test-APK ist kein Play-Uploadpaket.
 
 ## 1. App-Eintrag und Paket
 
-Name **PizzaScan**, Standardsprache **Deutsch (Deutschland)**, Typ **App**, Kategorie **Essen & Trinken**, kostenlos und ohne Werbung oder In-App-Käufe. Paket-ID für Play: `cloud.kosch.pizzascan`. Aktueller Quellstand: VersionName `2.3.0`, VersionCode `6`, Android mindestens 8 / API 26, Ziel Android 16 / API 36. Vor dem Bundlebau prüfen, ob VersionCode 6 in diesem Play-Eintrag noch unbenutzt ist; verwendete Codes können nicht erneut hochgeladen werden.
+Name **PizzaScan**, Standardsprache **Deutsch (Deutschland)**, Typ **App**, Kategorie **Essen & Trinken**, kostenlos und ohne Werbung oder In-App-Käufe. Paket-ID für Play: `cloud.kosch.pizzascan`. Aktueller Quellstand: VersionName `2.3.1`, VersionCode `7`, Android mindestens 8 / API 26, Ziel Android 16 / API 36. Vor dem Bundle-Upload prüfen, ob VersionCode 7 in diesem Play-Eintrag noch unbenutzt ist; verwendete Codes können nicht erneut hochgeladen werden.
 
 API 36 erfüllt die seit 31. August 2026 geltende Ziel-API-Vorgabe für neue Smartphone-Apps und Updates. [Google: Ziel-API](https://support.google.com/googleplay/android-developer/answer/11926878?hl=en).
 
@@ -46,13 +48,13 @@ Alle Funktionen sind ohne Login erreichbar. Es gibt keine Kontoerstellung, Werbu
 
 ## 5. Geräteprüfung und interner Test
 
-Zunächst die aktuelle APK anhand von [TESTPLAN.md](TESTPLAN.md) auf einem echten Telefon prüfen, insbesondere Installation als Update, Standort, Kamera, Modellstart, Offline-Nutzung und Mindestbewertung. Beobachtungen mit Gerät, Android- und WebView-Version festhalten.
+Zunächst die aktuelle **2.3.1-Test-APK** anhand von [TESTPLAN.md](TESTPLAN.md) auf einem echten Telefon prüfen. Priorität haben Installation/Update, Startsuche, Orts-/Adresssuche mit Fallback, Standort, Marker-Stabilität, Bewertungsfilter, Kamera, Modellstart, Modellpersistenz und Offline-Verhalten. Beobachtungen mit Gerät, Android- und WebView-Version festhalten.
 
-Danach das korrekt signierte Release-AAB in **Testen → Interner Test** hochladen, Bundle-Details auf Paket-ID, Versionscode, API und Zertifikate prüfen und Versionshinweise einfügen. Testkonten hinzufügen, den Opt-in-Link öffnen und über Play installieren. Den Pre-Launch-Bericht auswerten, insbesondere Android-Zurück, Kamera/Dateiauswahl, Standort, Querformat und Schriftvergrößerung. Die Test-APK ersetzt diese Play-Prüfung nicht.
+Erst nach dieser Geräte-Abnahme das 2.3.1-AAB mit dem korrekten Upload-Schlüssel signieren und in **Testen → Interner Test** bzw. direkt in den geplanten geschlossenen Track hochladen. Bundle-Details auf Paket-ID, Versionscode, API und Zertifikate prüfen und Versionshinweise einfügen. Den Pre-Launch-Bericht auswerten, insbesondere Android-Zurück, Kamera/Dateiauswahl, Standort, Querformat und Schriftvergrößerung. Die GitHub-Test-APK ersetzt diese Play-Prüfung nicht.
 
 ## 6. Freiwillige Tester über Google Groups
 
-Die geplante Testergruppe kann für einen **geschlossenen Test** verwendet werden. Ihre tatsächliche Gruppenadresse ist noch einzutragen.
+Die vorbereitete Testergruppe ist für den **geschlossenen Test** vorgesehen. Der offizielle Play-Opt-in-Link kann erst erzeugt werden, nachdem ein gültiges AAB in den geschlossenen Track hochgeladen und die Testergruppe dort hinterlegt wurde.
 
 1. In der Google Group freiwillige Tester aufnehmen. Sie müssen mit dem Google-Konto Mitglied sein, das sie für Play verwenden.
 2. In Play Console unter **Testen → Geschlossener Test → Tester → Google Groups** die echte Gruppenadresse im Format `gruppenname@googlegroups.com` eintragen.
