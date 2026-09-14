@@ -1,6 +1,6 @@
 {
   "updated": "2026-09-14",
-  "version": "2.3.2",
+  "version": "2.3.3",
   "stage": "Pre-closed-test",
   "completed": 3,
   "total": 8,
@@ -10,39 +10,39 @@
   "items": [
     {
       "id": "source",
-      "label": "2.3.2 Quellstand & Repo",
+      "label": "2.3.3 Quellstand & Repo",
       "status": "done",
-      "note": "Aktueller main-Stand enthält den robusten Photon→Nominatim-Fallback für ausdrücklich abgesendete Ortssuchen, Karten-Recovery nach Netz-/App-Rückkehr, erhaltene Nutzerfilter, Bewertungsfilter, Ratings-Links und die 5-sprachige Oberfläche."
+      "note": "Aktueller main-Stand enthält den robusten Photon→Nominatim-Fallback für ausdrücklich abgesendete Ortssuchen, Karten-Recovery nach Netz-/App-Rückkehr, erhaltene Nutzerfilter, Bewertungsfilter, Ratings-Links, die 5-sprachige Oberfläche und die optionale Google-Maps-Reviews-Integration."
     },
     {
       "id": "ci",
       "label": "CI-Build & Android-16-Test",
       "status": "done",
-      "note": "Build, Lint, Web/UI-Tests, Suche/Map/Rating-Regressionstests, lokale Modelltests und Android-16-Smoke-Test sind für 2.3.2 erfolgreich durchgelaufen."
+      "note": "Build, Lint, Web/UI-Tests, Suche/Map/Rating-Regressionstests, lokale Modelltests und Android-16-Smoke-Test sind für 2.3.3 erfolgreich durchgelaufen."
     },
     {
       "id": "apk",
-      "label": "Technische 2.3.2-Vorab-APK",
+      "label": "Technische 2.3.3-Vorab-APK",
       "status": "done",
-      "note": "downloads/PizzaScan-2.3.2-Test.apk ist für direkte Geräte- und Funktionsprüfung im Repository vorhanden; sie verwendet das Testpaket cloud.kosch.pizzascan.lang1 und ist nicht die offizielle Play-Testausgabe."
+      "note": "downloads/PizzaScan-2.3.3-Test.apk ist für direkte Geräte- und Funktionsprüfung im Repository vorhanden; sie verwendet das Testpaket cloud.kosch.pizzascan.lang1 und ist nicht die offizielle Play-Testausgabe."
     },
     {
       "id": "deviceqa",
       "label": "Echter Geräte-Abnahmetest",
       "status": "in_progress",
-      "note": "Die 2.3.2-Kernfunktionen einschließlich Orts-Suchfallback, Karten-Recovery, Filtererhalt, Standort, Ratings und Offline-KI müssen auf dem realen Android-Gerät final bestätigt werden."
+      "note": "Die 2.3.3-Kernfunktionen einschließlich Orts-Suchfallback, Karten-Recovery, Filtererhalt, Standort, Ratings, optionaler Google-Maps-Reviews und Offline-KI müssen auf dem realen Android-Gerät final bestätigt werden."
     },
     {
       "id": "aab",
       "label": "Google-Play-AAB & Signierung",
       "status": "in_progress",
-      "note": "Der CI-Workflow erzeugt und validiert ein 2.3.2 Release-AAB. Die finale Upload-Signierung für cloud.kosch.pizzascan steht noch aus; das CI-Bundle ist nicht als fertig signiertes Play-Paket zu behandeln."
+      "note": "Der CI-Workflow erzeugt und validiert ein 2.3.3 Release-AAB. Die finale Upload-Signierung für cloud.kosch.pizzascan steht noch aus; das CI-Bundle ist nicht als fertig signiertes Play-Paket zu behandeln."
     },
     {
       "id": "console",
       "label": "Play-Console-Eintrag & Erklärungen",
       "status": "in_progress",
-      "note": "Store-Grafiken, Datenschutz- und Datensicherheitsunterlagen sind vorbereitet und werden auf 2.3.2 abgeglichen; die Console-Formulare sind noch nicht vollständig abgeschlossen."
+      "note": "Store-Grafiken, Datenschutz- und Datensicherheitsunterlagen sind vorbereitet und werden auf 2.3.3 abgeglichen; die Console-Formulare sind noch nicht vollständig abgeschlossen."
     },
     {
       "id": "closedtest",
