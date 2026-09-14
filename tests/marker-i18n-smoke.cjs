@@ -4,12 +4,8 @@ const elements=[
  {type:'node',id:11,lat:53.5511,lon:9.9937,tags:{name:'Pizza Anchor',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}},
  {type:'node',id:12,lat:53.5531,lon:9.9977,tags:{name:'Pizza North',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}}
 ];
-const providerElements=[...elements,
- {type:'node',id:1901,tags:{name:'Marker guard 1',amenity:'restaurant'}},
- {type:'node',id:1902,tags:{name:'Marker guard 2',amenity:'cafe'}},
- {type:'node',id:1903,tags:{name:'Marker guard 3',amenity:'pub'}},
- {type:'node',id:1904,tags:{name:'Marker guard 4',amenity:'fast_food'}}
-];
+// Thirty raw elements keep marker/i18n tests independent from sparse-POI recovery while only two render.
+const providerElements=[...elements,...Array.from({length:28},(_,i)=>({type:'node',id:1900+i,tags:{name:'Marker guard '+i,amenity:i%4===0?'restaurant':i%4===1?'cafe':i%4===2?'pub':'fast_food'}}))];
 const expected={de:'Gute Pizza. Ganz nah.',en:'Great pizza. Right nearby.',it:'Buona pizza. Proprio qui vicino.',es:'Buena pizza. Muy cerca.',fr:'Bonne pizza. Tout près.'};
 (async()=>{const {server:s,url}=await server(),browser=await chromium.launch();try{
  for(const language of Object.keys(expected)){
