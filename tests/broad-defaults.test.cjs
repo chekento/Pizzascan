@@ -49,3 +49,21 @@ test('ordinary restaurant candidates are visible by default but remain filterabl
  assert.equal(B.candidateVisible(place,{...broad,onlyOpen:true},{visited:new Set()},()=>({state:'unknown'})),false);
  assert.equal(B.candidateVisible(place,{...broad,hideVisited:true},{visited:new Set(['node-1'])},()=>({state:'open'})),false);
 });
+
+test('broad discovery expands the upstream Overpass request before filtering',()=>{
+ const base='[out:json][timeout:15];(nwr["cuisine"~"pizza|italian",i](around:10000,53.67,10.24);nwr["vending:pizza"="yes"](around:10000,53.67,10.24););out body center;';
+ const expanded=B.expandDiscoveryQuery(base,true);
+ assert.match(expanded,/pizzascan-broad-discovery/);
+ assert.match(expanded,/amenity/);
+ assert.match(expanded,/restaurant\|fast_food\|cafe/);
+ assert.match(expanded,/around:10000,53\.67,10\.24/);
+ assert.equal(B.expandDiscoveryQuery(base,false),base);
+});
+
+test('thin provider results are supplemented and element ids are deduplicated',()=>{
+ assert.equal(B.shouldSupplement([{id:1}],12),true);
+ assert.equal(B.shouldSupplement(Array.from({length:12},(_,i)=>({id:i})),12),false);
+ const merged=B.mergeElements([{type:'node',id:1,tags:{name:'A'}},{type:'node',id:2}], [{type:'node',id:1,tags:{name:'A newer'}},{type:'way',id:3}]);
+ assert.equal(merged.length,3);
+ assert.equal(merged.find(x=>x.type==='node'&&x.id===1).tags.name,'A newer');
+});
