@@ -26,7 +26,7 @@ test('broad default migration restores a non-restrictive map configuration',()=>
  assert.equal(cfg.radius,10);
  assert.equal(cfg.hideVisited,false);
  assert.equal(cfg.minRating,0);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v5');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v6');
 });
 
 test('default candidate set is monotonic: pizza, Italian and generic food POIs all survive normalization and filtering',()=>{
@@ -39,6 +39,7 @@ test('default candidate set is monotonic: pizza, Italian and generic food POIs a
  ];
  const list=P.fromOverpass(elements,{allowNamed:true});
  assert.equal(list.length,5);
+ assert.deepEqual(list.map(p=>p.type),['pizzeria','other','other','cafe','other']);
  const cfg=B.normalizeConfig(P.defaults,{},P.TYPES);
  const visible=P.filter(list,cfg,{visited:new Set()},()=>({state:'unknown'}));
  assert.equal(visible.length,5,'new filter/review features must not shrink the default baseline candidate set');
@@ -50,4 +51,5 @@ test('broad Overpass query asks for every named food category before filtering',
  assert.match(q,/pizzascan-broad-discovery/);
  for(const amenity of ['restaurant','fast_food','cafe','food_truck','takeaway','food_court','bar','pub','biergarten'])assert.match(q,new RegExp(amenity));
  assert.match(q,/\["name"\]/);
+ assert.match(q,/vending:pizza/);
 });
