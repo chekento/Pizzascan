@@ -7,7 +7,7 @@ android {
         applicationId 'cloud.kosch.pizzascan'
         minSdk 26
         targetSdk 36
-        versionCode 12
+        versionCode 13
         versionName '2.3.3'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
@@ -38,7 +38,7 @@ dependencies {
 tasks.register('verifyWebAssets') {
     doLast {
         ['index.html', 'script.js', 'core.js', 'style.css',
-         'hotfix-map.js', 'hotfix-map.css', 'persistent-model-ui.js', 'search-ui.js', 'search-ui.css', 'google-reviews.js', 'google-reviews.css', 'i18n.js', 'i18n-extra.js', 'i18n.css', 'i18n-shim.js', 'i18n-content.js', 'i18n-static.js',
+         'hotfix-map.js', 'hotfix-map.css', 'persistent-model-ui.js', 'search-ui.js', 'search-ui.css', 'settings-search.js', 'google-reviews.js', 'google-reviews.css', 'i18n.js', 'i18n-extra.js', 'i18n.css', 'i18n-shim.js', 'i18n-content.js', 'i18n-static.js',
          'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css',
          'analysis.js', 'model-info.js', 'ratings.js', 'ratings-ui.js', 'places.js', 'map-ui.js', 'vendor/hours.js', 'vendor/ai-worker.js', 'review-builder.js', 'draft-store.js', 'draft-list.js', 'review-ui.js', 'privacy-ui.js', 'privacy-233.js', 'privacy.html', 'geocoder-proxy.html', 'geocoder-proxy.js'].each { name ->
             if (!file("../web/$name").isFile()) {
