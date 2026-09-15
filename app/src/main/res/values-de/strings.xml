@@ -11,7 +11,9 @@
     <string name="reply_error">Android-Antwort fehlgeschlagen.</string>
     <string name="action_error">Android-Aktion fehlgeschlagen</string>
     <string name="no_link_app">Keine App zum Öffnen dieses Links verfügbar.</string>
+    <string name="no_browser">Keine App zum Öffnen dieses Links verfügbar.</string>
     <string name="export_saved">JSON-Export gespeichert.</string>
     <string name="export_error">Export konnte nicht gespeichert werden.</string>
+    <string name="export_failed">Export konnte nicht gespeichert werden.</string>
     <string name="review_clip">PizzaScan Rezension</string>
 </resources>

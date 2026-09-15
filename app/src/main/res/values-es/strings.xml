@@ -11,7 +11,9 @@
     <string name="reply_error">Falló la respuesta de Android.</string>
     <string name="action_error">Falló la acción de Android</string>
     <string name="no_link_app">No hay una aplicación disponible para abrir este enlace.</string>
+    <string name="no_browser">No hay una aplicación disponible para abrir este enlace.</string>
     <string name="export_saved">Exportación JSON guardada.</string>
     <string name="export_error">No se pudo guardar la exportación.</string>
+    <string name="export_failed">No se pudo guardar la exportación.</string>
     <string name="review_clip">Reseña de PizzaScan</string>
 </resources>

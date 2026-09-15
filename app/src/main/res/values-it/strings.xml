@@ -11,7 +11,9 @@
     <string name="reply_error">Risposta Android non riuscita.</string>
     <string name="action_error">Azione Android non riuscita</string>
     <string name="no_link_app">Nessuna app disponibile per aprire questo link.</string>
+    <string name="no_browser">Nessuna app disponibile per aprire questo link.</string>
     <string name="export_saved">Esportazione JSON salvata.</string>
     <string name="export_error">Impossibile salvare l’esportazione.</string>
+    <string name="export_failed">Impossibile salvare l’esportazione.</string>
     <string name="review_clip">Recensione PizzaScan</string>
 </resources>
