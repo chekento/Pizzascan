@@ -1,4 +1,4 @@
-/* Pizza-only visibility/search policy. Categories describe the type of pizza place, never generic food venues. */
+/* Pizza-only map visibility with broad explicit POI search. Categories describe the type of pizza place on the ambient map, while an explicit restaurant/name search may return ordinary food POIs. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -6,7 +6,7 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-pizza-only-v4';
+const MARKER='pizzascan-pizza-only-v5';
 const PIZZA_WORD=/(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizzas)(?:[^a-z]|$)/i;
 function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase();}
 function directPizza(place){
@@ -27,10 +27,35 @@ function currentLocationItem(item,query,helper){
 }
 function geographicLocationItem(item){
   /* Cities, addresses and GPS positions are navigation/search targets, not food venues.
-   * They must remain selectable even while every visible venue/marker stays pizza-only. */
+   * They must remain selectable even while every ambient map marker stays pizza-only. */
   return item?.kind==='location'&&!item?.place&&Number.isFinite(Number(item.lat))&&Number.isFinite(Number(item.lng));
 }
+function explicitPizzaSearch(query,helper){
+  const categories=helper?.categoryIntent?.(query)||[];
+  if(categories.includes('pizza')||categories.includes('vending_pizza'))return true;
+  return PIZZA_WORD.test(text(query));
+}
+function stateOnlySearch(query,helper){
+  const states=helper?.stateIntent?.(query)||[];
+  if(!states.length)return false;
+  const categories=helper?.categoryIntent?.(query)||[];
+  const words=helper?.tokens?.(query)||[];
+  const generic=helper?.GENERIC;
+  return !categories.length&&words.length>0&&words.every(word=>generic?.has?.(word));
+}
+function restrictSearchToPizza(query,helper){
+  /* The ambient map is pizza-only, but the search box is also a restaurant/POI finder.
+   * Preserve the old 2.2 behaviour for explicit restaurant/category/name searches:
+   * - pizza-specific queries stay strict;
+   * - saved/visited state-only searches stay strict;
+   * - restaurant/cafe/fast-food/category searches and named POI searches may return
+   *   ordinary food venues, which are search results rather than ambient map markers. */
+  if(explicitPizzaSearch(query,helper))return true;
+  if(stateOnlySearch(query,helper))return true;
+  return false;
+}
 function pizzaOnlyGroups(groups,query,helper,root=globalThis){
+  if(!restrictSearchToPizza(query,helper))return (groups||[]).map(group=>[...(group||[])]);
   return (groups||[]).map(group=>(group||[]).filter(item=>geographicLocationItem(item)||currentLocationItem(item,query,helper)||eligible(item?.place||item,root)));
 }
 function asVenue(place){return {...place,kind:'venue',place,osmId:place.placeId};}
@@ -54,8 +79,12 @@ function installAutocompleteGuard(root,PD){
   if(!input||input.dataset.pizzaOnlyGuard)return;
   input.dataset.pizzaOnlyGuard='1';
   input.addEventListener('input',event=>{
-    event.stopImmediatePropagation();
     const q=input.value.trim();
+    /* Only intercept pizza-specific autocomplete. For restaurant names/categories,
+     * let the normal search-ui listener run Photon/Nominatim + precise POI lookup,
+     * restoring the broader and more useful 2.2-style restaurant autocomplete. */
+    if(!PIZZA_WORD.test(text(q)))return;
+    event.stopImmediatePropagation();
     if(q.length<2){try{root.showSearchResults?.([]);}catch{}const status=root.document.getElementById('search-status');if(status)status.textContent='';return;}
     let pool=[];
     try{if(typeof places!=='undefined')pool=PD.merge(pool,places||[]);}catch{}
@@ -63,8 +92,6 @@ function installAutocompleteGuard(root,PD){
     try{if(typeof saved!=='undefined')pool=PD.merge(pool,saved||[]);}catch{}
     let center=null;try{if(typeof mapCenter==='function')center=mapCenter();}catch{}
     const list=PD.suggestions(pool,q,center).slice(0,8).map(asVenue);
-    /* showSearchResults/selectSearch expects venue wrappers, not raw places. Keeping
-     * that contract ensures a pizza-only autocomplete result still opens details. */
     try{root.showSearchResults?.(list,true);}catch{}
     const status=root.document.getElementById('search-status');
     if(status)status.textContent=list.length?`${list.length} Pizza-Ort${list.length===1?'':'e'} aus der geladenen Karte · „Suchen“ prüft weitere Pizza-Orte und Ortsziele.`:'„Suchen“ prüft weitere Pizza-Orte, Städte und Adressen.';
@@ -121,5 +148,5 @@ function install(root){
   installUiPolicy(root);
   root.PizzaScanPizzaOnly={marker:MARKER,eligible:place=>eligible(place,root)};
 }
-return {MARKER,PIZZA_WORD,text,directPizza,reviewPizza,eligible,currentLocationItem,geographicLocationItem,pizzaOnlyGroups,asVenue,wrapPoiHelper,installUiPolicy,install};
+return {MARKER,PIZZA_WORD,text,directPizza,reviewPizza,eligible,currentLocationItem,geographicLocationItem,explicitPizzaSearch,stateOnlySearch,restrictSearchToPizza,pizzaOnlyGroups,asVenue,wrapPoiHelper,installUiPolicy,install};
 });
