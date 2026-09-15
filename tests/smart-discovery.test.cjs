@@ -18,7 +18,8 @@ test('WebSim pizza and Italian families remain the primary baseline',()=>{
   {amenity:'bar',cuisine:'pizza'},
   {amenity:'pub',name:'Pizza Pub',cuisine:'pizza'},
   {amenity:'takeaway',cuisine:'pizza'},
-  {shop:'bakery',name:'Pizza Bakeshop',product:'pizza'},
+  {shop:'bakery',name:'Italian Bakeshop'},
+  {shop:'deli',product:'pizza'},
   {speciality:'pizza'},
   {name:'Pizza Max'},
   {description:'Hausgemachte Pizza aus dem Steinofen'},
@@ -75,7 +76,7 @@ test('marker category distinguishes Italian candidates from actual pizza places'
 
 test('WebSim query has precise venue families plus hidden restaurant candidates for deep review evidence',()=>{
  const q=S.websimQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
- assert.match(q,/pizzascan-websim-search-v5/);
+ assert.match(q,/pizzascan-websim-search-v6/);
  assert.match(q,/cuisine\"~\"pizza\|pizzeria/);
  assert.match(q,/amenity\"=\"restaurant\"\]\[\"cuisine\"~\"italian\|italiano\|italiana/);
  assert.match(q,/ristorante\|trattoria\|osteria/);
@@ -88,21 +89,36 @@ test('WebSim query has precise venue families plus hidden restaurant candidates 
  assert.equal(S.isWebsimDiscoveryQuery(q),true);
 });
 
+test('focused fallback still searches Italian families when broad recovery already returned many generic restaurants',async()=>{
+ const seed=Array.from({length:25},(_,i)=>el(100+i,{amenity:'restaurant',name:'Generic '+i}));
+ const calls=[];
+ const item=(id,name)=>({place:{placeId:'node-'+id,name,lat:53.675,lng:10.24,tags:{amenity:'restaurant',name}}});
+ const service={async photon(term){calls.push(term);if(term==='pizzeria')return [item(1,'Da Anna')];if(term==='italian restaurant')return [item(2,'Bella Italia')];if(term==='trattoria')return [item(3,'Trattoria Roma')];if(term==='osteria')return [item(4,'Osteria Uno')];return [];}};
+ const q=S.websimQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
+ const out=await S.focusedRecovery(service,q,{},seed);
+ assert.ok(calls.includes('italian restaurant'));
+ assert.ok(calls.includes('trattoria'));
+ assert.ok(calls.includes('osteria'));
+ assert.ok(S.relevantCount(out)>=4);
+ assert.ok(out.some(x=>/italian/.test(x.tags.cuisine||'')));
+});
+
+test('focused fallback terms cover requested WebSim venue vocabulary',()=>{
+ for(const term of ['pizzeria','pizza','italian restaurant','italienisches restaurant','ristorante','trattoria','osteria','pizza cafe','pizza takeaway','pizza pub','pizza bar','pizza bakery','pizza bakeshop','pizza food truck','pizza vending'])assert.ok(S.FOCUSED_TERMS.includes(term),term);
+ assert.equal(S.FOCUSED_TARGET,8);
+});
+
 test('installed map filter hides generic candidate pool and exposes review-confirmed restaurants',()=>{
  const pizza={name:'Pizza Max',type:'pizzeria',pizzaEvidence:'confirmed',tags:{amenity:'restaurant',name:'Pizza Max',cuisine:'pizza'}};
  const neutral={name:'Restaurant Nord',type:'other',pizzaEvidence:'search',tags:{amenity:'restaurant',name:'Restaurant Nord'}};
  const reviewed={name:'Restaurant Review',type:'other',pizzaEvidence:'search',tags:{amenity:'restaurant',name:'Restaurant Review'}};
- const PD={
-  TYPES:{pizzeria:{emoji:'🍕',name:'Pizzeria'},other:{emoji:'🍽️',name:'Weitere Orte'}},
-  query(){return 'old';},
-  filter(list){return list;}
- };
+ const PD={TYPES:{pizzeria:{emoji:'🍕',name:'Pizzeria'},other:{emoji:'🍽️',name:'Weitere Orte'}},query(){return 'old';},filter(list){return list;}};
  const ratings={summary:p=>({pizzaMentions:p.name==='Restaurant Review'?1:0})};
  const root={PizzaPlaces:PD,PizzaRatingsUI:ratings,localStorage:null};
  S.install(root);
  const visible=PD.filter([pizza,neutral,reviewed],{},null,()=>({state:'unknown'}));
  assert.deepEqual(visible.map(p=>p.name),['Pizza Max','Restaurant Review']);
- assert.equal(PD.TYPES.other.emoji,'🇮🇹');
+ assert.equal(PD.TYPES.other.emoji,'🍝');
  assert.equal(PD.TYPES.pizzeria.emoji,'🍕');
 });
 
@@ -114,5 +130,5 @@ test('Google review evidence only counts actual review text',()=>{
 });
 
 test('relevance cache marker advances for installed clients',()=>{
- assert.equal(S.MARKER,'pizzascan-smart-discovery-v5');
+ assert.equal(S.MARKER,'pizzascan-smart-discovery-v6');
 });
