@@ -27,8 +27,21 @@ test('last-resort text and structured Photon search both cover generic restauran
   assert.equal(D.ADEQUATE_POIS,24);
   assert.equal(D.FALLBACK_TARGET,24);
   assert.equal(D.MIN_GENERIC_POIS,3);
-  assert.equal(D.MARKER,'pizzascan-poi-discovery-v10');
+  assert.equal(D.MARKER,'pizzascan-poi-discovery-v11');
   assert.match(D.RECOVERY_PROVIDERS[0],/maps\.mail\.ru/,'healthy global recovery mirror is attempted before the certificate-problematic backup seen in CI');
+});
+
+test('legacy sequential Photon loop is bypassed so alternate broad providers run immediately',async()=>{
+  let legacyCalls=0;
+  const service={nearbyFallback:async()=>{legacyCalls++;return [{id:1}];}};
+  assert.equal(D.disableLegacyFallback(service),true);
+  assert.equal(service.nearbyFallback.__poiDiscoveryBypass,true);
+  assert.equal(typeof service.nearbyFallback.__poiDiscoveryLegacy,'function');
+  assert.deepEqual(await service.nearbyFallback('query',{}),[]);
+  assert.equal(legacyCalls,0,'the old text-term loop must not execute after resilient discovery is installed');
+  assert.equal(D.disableLegacyFallback(service),false,'installation is idempotent');
+  const ctl=new AbortController();ctl.abort();
+  await assert.rejects(()=>service.nearbyFallback('query',{signal:ctl.signal}),error=>error?.name==='AbortError');
 });
 
 test('structured Photon request is tag-filtered and converts only nearby named food POIs',()=>{
