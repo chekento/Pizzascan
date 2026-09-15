@@ -18,6 +18,7 @@ const FOOD_AMENITIES=new Set(['restaurant','fast_food','cafe','food_truck','take
 const FOOD_SHOPS=new Set(['bakery','deli','convenience']);
 const FOCUSED_TERMS=['pizzeria','pizza','italian restaurant','italienisches restaurant','ristorante','trattoria','osteria','pizza cafe','pizza fast food','pizza takeaway','pizza pub','pizza bar','pizza bakery','pizza bakeshop','pizza food truck','pizza vending'];
 const FOCUSED_TARGET=8;
+const FOCUSED_MAX_CALLS=8;
 
 function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase();}
 function fields(tags={},keys=[]){return keys.map(k=>tags[k]).filter(Boolean).join(' ');}
@@ -152,7 +153,7 @@ async function focusedRecovery(service,query,options={},seed=[]){
   const info=queryAreaInfo(query);if(!info||typeof service?.photon!=='function')return seed;
   let elements=mergeElements(seed);if(relevantCount(elements)>=FOCUSED_TARGET)return elements;
   options.onStatus?.('Weitere Pizzerien, Italiener und Trattorien werden gesucht …');
-  for(const term of FOCUSED_TERMS){
+  for(const term of FOCUSED_TERMS.slice(0,FOCUSED_MAX_CALLS)){
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
     try{
       const items=await service.photon(term,info.center,{signal:options.signal}),extra=[];
@@ -189,9 +190,9 @@ function install(root){
     };
     wrapped.__websimFocused=true;wrapped.__websimFocusedInner=base;service.overpass=wrapped;
   }
-  if(PD.TYPES?.other)PD.TYPES.other={...PD.TYPES.other,emoji:'🇮🇹',name:'Italiener / Pizza-Kandidat'};
+  if(PD.TYPES?.other)PD.TYPES.other={...PD.TYPES.other,emoji:'🍝',name:'Italiener / Pizza-Kandidat'};
   if(PD.TYPES?.pizzeria)PD.TYPES.pizzeria={...PD.TYPES.pizzeria,emoji:'🍕',name:'Pizzeria / Pizza-Ort'};
   root.PizzaScanSmartDiscovery={marker:MARKER,mode:'websim-relevant-only',query:'websim-plus-hidden-review-candidates',focusedFallback:true,genericRestaurantsVisible:false,reviewEvidence:true,menuEvidence:true};
 }
-return {MARKER,PIZZA,ITALIAN,FOOD_AMENITIES,FOOD_SHOPS,FOCUSED_TERMS,FOCUSED_TARGET,text,directPizzaEvidence,pizzaMenuEvidence,pizzaCommentEvidence,pizzaText,italianEvidence,plausibleFoodObject,websimBaselineTags,deepEvidenceTags,eligibleElement,reviewPizzaMentions,placeRelevant,strongPizzaPlace,classifyPlace,area,websimQuery,strictQuery,isWebsimDiscoveryQuery,isStrictDiscoveryQuery,mergeElements,filterCandidates,relevantCount,googleReviewHasPizza,queryAreaInfo,inside,focusedElement,focusedRecovery,clearOldCaches,install};
+return {MARKER,PIZZA,ITALIAN,FOOD_AMENITIES,FOOD_SHOPS,FOCUSED_TERMS,FOCUSED_TARGET,FOCUSED_MAX_CALLS,text,directPizzaEvidence,pizzaMenuEvidence,pizzaCommentEvidence,pizzaText,italianEvidence,plausibleFoodObject,websimBaselineTags,deepEvidenceTags,eligibleElement,reviewPizzaMentions,placeRelevant,strongPizzaPlace,classifyPlace,area,websimQuery,strictQuery,isWebsimDiscoveryQuery,isStrictDiscoveryQuery,mergeElements,filterCandidates,relevantCount,googleReviewHasPizza,queryAreaInfo,inside,focusedElement,focusedRecovery,clearOldCaches,install};
 });
