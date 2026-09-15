@@ -25,7 +25,7 @@ test('explicit user filters still narrow broad place defaults after migration',(
  assert.equal(cfg.radius,3);
  assert.equal(cfg.autoSearch,false);
  assert.equal(cfg.onlyOpen,true);
- assert.equal(cfg.includeUnconfirmed,false,'explicit user choice may still narrow generic POIs after the v11 reset has run');
+ assert.equal(cfg.includeUnconfirmed,false,'explicit user choice may still narrow generic POIs after the v12 reset has run');
  assert.equal(cfg.minRating,4.6);
  assert.equal(cfg.includeUnrated,false);
 });
@@ -62,10 +62,10 @@ test('map query keeps broad named food results and adds original PizzaScan cover
  assert.match(restored,/cuisine.*italian\|italiano\|italiana/i);
  assert.match(restored,/around:5000,53\.67,10\.24/);
  assert.equal(B.expandDiscoveryQuery(base,false),base);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v11');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v12');
 });
 
-test('thin result sets are supplemented before they collapse to a handful of venues',()=>{
+test('thin result sets are delegated to resilient POI recovery instead of a duplicate Photon loop',()=>{
  assert.equal(B.SUPPLEMENT_BELOW,12);
  assert.equal(B.shouldSupplement(Array.from({length:11},(_,id)=>({id}))),true);
  assert.equal(B.shouldSupplement(Array.from({length:12},(_,id)=>({id}))),false);
