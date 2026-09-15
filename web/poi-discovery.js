@@ -8,13 +8,11 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-poi-discovery-v6';
+const MARKER='pizzascan-poi-discovery-v7';
 const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const PIZZA_WORDS='pizza|pizzeria|pizzaria|pizzerie|pizze';
 const ITALIAN_CUISINE='italian|italiano|italiana|pasta';
 const ITALIAN_NAME_WORDS='ristorante|trattoria|osteria|italian|italiano|italiana|italiener|italienisch';
-/* Keep multiple human search phrases because Photon is only a fallback and each
- * phrase can expose OSM POIs omitted by the main Overpass provider. */
 const FALLBACK_TERMS=[
   'pizzeria','pizza','italian restaurant','ristorante','trattoria','osteria',
   'italienisches restaurant','pizza cafe','pizza imbiss','pizza food truck',
@@ -25,6 +23,7 @@ const RECOVERY_PROVIDERS=[
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
 ];
 const SPARSE_BELOW=6;
+const ADEQUATE_POIS=18;
 const FALLBACK_TARGET=18;
 
 function extractArea(query){
@@ -51,8 +50,6 @@ function pizzaTags(tags={}){
 function elementPizza(element){return !!element&&pizzaTags(element.tags||{});}
 function pizzaCount(elements){return (elements||[]).filter(elementPizza).length;}
 
-/* This deliberately mirrors and expands the original WebSim query. Italian identity
- * makes a venue a search candidate, not confirmed pizza evidence. */
 function robustQuery(area){
   if(!area)return '';
   return `[out:json][timeout:28];(`+
@@ -82,7 +79,11 @@ function mergeElements(...groups){
 function evidence(place){return place&&pizzaTags({...place.tags,name:place.name,cuisine:place.cuisine})?'confirmed':place?.pizzaEvidence||'search';}
 function isSparse(result){
   const elements=result?.data?.elements||[],source=String(result?.source||'').toLowerCase();
-  return pizzaCount(elements)<SPARSE_BELOW||source.includes('photon');
+  if(source.includes('photon'))return true;
+  /* A dense Overpass result is already the desired old-WebSim experience. Do not
+   * block rendering merely because only a small share is explicitly tagged pizza. */
+  if(elements.length>=ADEQUATE_POIS)return false;
+  return elements.length<SPARSE_BELOW||pizzaCount(elements)<SPARSE_BELOW;
 }
 function placeToElement(place,term='pizza'){
   const m=/^(node|way|relation)-(\d+)$/.exec(place?.placeId||'');
@@ -123,7 +124,9 @@ async function recoverProviders(service,query,options={},seed=[]){
       const data=await service.json(endpoint,{method:'POST',body:new URLSearchParams({data:rq})},options.signal,22000);
       if(Array.isArray(data?.elements)&&!data.remark&&data.elements.length){
         elements=mergeElements(elements,data.elements);sources.push(new URL(endpoint).hostname);
-        if(pizzaCount(elements)>=FALLBACK_TARGET&&elements.length>=40)break;
+        /* One healthy recovery provider with a useful POI set is enough. Rendering
+         * should not be held hostage by slower fallbacks. */
+        if(elements.length>=ADEQUATE_POIS)break;
       }
     }catch(error){if(options.signal?.aborted)throw error;}
   }
@@ -141,7 +144,7 @@ async function recoverPhoton(service,query,options={},seed=[]){
       const extra=[];
       for(const item of items||[]){const p=item?.place;if(p&&inside(info,p)){const e=placeToElement(p,term);if(e)extra.push(e);}}
       elements=mergeElements(elements,extra);
-      if(elements.length>=60&&pizzaCount(elements)>=FALLBACK_TARGET)break;
+      if(elements.length>=ADEQUATE_POIS)break;
     }catch(error){if(options.signal?.aborted)throw error;}
   }
   return elements;
@@ -177,7 +180,11 @@ function install(root){
         const seed=primary?.data?.elements||[];
         const recovered=await recoverProviders(service,query,options,seed);
         let elements=recovered.elements;
-        if(elements.length<60||pizzaCount(elements)<FALLBACK_TARGET)elements=await recoverPhoton(service,query,options,elements);
+        /* Photon is a last resort only. A successful Overpass recovery should be
+         * returned immediately, exactly as the original WebSim app did. */
+        if((!recovered.sources.length||elements.length<ADEQUATE_POIS)&&elements.length<ADEQUATE_POIS){
+          elements=await recoverPhoton(service,query,options,elements);
+        }
         if(elements.length){
           const sources=[primary?.source,...recovered.sources,elements.length>recovered.elements.length?'photon.komoot.io':''].filter(Boolean);
           return {data:{...(primary?.data||{}),elements},source:[...new Set(sources)].join(' + ')};
@@ -191,5 +198,5 @@ function install(root){
   root.PizzaScanPoiDiscovery={marker:MARKER,terms:FALLBACK_TERMS.slice(),providers:RECOVERY_PROVIDERS.slice()};
 }
 
-return {MARKER,FOOD_AMENITIES,PIZZA_WORDS,ITALIAN_CUISINE,ITALIAN_NAME_WORDS,FALLBACK_TERMS,RECOVERY_PROVIDERS,SPARSE_BELOW,FALLBACK_TARGET,extractArea,areaInfo,text,pizzaTags,elementPizza,pizzaCount,robustQuery,mergeElements,evidence,isSparse,placeToElement,install};
+return {MARKER,FOOD_AMENITIES,PIZZA_WORDS,ITALIAN_CUISINE,ITALIAN_NAME_WORDS,FALLBACK_TERMS,RECOVERY_PROVIDERS,SPARSE_BELOW,ADEQUATE_POIS,FALLBACK_TARGET,extractArea,areaInfo,text,pizzaTags,elementPizza,pizzaCount,robustQuery,mergeElements,evidence,isSparse,placeToElement,install};
 });
