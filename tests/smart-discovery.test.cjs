@@ -9,6 +9,8 @@ test('original WebSim pizza/Italian POI families remain baseline when cuisine is
   {cuisine:'pizza'},
   {amenity:'restaurant',cuisine:'italian'},
   {amenity:'restaurant',cuisine:'pizza;italian'},
+  {amenity:'restaurant',name:'Ristorante Roma'},
+  {amenity:'restaurant',name:'Trattoria Bella'},
   {amenity:'cafe',cuisine:'pizza'},
   {amenity:'fast_food',cuisine:'italian'},
   {amenity:'food_truck',cuisine:'pizza'},
@@ -89,12 +91,45 @@ test('strict nearby query keeps pizza and Italian discovery without generic rest
  const q=S.strictQuery({lat:53.675,lng:10.24},3,{south:53.6,west:10.1,north:53.7,east:10.3});
  assert.match(q,/amenity\"=\"restaurant/);
  assert.match(q,/cuisine\"~\"pizza\|pizzeria\|italian/);
+ assert.match(q,/ristorante\|trattoria\|osteria/);
  assert.match(q,/description\"~\"pizza/);
  assert.match(q,/note\"~\"pizza/);
  assert.match(q,/menu\"~\"pizza/);
  assert.doesNotMatch(q,/website:menu\"~\"pizza/);
  assert.doesNotMatch(q,/contact:menu\"~\"pizza/);
  assert.doesNotMatch(q,/amenity\"~\"restaurant\|fast_food\|cafe[^\]]*\]\[\"name\"\]/);
+ assert.equal(S.isStrictDiscoveryQuery(q),true);
+ assert.equal(S.isStrictDiscoveryQuery('[out:json];node(1);out;'),false);
+});
+
+test('pizza-specific Photon fallback returns Italian/pizza POIs when Overpass is unavailable',async()=>{
+ const q=S.strictQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
+ const feature=(id,name)=>({type:'Feature',geometry:{coordinates:[10.24,53.675]},properties:{osm_type:'N',osm_id:id,name}});
+ const service={
+  lastErrors:[],
+  async json(url){
+   if(String(url).startsWith('https://photon.komoot.io/reverse')){
+    const tag=new URL(url).searchParams.get('osm_tag');
+    return {features:tag==='cuisine:pizza'?[feature(100,'Pizza Max')]:[feature(101,'Ristorante Roma')]};
+   }
+   throw Error('Overpass unavailable');
+  },
+  async photon(){return [];}
+ };
+ const result=await S.strictOverpass(service,q,{});
+ assert.equal(result.source,'photon.komoot.io');
+ assert.equal(result.data.elements.length,2);
+ assert.ok(result.data.elements.every(S.eligibleElement));
+});
+
+test('manual/detail overpass calls remain delegated to the pre-existing broad service',async()=>{
+ let delegated='';
+ const service={overpass:async query=>{delegated=query;return {data:{elements:[]},source:'broad'};}};
+ const root={PizzaPlaces:{query(){},TYPES:{other:{},fast_food:{}}},placeService:service,localStorage:null};
+ S.install(root);
+ const result=await service.overpass('[out:json];node(1);out;');
+ assert.equal(delegated,'[out:json];node(1);out;');
+ assert.equal(result.source,'broad');
 });
 
 test('Google review evidence only counts actual review text',()=>{
@@ -105,5 +140,5 @@ test('Google review evidence only counts actual review text',()=>{
 });
 
 test('precision cache marker advances for installed clients',()=>{
- assert.equal(S.MARKER,'pizzascan-smart-discovery-v2');
+ assert.equal(S.MARKER,'pizzascan-smart-discovery-v3');
 });
