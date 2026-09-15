@@ -6,7 +6,7 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v9';
+const MARKER='pizzascan-broad-defaults-v10';
 const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const SUPPLEMENT_BELOW=4;
 
@@ -20,7 +20,10 @@ function normalizeConfig(base={},raw={},types={}){
     unknownHours:has('unknownHours')?raw.unknownHours===true:false,
     includeItalian:has('includeItalian')?raw.includeItalian!==false:true,
     includeUnconfirmed:has('includeUnconfirmed')?raw.includeUnconfirmed!==false:true,
-    radius:has('radius')&&[0,1,3,5,10].includes(Number(raw.radius))?Number(raw.radius):10,
+    /* Match the original PizzaScan/WebSim behaviour: the visible map viewport is
+     * the search area and moving the map automatically regenerates the results. */
+    radius:has('radius')&&[0,1,3,5,10].includes(Number(raw.radius))?Number(raw.radius):0,
+    autoSearch:has('autoSearch')?raw.autoSearch!==false:true,
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,
     ratingsEnabled:has('ratingsEnabled')?raw.ratingsEnabled!==false:true,
     minRating:has('minRating')&&Number.isFinite(Number(raw.minRating))?Math.max(0,Math.min(5,Number(raw.minRating))):0,
@@ -35,7 +38,8 @@ function broadMigration(previous={},types={}){
     unknownHours:false,
     includeItalian:true,
     includeUnconfirmed:true,
-    radius:10,
+    radius:0,
+    autoSearch:true,
     hideVisited:false,
     ratingsEnabled:true,
     minRating:0,
@@ -57,19 +61,19 @@ function expandDiscoveryQuery(query,enabled=true){
   const q=String(query||'');
   if(!enabled)return q;
   const area=queryAreaToken(q);
-  if(!area)return q;
-  /* Restore the compact 2.2/WebSim search shape instead of asking Overpass for
-   * every named restaurant. The latter made dense city searches time out and
-   * forced Android into the tiny Photon fallback. These selectors directly ask
-   * OSM for Italian/pizza POIs and common Italian venue names. */
-  return `[out:json][timeout:20];(`+
-    `nwr["cuisine"~"pizza|pizzeria|italian|italiano|italiana",i](${area});`+
-    `nwr["amenity"~"${BROAD_AMENITIES}"]["name"~"pizza|pizzeria|pizzaria|pizze|ristorante|trattoria|osteria|italian|italiano|italiana|italien",i](${area});`+
-    `nwr["amenity"="restaurant"]["cuisine"~"italian|italiano|italiana",i](${area});`+
+  if(!area||q.includes('pizzascan-legacy-result-coverage'))return q;
+  /* Keep the broad named-food query intact. This is what restores the large
+   * result set. The original PizzaScan/WebSim pizza selectors are added on top
+   * so pizza-specific objects are not lost when their amenity tagging is sparse. */
+  const extra=`/* pizzascan-legacy-result-coverage */`+
     `nwr["speciality"~"pizza",i](${area});`+
     `nwr["brand"~"pizza|pizzeria|pizzaria",i](${area});`+
-    `nwr["vending"~"pizza",i](${area});nwr["vending:pizza"="yes"](${area});`+
-    `);out body center;`;
+    `nwr["name"~"pizza|pizzeria|pizzaria|pizze",i](${area});`+
+    `nwr["description"~"pizza",i](${area});`+
+    `nwr["amenity"="restaurant"]["cuisine"~"italian|italiano|italiana",i](${area});`+
+    `nwr["amenity"~"cafe|fast_food|food_truck|takeaway|bar|pub"]["cuisine"~"pizza|pizzeria|italian|italiano|italiana",i](${area});`;
+  if(q.includes(');out body center;'))return q.replace(');out body center;',extra+');out body center;');
+  return q;
 }
 function mergeElements(primary=[],extra=[]){
   const result=new Map();
@@ -93,7 +97,10 @@ function install(root){
     try{
       if(typeof settings==='undefined'||!settings||!root.localStorage||root.localStorage.getItem(MARKER))return;
       settings.filters=broadMigration(settings.filters||{},PD.TYPES);
+      /* v10 intentionally drops old sparse/Photon map results once so an update
+       * immediately repopulates the current viewport from the restored broad query. */
       root.localStorage.removeItem('pizzascan-map-cache-v3');
+      root.localStorage.removeItem('pizzascan-map-cache-v2');
       root.localStorage.removeItem('pizzascan-open-ratings-v1');
       for(let i=root.localStorage.length-1;i>=0;i--){const key=root.localStorage.key(i);if(key?.startsWith('pizzascan-search-'))root.localStorage.removeItem(key);}
       root.localStorage.setItem(MARKER,'1');
