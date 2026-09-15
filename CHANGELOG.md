@@ -1,53 +1,48 @@
 # PizzaScan Changelog
 
-## 2.3.4 — aktuelle Direktversion · 14.09.2026
+## 2.3.5 — aktuelle Direktversion · 15.09.2026
 
-Aktueller Stand: `versionCode 26`, `versionName 2.3.4`, Android-Paket `cloud.kosch.pizzascan`.
+Aktueller Stand: `versionCode 28`, `versionName 2.3.5`, Android-Paket `cloud.kosch.pizzascan`.
 
-2.3.4 konsolidiert die POI-/Suchstabilisierung und wird als direkt installierbare **PizzaScan-2.3.4.apk** veröffentlicht. Der aktuelle App- und Dateiname enthält keinen zusätzlichen Test-Namenszusatz.
+### Build 28 — WebSim-Basis + Pizza-Evidence statt generischer Gastro-Treffer
+
+- Die automatische Umgebungskarte übernimmt wieder gezielt die Pizza-/Italienisch-Gruppen der ursprünglichen WebSim-App statt pauschal jedes benannte Restaurant, Café, Fast-Food-Lokal, jede Bar oder jeden Pub als Pizza-Kandidaten zu behandeln.
+- Die WebSim-Basis bleibt erhalten: Pizza-Küche, italienische Restaurants, entsprechende Cafés/Imbisse/Foodtrucks/Takeaways/Bars/Pubs, Pizza-Spezialität, Pizza im Namen oder in der Beschreibung sowie Pizzaautomaten.
+- Zusätzliche Gastro-POIs benötigen nun ein ausdrückliches Pizza-Signal in strukturierten Daten, Beschreibung/Notiz, Produktdaten oder Speisekarten-Metadaten.
+- Die Recovery nutzt mehrere Overpass-Endpunkte, erweitert bei dünnen Antworten aber nicht mehr auf generische Restaurants, nur um eine Zielanzahl an Treffern zu erreichen.
+- Ein neuer Cache-Marker verwirft einmalig alte breite Karten-/Photon-Recovery-Caches aus 2.3.4. Gemerkte Orte und persönliche Daten bleiben erhalten.
+- Die bewusste manuelle Restaurant-/POI-Suche bleibt breit: Ein Nutzer kann weiterhin ein konkretes Restaurant suchen und prüfen, auch wenn dessen OSM-Daten noch keinen Pizza-Nachweis enthalten.
+- Optional geladene Google-Maps-Rezensionen werden ausschließlich in der laufenden Sitzung auf ein tatsächliches Pizza-Schlüsselwort geprüft; ein positiver Treffer kann den bereits geöffneten Ort als Pizza-belegt markieren. Rezensionstexte werden nicht dauerhaft gespeichert und Google wird nicht massenhaft automatisch abgefragt.
+- POI-Typisierung und Kartenlegende sind synchronisiert: 🍕 Pizzeria, ☕ Café, 🍔 Imbiss/Takeaway, 🚚 Foodtruck, 🤖 Pizzaautomat und 🍽️ Restaurant/Bar/weiterer Pizza-Ort.
+- Ein italienisches Restaurant aus der WebSim-Basis wird ohne zusätzliches Pizza-Signal nicht mehr fälschlich als 🍕 Pizzeria umetikettiert.
+- Neue Regressionstests prüfen WebSim-Basis, Ausschluss generischer Restaurants, Menü-/Kommentar-Evidence, Marker-Typisierung und Google-Review-Evidence.
+
+## 2.3.4 — archivierte Direktversion · 14.09.2026
+
+2.3.4 konsolidierte die POI-/Suchstabilisierung und wurde als direkt installierbare **PizzaScan-2.3.4.apk** veröffentlicht. Die breite Recovery konnte in dünn besiedelten Suchgebieten jedoch zusätzliche generische Gastro-POIs in die Discovery einbeziehen. 2.3.5 zieht deshalb die automatische Umgebungssuche wieder auf die ursprüngliche WebSim-Auswahl plus nachweisbare Pizza-Evidence zusammen.
 
 ### Build 26 — vollständige POI-Kategorien und Suchreparatur
 
-- Die ursprünglichen sichtbaren Kategorien sind wieder vollständig Teil von Discovery **und** manueller Suche: 🍕 Pizzeria, ☕ Café, 🍔 Imbiss, 🚚 Foodtruck, 🤖 Pizzaautomat und 🍽️ Weitere Orte.
-- Kategorien werden semantisch über OSM-Tags gesucht: Ein Café benötigt nicht das Wort „Café“ im Namen, ein Imbiss nicht „Imbiss“ und ein Foodtruck nicht „Foodtruck“.
-- Normale benannte Restaurants, Takeaway, Food Courts, Bars, Pubs und Biergärten werden als **🍽️ Weitere Orte** klassifiziert, solange kein bestätigtes Pizza-Signal vorliegt. Sie werden nicht mehr pauschal als Pizzeria dargestellt.
-- Pizzaautomaten werden ausdrücklich über `vending=pizza`, `vending:pizza=yes` und entsprechende Vending-Merkmale abgefragt.
-- Mobile Gastronomie (`food_truck`, `mobile=yes`) wird ausdrücklich berücksichtigt.
-- ⭐ **Gemerkt**, ✓ **Besucht** und 📍 **Dein Standort** sind jetzt lokale Suchzustände: Die Suche kann diese lokalen Daten direkt aufrufen, ohne sie fälschlich an externe POI-Dienste zu senden.
-- Der Photon-Fallback ergänzt Restaurants/Cafés/Foodtrucks jetzt entsprechend ihrer tatsächlichen Kategorie und erfindet für generische Treffer keine Pizza-Eigenschaft mehr.
-- Antworten mit weniger als 18 rohen POIs gelten als potenziell unvollständig. Recovery über zusätzliche Overpass-Endpunkte zielt auf bis zu 30 rohe Kandidaten, bevor Photon ergänzend verwendet wird.
-- Der Discovery-Cache-Marker wurde erhöht; bestehende Installationen bauen einmalig Karten-/Suchcache und breite Default-Filter neu auf.
-- Neue Regressionstests prüfen alle sechs POI-Kategorien sowie Gemerkt/Besucht/Standort und verhindern, dass künftige Feature-Filter die Basissuche erneut verengen.
-
-### Präzise Suche und POIs
-
-- Discovery und Filterung sind strikt getrennt: gastronomische POIs werden zuerst geladen und normalisiert, optionale Filter greifen erst danach.
-- Standardmäßig: 10 km, alle Place-Typen, keine Mindestbewertung, kein „nur geöffnet“, keine automatische Ausblendung besuchter Orte.
-- Benannte `restaurant`, `fast_food`, `cafe`, `food_truck`, `takeaway`, `food_court`, `bar`, `pub` und `biergarten` werden unabhängig von der Küche als Kandidaten berücksichtigt.
-- Eine ausdrücklich abgesendete Restaurant-/POI-Suche wird zusätzlich direkt gegen OpenStreetMap/Overpass abgeglichen.
-- Der POI-Abgleich bewertet Kategorie, Name, Adresse, Ortsbezug, OSM-Identität und Entfernung; identische OSM-Objekte werden dedupliziert und exakte Namens-/Ortskombinationen werden priorisiert.
-- Suchvarianten wie `Pizza Max Ahrensburg` werden in sichere, regex-escaped Namensvarianten zerlegt, ohne rohe Benutzereingaben als Overpass-RegEx zu übernehmen.
-- Die direkte POI-Suche ist auf den gewählten Suchradius bzw. maximal 10 km um den Kartenmittelpunkt begrenzt.
-- Photon bleibt für Vorschläge und Orts-/Adresssuche aktiv; bei ausdrücklich abgesendeten Suchanfragen kann kontrolliert Nominatim als Fallback dienen.
-- Zusätzliche Overpass-Recovery-Provider bleiben für dünne oder ausgefallene POI-Antworten aktiv.
-- Android nutzt für Overpass den nativen HTTPS-Transport mit fester Allowlist.
+- Die sichtbaren Kategorien waren vollständig Teil von Discovery und manueller Suche: 🍕 Pizzeria, ☕ Café, 🍔 Imbiss, 🚚 Foodtruck, 🤖 Pizzaautomat und 🍽️ Weitere Orte.
+- Kategorien wurden semantisch über OSM-Tags gesucht.
+- Pizzaautomaten wurden ausdrücklich über `vending=pizza`, `vending:pizza=yes` und entsprechende Vending-Merkmale abgefragt.
+- ⭐ Gemerkt, ✓ Besucht und 📍 Dein Standort wurden lokale Suchzustände.
+- Die direkte POI-Suche bewertete Kategorie, Name, Adresse, Ortsbezug, OSM-Identität und Entfernung.
+- Android nutzte für Overpass den nativen HTTPS-Transport mit fester Allowlist.
 
 ### APK und Packaging
 
 - `direct`-Build: nicht debuggable, gleicher Paketname wie die App (`cloud.kosch.pizzascan`), installierbar signiert und ohne `.lang1`-/`-lang1`-Namenszusatz.
 - Veröffentlichter Dateiname: `downloads/PizzaScan-2.3.4.apk`.
-- CI prüft Signatur, Package-ID und App-Label der tatsächlich veröffentlichten APK.
-- Die Playwright-Abnahme läuft gegen die aus genau dieser APK extrahierten Web-Assets.
-- Android-16-CI installiert und startet zusätzlich die Direkt-APK selbst.
-- Parallel wird weiterhin ein validiertes Release-AAB für die Google-Play-Vorbereitung erzeugt.
+- CI prüfte Signatur, Package-ID und App-Label der tatsächlich veröffentlichten APK.
+- Parallel wurde ein validiertes Release-AAB für die Google-Play-Vorbereitung erzeugt.
 
 ### Filter und Bewertungen
 
 - Mindestbewertung 0,0–5,0 in 0,1-Schritten.
 - Mangrove/Open Reviews als kostenlose offene Bewertungsquelle.
-- Review-Evidence kann Pizza-Bezug aus offenen Rezensionen ableiten, ohne vollständige Rezensionstexte als POI-Merkmal dauerhaft zu speichern.
 - Externe Links zu Google Maps, Tripadvisor und Yelp.
-- Optionale Google-Places-Integration mit eigenem API-Key bleibt freiwillig.
+- Optionale Google-Places-Integration mit eigenem API-Key.
 
 ### Android, lokale KI und UX
 
@@ -55,13 +50,10 @@ Aktueller Stand: `versionCode 26`, `versionName 2.3.4`, Android-Paket `cloud.kos
 - CLIP B/32, CLIP B/16 und SigLIP B/16 als lokale ONNX/WASM-Modelle mit persistenter Modellablage.
 - Fotoanalyse mit 25 sichtbaren Kriterien und 100 simulierten Gewichtungsperspektiven.
 - Review Builder und Oberfläche in DE / EN / IT / ES / FR.
-- Datenschutzerklärung und In-App-Versionsanzeige sind auf 2.3.4 synchronisiert.
 
 ## 2.3.3 — archivierte Maintenance-Line · 14.09.2026
 
-2.3.3 war die intensive Maintenance- und Experimentierlinie für Ratings, Reviews, Filter, Search-Fallbacks, POI-Recovery, Offline-KI, Mehrsprachigkeit und Play-Store-Vorbereitung. Spätere Zwischenstände zeigten eine Regression der POI-Vollständigkeit; 2.3.4 trennt deshalb Discovery und Filterung wieder strikt.
-
-Die zuletzt veröffentlichte 2.3.3-APK bleibt für Regression im Archiv erhalten.
+2.3.3 war die intensive Maintenance- und Experimentierlinie für Ratings, Reviews, Filter, Search-Fallbacks, POI-Recovery, Offline-KI, Mehrsprachigkeit und Play-Store-Vorbereitung.
 
 [⬇️ PizzaScan 2.3.3 Archiv-APK](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.3-Test.apk)
 
