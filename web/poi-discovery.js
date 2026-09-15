@@ -9,7 +9,7 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-poi-discovery-v10';
+const MARKER='pizzascan-poi-discovery-v11';
 const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const FOOD_SET=new Set(FOOD_AMENITIES.split('|'));
 const PIZZA_WORDS='pizza|pizzeria|pizzaria|pizzerie|pizze';
@@ -126,7 +126,6 @@ function inside(info,p){
   if(info?.bounds){const b=info.bounds;return p.lat>=b.south&&p.lat<=b.north&&(b.west<=b.east?p.lng>=b.west&&p.lng<=b.east:p.lng>=b.west||p.lng<=b.east);}
   const d=globalThis.PizzaCore?.distance?.(info.center,p);
   if(Number.isFinite(d))return d<=Math.min(10,info.radius*1.15);
-  /* Node tests and early bootstrap can run without PizzaCore on globalThis. */
   const dy=(Number(p.lat)-info.center.lat)*111.32,dx=(Number(p.lng)-info.center.lng)*111.32*Math.cos(info.center.lat*Math.PI/180);
   return Math.hypot(dx,dy)<=Math.min(10,info.radius*1.15);
 }
@@ -207,6 +206,24 @@ async function recoverPhoton(service,query,options={},seed=[]){
   return elements;
 }
 
+/* places.js historically runs its own sequential Photon text fallback after the
+ * first two Overpass servers fail. Once this module is installed that fallback
+ * is redundant and, more importantly, delays the broader alternate-provider
+ * recovery by many seconds. Keep the legacy function available for diagnostics
+ * but make the base overpass call fail fast into this module's recovery chain. */
+function disableLegacyFallback(service){
+  if(!service||typeof service.nearbyFallback!=='function'||service.nearbyFallback.__poiDiscoveryBypass)return false;
+  const legacy=service.nearbyFallback.bind(service);
+  const bypass=async function(_query,{signal}={}){
+    if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+    return [];
+  };
+  bypass.__poiDiscoveryBypass=true;
+  bypass.__poiDiscoveryLegacy=legacy;
+  service.nearbyFallback=bypass;
+  return true;
+}
+
 function clearOldCaches(root){
   try{
     if(!root.localStorage||root.localStorage.getItem(MARKER))return;
@@ -230,16 +247,15 @@ function install(root){
   }
   try{
     if(typeof placeService!=='undefined'&&placeService&&!placeService.overpass.__poiDiscovery){
-      const service=placeService,base=service.overpass.bind(service);
+      const service=placeService;
+      disableLegacyFallback(service);
+      const base=service.overpass.bind(service);
       const wrapped=async function(query,options={}){
         let primary=null,primaryError=null;
         try{primary=await base(query,options);}catch(error){primaryError=error;if(options.signal?.aborted)throw error;}
         if(primary&&!isSparse(primary))return primary;
         let elements=primary?.data?.elements||[],sources=[primary?.source].filter(Boolean);
 
-        /* Do not make the user wait through a long sequence of Photon searches
-         * before trying the two additional Overpass servers. The previous order
-         * is what produced the misleading "Weitere Restaurants ..." stall. */
         const recovered=await recoverProviders(service,query,options,elements);
         elements=recovered.elements;sources=sources.concat(recovered.sources);
         if(!broadEnough(elements)){
@@ -254,8 +270,8 @@ function install(root){
       wrapped.__poiDiscovery=true;service.overpass=wrapped;
     }
   }catch(error){console.warn('PizzaScan broad restaurant/pizza discovery recovery skipped',error);}
-  root.PizzaScanPoiDiscovery={marker:MARKER,terms:FALLBACK_TERMS.slice(),photonTags:PHOTON_TAGS.slice(),providers:RECOVERY_PROVIDERS.slice()};
+  root.PizzaScanPoiDiscovery={marker:MARKER,terms:FALLBACK_TERMS.slice(),photonTags:PHOTON_TAGS.slice(),providers:RECOVERY_PROVIDERS.slice(),legacyFallbackBypassed:true};
 }
 
-return {MARKER,FOOD_AMENITIES,PIZZA_WORDS,ITALIAN_CUISINE,ITALIAN_NAME_WORDS,FALLBACK_TERMS,PHOTON_TAGS,RECOVERY_PROVIDERS,SPARSE_BELOW,ADEQUATE_POIS,FALLBACK_TARGET,PHOTON_LIMIT,MIN_GENERIC_POIS,extractArea,areaInfo,text,pizzaTags,elementPizza,pizzaCount,genericFoodElement,genericFoodCount,broadEnough,robustQuery,mergeElements,evidence,isSparse,placeToElement,inside,photonNearbyUrl,photonFeatureElements,structuredPhoton,recoverProviders,recoverPhoton,install};
+return {MARKER,FOOD_AMENITIES,PIZZA_WORDS,ITALIAN_CUISINE,ITALIAN_NAME_WORDS,FALLBACK_TERMS,PHOTON_TAGS,RECOVERY_PROVIDERS,SPARSE_BELOW,ADEQUATE_POIS,FALLBACK_TARGET,PHOTON_LIMIT,MIN_GENERIC_POIS,extractArea,areaInfo,text,pizzaTags,elementPizza,pizzaCount,genericFoodElement,genericFoodCount,broadEnough,robustQuery,mergeElements,evidence,isSparse,placeToElement,inside,photonNearbyUrl,photonFeatureElements,structuredPhoton,recoverProviders,recoverPhoton,disableLegacyFallback,install};
 });
