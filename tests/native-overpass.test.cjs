@@ -6,7 +6,7 @@ test('native Overpass transport uses only the fixed HTTPS allowlist',()=>{
  for(const endpoint of N.ENDPOINTS)assert.equal(N.allowed(endpoint),true);
  assert.equal(N.allowed('http://overpass-api.de/api/interpreter'),false);
  assert.equal(N.allowed('https://example.com/api/interpreter'),false);
- assert.ok(N.NATIVE_TIMEOUT>=10000&&N.NATIVE_TIMEOUT<15000);
+ assert.ok(N.NATIVE_TIMEOUT>=25000&&N.NATIVE_TIMEOUT<=30000);
  assert.ok(N.DIRECT_FALLBACK_TIMEOUT>=20000);
 });
 
@@ -17,26 +17,32 @@ test('native Overpass extracts only the Overpass POST query',()=>{
  assert.equal(N.queryFrom({body:{data:'x'}}),'');
 });
 
-test('packaged Android uses native HTTPS before WebView Overpass',async()=>{
- let called=null,webCalls=0;
+test('packaged Android uses the long raw native channel before WebView Overpass',async()=>{
+ let posted=null,webCalls=0,bridgeCalls=0;
  const root={
+  crypto:{randomUUID:()=> 'native-overpass-test'},
   navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.4 (+https://github.com/chekento/Pizzascan)'},
-  PizzaScanNative:{},
-  bridge:async(type,payload)=>{called={type,payload};return JSON.stringify({elements:[{type:'node',id:1,lat:53.67,lon:10.24,tags:{name:'Test Restaurant',amenity:'restaurant'}}]});},
+  PizzaScanBridge:{reply(){throw Error('unhandled reply');}},
+  PizzaScanNative:{postMessage(message){
+   posted=JSON.parse(message);
+   setImmediate(()=>root.PizzaScanBridge.reply({id:posted.id,value:JSON.stringify({elements:[{type:'node',id:1,lat:53.67,lon:10.24,tags:{name:'Test Restaurant',amenity:'restaurant'}}]})}));
+  }},
+  bridge:async()=>{bridgeCalls++;throw Error('short generic bridge must not run');},
   placeService:{json:async()=>{webCalls++;throw Error('WebView transport should not be primary');}}
  };
  assert.equal(N.install(root),true);
  const query='[out:json];nwr["amenity"="restaurant"](around:10000,53.67,10.24);out;';
  const result=await root.placeService.json(N.ENDPOINTS[0],{method:'POST',body:new URLSearchParams({data:query})},null,8000);
  assert.equal(webCalls,0);
- assert.equal(called.type,'overpass');
- assert.equal(called.payload.endpoint,N.ENDPOINTS[0]);
- assert.equal(called.payload.query,query);
- assert.equal(called.payload.timeout,N.NATIVE_TIMEOUT);
+ assert.equal(bridgeCalls,0);
+ assert.equal(posted.type,'overpass');
+ assert.equal(posted.endpoint,N.ENDPOINTS[0]);
+ assert.equal(posted.query,query);
+ assert.equal(posted.timeout,N.NATIVE_TIMEOUT);
  assert.equal(result.elements.length,1);
 });
 
-test('packaged Android falls back to direct Overpass when native bridge fails',async()=>{
+test('packaged Android falls back to direct Overpass when native transport fails',async()=>{
  let bridgeCalls=0,webCalls=0,seenTimeout=0;
  const root={
   navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.4 (+https://github.com/chekento/Pizzascan)'},
