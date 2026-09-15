@@ -6,7 +6,7 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v11';
+const MARKER='pizzascan-broad-defaults-v12';
 const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const DEFAULT_RADIUS=5;
 const SUPPLEMENT_BELOW=12;
@@ -96,8 +96,8 @@ function install(root){
     if(migrated)return;migrated=true;
     try{
       if(typeof settings==='undefined'||!settings||!root.localStorage||root.localStorage.getItem(MARKER))return;
-      /* v11 deliberately re-opens discovery once on existing installations. Old
-       * type/rating/radius filters from the sparse releases must not silently keep
+      /* v12 deliberately re-opens discovery once on existing installations. Old
+       * type/rating/radius filters from sparse releases must not silently keep
        * hiding restaurants after the discovery fix is installed. */
       settings.filters=broadMigration(settings.filters||{},PD.TYPES);
       root.localStorage.removeItem('pizzascan-map-cache-v3');
@@ -105,7 +105,10 @@ function install(root){
       root.localStorage.removeItem('pizzascan-open-ratings-v1');
       root.localStorage.removeItem('pizzascan-first-map-discovery-v1');
       root.localStorage.removeItem('pizzascan-first-map-discovery-v2');
-      for(let i=root.localStorage.length-1;i>=0;i--){const key=root.localStorage.key(i);if(key?.startsWith('pizzascan-search-'))root.localStorage.removeItem(key);}
+      for(let i=root.localStorage.length-1;i>=0;i--){
+        const key=root.localStorage.key(i);
+        if(key?.startsWith('pizzascan-search-')||key?.startsWith('pizzascan-nearby-photon-'))root.localStorage.removeItem(key);
+      }
       root.localStorage.setItem(MARKER,'1');
       if(typeof saveSettings==='function')saveSettings();
     }catch(error){console.warn('PizzaScan broad-default migration skipped',error);}
@@ -141,25 +144,12 @@ function install(root){
     };
     PD.filter.__pizzaBroadDefaults=true;
   }
-  try{
-    if(typeof placeService!=='undefined'&&placeService&&!placeService.overpass.__pizzaBroadDefaults){
-      const baseOverpass=placeService.overpass.bind(placeService);
-      const wrappedOverpass=async function(q,options={}){
-        const primary=await baseOverpass(q,options),elements=primary?.data?.elements||[];
-        if(!shouldSupplement(elements)||String(primary?.source||'').includes('photon'))return primary;
-        try{
-          options.onStatus?.('Weitere Restaurants und Pizza-Orte werden ergänzt …');
-          const extra=await this.nearbyFallback(q,options);
-          if(extra?.length)return {data:{...primary.data,elements:mergeElements(elements,extra)},source:[primary.source,'photon.komoot.io'].filter(Boolean).join(' + ')};
-        }catch(error){if(options.signal?.aborted)throw error;}
-        return primary;
-      };
-      wrappedOverpass.__pizzaBroadDefaults=true;
-      placeService.overpass=wrappedOverpass.bind(placeService);
-      placeService.overpass.__pizzaBroadDefaults=true;
-    }
-  }catch(error){console.warn('PizzaScan discovery supplement skipped',error);}
-  root.PizzaScanBroadPolicy={marker:MARKER,defaults:()=>normalizeConfig({}, {}, PD.TYPES)};
+  /* Sparse-result recovery used to run a second, sequential Photon text search
+   * here before poi-discovery.js got a chance to use alternate Overpass servers
+   * or structured OSM-tag lookups. That made the UI appear to skip/stop while
+   * "Weitere Restaurants …" was shown. Recovery now has a single owner:
+   * poi-discovery.js, loaded immediately after this module. */
+  root.PizzaScanBroadPolicy={marker:MARKER,defaults:()=>normalizeConfig({}, {}, PD.TYPES),recoveryOwner:'poi-discovery'};
 }
 return {MARKER,BROAD_AMENITIES,DEFAULT_RADIUS,SUPPLEMENT_BELOW,allTypes,normalizeConfig,broadMigration,candidateVisible,queryAreaToken,expandDiscoveryQuery,mergeElements,shouldSupplement,install};
 });
