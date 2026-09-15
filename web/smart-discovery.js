@@ -1,7 +1,7 @@
-/* PizzaScan 2.3.5: strict WebSim-baseline + evidence-driven Pizza discovery.
- * The nearby map keeps every POI category the original WebSim query intentionally
- * returned. Additional POIs need an explicit pizza signal in structured data,
- * description/comment-style text or menu metadata. Manual restaurant search stays broad. */
+/* PizzaScan 2.3.5: precise WebSim-baseline + evidence-driven Pizza discovery.
+ * Nearby discovery may keep plausible Italian/WebSim candidates, but it must not
+ * add obviously incompatible restaurants merely because a URL, weak note or broad
+ * restaurant source happens to contain the word pizza. Manual POI search stays broad. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -9,9 +9,10 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-smart-discovery-v1';
+const MARKER='pizzascan-smart-discovery-v2';
 const PIZZA=/(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizze|pizzas)(?:[^a-z]|$)/i;
 const ITALIAN=/(?:^|[^a-z])(italian|italiano|italiana)(?:[^a-z]|$)/i;
+const INCOMPATIBLE=/(?:^|[^a-z])(asian|chinese|japanese|thai|vietnamese|korean|indian|sushi|ramen|nepalese|indonesian|malaysian|filipino|pakistani|bangladeshi|sri[_ -]?lankan|mongolian|cantonese|sichuan|dim[_ -]?sum)(?:[^a-z]|$)/i;
 const FOOD_AMENITIES=new Set(['restaurant','fast_food','cafe','food_truck','takeaway','food_court','bar','pub','biergarten']);
 const FOOD_SHOPS=new Set(['deli','bakery','convenience']);
 const PROVIDERS=[
@@ -26,63 +27,66 @@ function fields(tags={},keys=[]){return keys.map(k=>tags[k]).filter(Boolean).joi
 function cuisine(tags={}){return text(tags.cuisine||'');}
 function pizzaCuisine(tags={}){return PIZZA.test(cuisine(tags));}
 function italianCuisine(tags={}){return ITALIAN.test(cuisine(tags));}
-function pizzaText(tags={}){
-  return PIZZA.test(text(fields(tags,[
-    'name','cuisine','brand','operator','speciality','description','description:de','description:en','description:it','description:es','description:fr',
-    'note','note:de','note:en','product','products','vending','menu','website:menu','contact:menu','url','website'
-  ])));
+function incompatibleCuisine(tags={}){return !pizzaCuisine(tags)&&INCOMPATIBLE.test(cuisine(tags));}
+function isUrlLike(value){return /^\s*(?:https?:\/\/|www\.)/i.test(String(value||''));}
+function nonUrlFields(tags={},keys=[]){return keys.map(k=>tags[k]).filter(v=>v&&!isUrlLike(v)).join(' ');}
+function directPizzaEvidence(tags={}){
+  if(tags['vending:pizza']==='yes')return true;
+  return PIZZA.test(text(fields(tags,['name','cuisine','brand','operator','speciality','vending','product','products'])));
 }
-function pizzaMenuEvidence(tags={}){return PIZZA.test(text(fields(tags,['menu','website:menu','contact:menu','product','products'])));}
+function pizzaMenuEvidence(tags={}){
+  if(PIZZA.test(text(fields(tags,['product','products']))))return true;
+  return PIZZA.test(text(nonUrlFields(tags,['menu','website:menu','contact:menu'])));
+}
 function pizzaCommentEvidence(tags={}){return PIZZA.test(text(fields(tags,['description','description:de','description:en','description:it','description:es','description:fr','note','note:de','note:en'])));}
+function pizzaText(tags={}){return directPizzaEvidence(tags)||pizzaMenuEvidence(tags)||pizzaCommentEvidence(tags);}
 function isPizzaVending(tags={}){return tags['vending:pizza']==='yes'||PIZZA.test(text(tags.vending||''));}
 function plausibleFoodObject(tags={}){
   const amenity=text(tags.amenity||''),shop=text(tags.shop||'');
   if(FOOD_AMENITIES.has(amenity)||amenity==='vending_machine'||FOOD_SHOPS.has(shop)||isPizzaVending(tags))return true;
-  /* Preserve untyped OSM pizza objects from the original WebSim query, while an
-   * explicitly non-food amenity/shop (school, hotel shop, etc.) cannot enter merely
-   * because its description happens to mention pizza. */
   if(amenity)return false;
   if(shop&&!FOOD_SHOPS.has(shop))return false;
   return true;
 }
 
-/* Mirrors the POI families used by the original WebSim app. This is the protected
- * baseline: later discovery logic may enrich it, but must not replace it with every
- * generic restaurant in the area. */
+/* Direct pizza evidence always wins. Italian-only WebSim candidates remain useful,
+ * but an explicit incompatible cuisine is a veto unless the same OSM object also
+ * carries direct pizza evidence. This prevents Asia/sushi/Thai/etc. restaurants from
+ * becoming ambient PizzaScan candidates on weak metadata alone. */
 function websimBaselineTags(tags={}){
-  const amenity=text(tags.amenity||'');
+  const amenity=text(tags.amenity||''),direct=directPizzaEvidence(tags),conflict=incompatibleCuisine(tags);
   if(isPizzaVending(tags))return true;
-  if(pizzaCuisine(tags)&&plausibleFoodObject(tags))return true;
-  if(amenity==='restaurant'&&(italianCuisine(tags)||pizzaCuisine(tags)))return true;
-  if(['cafe','fast_food','food_truck','takeaway'].includes(amenity)&&(pizzaCuisine(tags)||italianCuisine(tags)))return true;
-  if(['bar','pub'].includes(amenity)&&(pizzaCuisine(tags)||italianCuisine(tags)))return true;
-  if(PIZZA.test(text(tags.speciality||''))&&plausibleFoodObject(tags))return true;
-  if(PIZZA.test(text(tags.name||''))&&plausibleFoodObject(tags))return true;
-  if(PIZZA.test(text(tags.description||''))&&plausibleFoodObject(tags))return true;
+  if(direct&&plausibleFoodObject(tags))return true;
+  if(conflict)return false;
+  if(amenity==='restaurant'&&italianCuisine(tags))return true;
+  if(['cafe','fast_food','food_truck','takeaway'].includes(amenity)&&italianCuisine(tags))return true;
+  if(['bar','pub'].includes(amenity)&&italianCuisine(tags))return true;
+  if(pizzaCommentEvidence(tags)&&plausibleFoodObject(tags))return true;
   return false;
 }
 function supplementalEvidenceTags(tags={}){
-  const amenity=text(tags.amenity||'');
-  const food=FOOD_AMENITIES.has(amenity)||FOOD_SHOPS.has(text(tags.shop||''));
-  return food&&(pizzaText(tags)||pizzaMenuEvidence(tags)||pizzaCommentEvidence(tags));
+  const amenity=text(tags.amenity||''),food=FOOD_AMENITIES.has(amenity)||FOOD_SHOPS.has(text(tags.shop||''));
+  if(!food)return false;
+  if(directPizzaEvidence(tags))return true;
+  if(incompatibleCuisine(tags))return false;
+  return pizzaMenuEvidence(tags)||pizzaCommentEvidence(tags);
 }
 function eligibleElement(element){const tags=element?.tags||{};return websimBaselineTags(tags)||supplementalEvidenceTags(tags);}
 function evidenceKind(tags={}){
   if(isPizzaVending(tags))return 'vending';
+  if(directPizzaEvidence(tags))return 'pizza';
+  if(incompatibleCuisine(tags))return '';
   if(pizzaMenuEvidence(tags))return 'menu';
   if(pizzaCommentEvidence(tags))return 'comment';
-  if(pizzaText(tags))return 'pizza';
   if(websimBaselineTags(tags))return 'websim';
   return '';
 }
 function promoteElement(element){
   if(!element||!element.tags)return element;
-  const kind=evidenceKind(element.tags);
-  if(!kind)return element;
+  const kind=evidenceKind(element.tags);if(!kind)return element;
   const tags={...element.tags,'pizzascan:evidence':kind};
-  /* places.js already understands speciality=pizza. Promote only evidence fields it
-   * could otherwise miss; do not rewrite Italian-only WebSim baseline POIs as pizza. */
-  if((pizzaMenuEvidence(tags)||pizzaCommentEvidence(tags))&&!PIZZA.test(text(fields(tags,['name','cuisine','brand','vending','speciality'])))){
+  const coreDirect=PIZZA.test(text(fields(tags,['name','cuisine','brand','vending','speciality'])));
+  if(!incompatibleCuisine(tags)&&(pizzaMenuEvidence(tags)||pizzaCommentEvidence(tags)||PIZZA.test(text(fields(tags,['product','products']))))&&!coreDirect){
     tags.speciality=[tags.speciality,'pizza'].filter(Boolean).join(';');
   }
   return {...element,tags};
@@ -93,7 +97,9 @@ function strongPizzaPlace(place){
   if(place?.cuisine&&!tags.cuisine)tags.cuisine=place.cuisine;
   if(place?.description&&!tags.description)tags.description=place.description;
   if(place?.menu&&!tags.menu)tags.menu=place.menu;
-  return pizzaText(tags)||isPizzaVending(tags)||place?.pizzaEvidenceSource==='google-review-session';
+  if(place?.pizzaEvidenceSource==='google-review-session')return true;
+  if(directPizzaEvidence(tags)||isPizzaVending(tags))return true;
+  return !incompatibleCuisine(tags)&&(pizzaMenuEvidence(tags)||pizzaCommentEvidence(tags));
 }
 function classifyPlace(place){
   const t=place?.tags||{},amenity=text(t.amenity||'');
@@ -121,7 +127,7 @@ function strictQuery(center,radius,bounds){
     `nwr["description"~"pizza",i](${a});`+
     `nwr["note"~"pizza",i](${a});`+
     `nwr["product"~"pizza",i](${a});nwr["products"~"pizza",i](${a});`+
-    `nwr["menu"~"pizza",i](${a});nwr["website:menu"~"pizza",i](${a});nwr["contact:menu"~"pizza",i](${a});`+
+    `nwr["menu"~"pizza",i](${a});`+
     `nwr["amenity"="vending_machine"]["vending"~"pizza",i](${a});nwr["vending"~"pizza",i](${a});nwr["vending:pizza"="yes"](${a});`+
     `);out body center;`;
 }
@@ -136,12 +142,12 @@ async function strictOverpass(service,query,{signal,onStatus}={}){
       const data=await service.json(endpoint,{method:'POST',body:new URLSearchParams({data:query})},signal,i<2?10000:13000);
       if(!Array.isArray(data?.elements)||data.remark)throw new Error(data?.remark||'Unvollständige Kartendaten');
       const elements=data.elements.filter(eligibleElement);
-      if(!elements.length){errors.push({source:new URL(endpoint).hostname,message:'Keine belegten Pizza-POIs'});continue;}
+      if(!elements.length){errors.push({source:new URL(endpoint).hostname,message:'Keine plausiblen Pizza-POIs'});continue;}
       return {data:{...data,elements},source:new URL(endpoint).hostname};
     }catch(error){if(signal?.aborted)throw error;errors.push({source:new URL(endpoint).hostname,message:error?.message||String(error)});}
   }
   service.lastErrors=errors;
-  const error=new Error('Keine belegten Pizza-Orte aus den Kartenquellen erreichbar.');
+  const error=new Error('Keine plausiblen Pizza-Orte aus den Kartenquellen erreichbar.');
   error.sources=errors;throw error;
 }
 
@@ -171,6 +177,8 @@ function clearStaleCaches(root){
     if(!root.localStorage||root.localStorage.getItem(MARKER))return;
     root.localStorage.removeItem('pizzascan-map-cache-v3');
     root.localStorage.removeItem('pizzascan-map-cache-v2');
+    root.localStorage.removeItem('pizzascan-first-map-discovery-v1');
+    root.localStorage.removeItem('pizzascan-first-map-discovery-v2');
     for(let i=root.localStorage.length-1;i>=0;i--){const k=root.localStorage.key(i);if(k?.startsWith('pizzascan-nearby-photon-'))root.localStorage.removeItem(k);}
     root.localStorage.setItem(MARKER,'1');
   }catch{}
@@ -194,7 +202,7 @@ function install(root){
   }
   PD.query=strictQuery;
   if(PD.TYPES){
-    if(PD.TYPES.other)PD.TYPES.other.name='Restaurant / Bar / weiterer Pizza-Ort';
+    if(PD.TYPES.other)PD.TYPES.other.name='Restaurant / Bar / möglicher Pizza-Ort';
     if(PD.TYPES.fast_food)PD.TYPES.fast_food.name='Imbiss / Takeaway';
   }
   const service=serviceFor(root);
@@ -202,5 +210,5 @@ function install(root){
   installGoogleObserver(root);
 }
 
-return {MARKER,PIZZA,ITALIAN,PROVIDERS,text,pizzaCuisine,italianCuisine,pizzaText,pizzaMenuEvidence,pizzaCommentEvidence,isPizzaVending,plausibleFoodObject,websimBaselineTags,supplementalEvidenceTags,eligibleElement,evidenceKind,promoteElement,strongPizzaPlace,classifyPlace,strictQuery,strictOverpass,googleReviewHasPizza,applyGoogleReviewEvidence,clearStaleCaches,install};
+return {MARKER,PIZZA,ITALIAN,INCOMPATIBLE,PROVIDERS,text,pizzaCuisine,italianCuisine,incompatibleCuisine,isUrlLike,directPizzaEvidence,pizzaText,pizzaMenuEvidence,pizzaCommentEvidence,isPizzaVending,plausibleFoodObject,websimBaselineTags,supplementalEvidenceTags,eligibleElement,evidenceKind,promoteElement,strongPizzaPlace,classifyPlace,strictQuery,strictOverpass,googleReviewHasPizza,applyGoogleReviewEvidence,clearStaleCaches,install};
 });
