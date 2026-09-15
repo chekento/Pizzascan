@@ -6,7 +6,7 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v8';
+const MARKER='pizzascan-broad-defaults-v9';
 const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const SUPPLEMENT_BELOW=4;
 
@@ -19,9 +19,6 @@ function normalizeConfig(base={},raw={},types={}){
     onlyOpen:has('onlyOpen')?raw.onlyOpen===true:false,
     unknownHours:has('unknownHours')?raw.unknownHours===true:false,
     includeItalian:has('includeItalian')?raw.includeItalian!==false:true,
-    /* Broad named restaurants are the baseline again. The setting is retained for
-     * compatibility, but the migration enables it so installed clients regain the
-     * richer 2.2-style result set. */
     includeUnconfirmed:has('includeUnconfirmed')?raw.includeUnconfirmed!==false:true,
     radius:has('radius')&&[0,1,3,5,10].includes(Number(raw.radius))?Number(raw.radius):10,
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,
@@ -46,8 +43,6 @@ function broadMigration(previous={},types={}){
   };
 }
 function candidateVisible(place,cfg={},context={},hours=()=>({state:'unknown'})){
-  /* Generic named food venues are valid primary results again. Pizza evidence may
-   * annotate/prioritize them, but is not a visibility prerequisite. */
   if(!place||cfg.includeUnconfirmed===false)return false;
   if(Array.isArray(cfg.types)&&!cfg.types.includes(place.type))return false;
   if(cfg.hideVisited&&context.visited?.has?.(place.placeId))return false;
@@ -59,11 +54,22 @@ function queryAreaToken(query){
   return m?.[1]||'';
 }
 function expandDiscoveryQuery(query,enabled=true){
-  if(!enabled)return String(query||'');
-  const q=String(query||''),area=queryAreaToken(q);
-  if(!area||q.includes('pizzascan-broad-discovery'))return q;
-  const extra=`/* pizzascan-broad-discovery */nwr["amenity"~"${BROAD_AMENITIES}"]["name"](${area});nwr["amenity"~"restaurant|fast_food|cafe|food_truck"]["mobile"="yes"]["name"](${area});`;
-  return q.replace(');out body center;',`${extra});out body center;`);
+  const q=String(query||'');
+  if(!enabled)return q;
+  const area=queryAreaToken(q);
+  if(!area)return q;
+  /* Restore the compact 2.2/WebSim search shape instead of asking Overpass for
+   * every named restaurant. The latter made dense city searches time out and
+   * forced Android into the tiny Photon fallback. These selectors directly ask
+   * OSM for Italian/pizza POIs and common Italian venue names. */
+  return `[out:json][timeout:20];(`+
+    `nwr["cuisine"~"pizza|pizzeria|italian|italiano|italiana",i](${area});`+
+    `nwr["amenity"~"${BROAD_AMENITIES}"]["name"~"pizza|pizzeria|pizzaria|pizze|ristorante|trattoria|osteria|italian|italiano|italiana|italien",i](${area});`+
+    `nwr["amenity"="restaurant"]["cuisine"~"italian|italiano|italiana",i](${area});`+
+    `nwr["speciality"~"pizza",i](${area});`+
+    `nwr["brand"~"pizza|pizzeria|pizzaria",i](${area});`+
+    `nwr["vending"~"pizza",i](${area});nwr["vending:pizza"="yes"](${area});`+
+    `);out body center;`;
 }
 function mergeElements(primary=[],extra=[]){
   const result=new Map();
