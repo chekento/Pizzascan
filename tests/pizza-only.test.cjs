@@ -37,18 +37,20 @@ test('open-review pizza evidence can promote a generic internal candidate withou
  assert.equal(O.eligible(candidate,noRoot),false);
 });
 
-test('search groups remove generic venues and generic geocoder locations',()=>{
+test('search groups remove generic food venues but preserve geographic navigation targets',()=>{
  const helper={stateIntent:q=>/standort/i.test(q)?['location']:[]};
  const groups=[[
   {kind:'venue',name:'Pizza Uno',place:place(1,'pizzeria','Pizza Uno','pizza')},
   {kind:'venue',name:'Kaffeeküche',place:place(2,'cafe','Kaffeeküche','coffee_shop')},
-  {kind:'location',name:'Ahrensburg',address:'Schleswig-Holstein'},
-  {kind:'location',name:'Dein Standort',searchStates:['location']}
+  {kind:'location',name:'Ahrensburg',address:'Schleswig-Holstein',lat:53.6759,lng:10.2393},
+  {kind:'location',name:'Dein Standort',lat:53.55,lng:10.0,searchStates:['location']}
  ]];
  const pizza=O.pizzaOnlyGroups(groups,'pizza',helper,{PizzaRatingsUI:{summary:()=>({pizzaMentions:0})}})[0];
- assert.deepEqual(pizza.map(x=>x.name),['Pizza Uno']);
+ assert.deepEqual(pizza.map(x=>x.name),['Pizza Uno','Ahrensburg','Dein Standort']);
  const gps=O.pizzaOnlyGroups(groups,'mein Standort',helper,{PizzaRatingsUI:{summary:()=>({pizzaMentions:0})}})[0];
- assert.deepEqual(gps.map(x=>x.name),['Pizza Uno','Dein Standort']);
+ assert.deepEqual(gps.map(x=>x.name),['Pizza Uno','Ahrensburg','Dein Standort']);
+ assert.equal(O.geographicLocationItem({kind:'location',lat:53.6759,lng:10.2393}),true);
+ assert.equal(O.geographicLocationItem({kind:'location',lat:'x',lng:10.2393}),false);
 });
 
 test('saved and visited state do not bypass pizza eligibility',()=>{
