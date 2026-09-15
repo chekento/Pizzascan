@@ -13,6 +13,7 @@ const MARKER='pizzascan-smart-discovery-v1';
 const PIZZA=/(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizze|pizzas)(?:[^a-z]|$)/i;
 const ITALIAN=/(?:^|[^a-z])(italian|italiano|italiana)(?:[^a-z]|$)/i;
 const FOOD_AMENITIES=new Set(['restaurant','fast_food','cafe','food_truck','takeaway','food_court','bar','pub','biergarten']);
+const FOOD_SHOPS=new Set(['deli','bakery','convenience']);
 const PROVIDERS=[
   'https://overpass-api.de/api/interpreter',
   'https://overpass.private.coffee/api/interpreter',
@@ -34,24 +35,35 @@ function pizzaText(tags={}){
 function pizzaMenuEvidence(tags={}){return PIZZA.test(text(fields(tags,['menu','website:menu','contact:menu','product','products'])));}
 function pizzaCommentEvidence(tags={}){return PIZZA.test(text(fields(tags,['description','description:de','description:en','description:it','description:es','description:fr','note','note:de','note:en'])));}
 function isPizzaVending(tags={}){return tags['vending:pizza']==='yes'||PIZZA.test(text(tags.vending||''));}
+function plausibleFoodObject(tags={}){
+  const amenity=text(tags.amenity||''),shop=text(tags.shop||'');
+  if(FOOD_AMENITIES.has(amenity)||amenity==='vending_machine'||FOOD_SHOPS.has(shop)||isPizzaVending(tags))return true;
+  /* Preserve untyped OSM pizza objects from the original WebSim query, while an
+   * explicitly non-food amenity/shop (school, hotel shop, etc.) cannot enter merely
+   * because its description happens to mention pizza. */
+  if(amenity)return false;
+  if(shop&&!FOOD_SHOPS.has(shop))return false;
+  return true;
+}
 
 /* Mirrors the POI families used by the original WebSim app. This is the protected
  * baseline: later discovery logic may enrich it, but must not replace it with every
  * generic restaurant in the area. */
 function websimBaselineTags(tags={}){
   const amenity=text(tags.amenity||'');
-  if(pizzaCuisine(tags)||isPizzaVending(tags))return true;
+  if(isPizzaVending(tags))return true;
+  if(pizzaCuisine(tags)&&plausibleFoodObject(tags))return true;
   if(amenity==='restaurant'&&(italianCuisine(tags)||pizzaCuisine(tags)))return true;
   if(['cafe','fast_food','food_truck','takeaway'].includes(amenity)&&(pizzaCuisine(tags)||italianCuisine(tags)))return true;
   if(['bar','pub'].includes(amenity)&&(pizzaCuisine(tags)||italianCuisine(tags)))return true;
-  if(PIZZA.test(text(tags.speciality||'')))return true;
-  if(PIZZA.test(text(tags.name||'')))return true;
-  if(PIZZA.test(text(tags.description||'')))return true;
+  if(PIZZA.test(text(tags.speciality||''))&&plausibleFoodObject(tags))return true;
+  if(PIZZA.test(text(tags.name||''))&&plausibleFoodObject(tags))return true;
+  if(PIZZA.test(text(tags.description||''))&&plausibleFoodObject(tags))return true;
   return false;
 }
 function supplementalEvidenceTags(tags={}){
   const amenity=text(tags.amenity||'');
-  const food=FOOD_AMENITIES.has(amenity)||['deli','bakery','convenience'].includes(text(tags.shop||''));
+  const food=FOOD_AMENITIES.has(amenity)||FOOD_SHOPS.has(text(tags.shop||''));
   return food&&(pizzaText(tags)||pizzaMenuEvidence(tags)||pizzaCommentEvidence(tags));
 }
 function eligibleElement(element){const tags=element?.tags||{};return websimBaselineTags(tags)||supplementalEvidenceTags(tags);}
@@ -76,7 +88,11 @@ function promoteElement(element){
   return {...element,tags};
 }
 function strongPizzaPlace(place){
-  const tags={...(place?.tags||{}),name:place?.name||'',cuisine:place?.cuisine||'',description:place?.description||'',menu:place?.menu||''};
+  const tags={...(place?.tags||{})};
+  if(place?.name&&!tags.name)tags.name=place.name;
+  if(place?.cuisine&&!tags.cuisine)tags.cuisine=place.cuisine;
+  if(place?.description&&!tags.description)tags.description=place.description;
+  if(place?.menu&&!tags.menu)tags.menu=place.menu;
   return pizzaText(tags)||isPizzaVending(tags)||place?.pizzaEvidenceSource==='google-review-session';
 }
 function classifyPlace(place){
@@ -186,5 +202,5 @@ function install(root){
   installGoogleObserver(root);
 }
 
-return {MARKER,PIZZA,ITALIAN,PROVIDERS,text,pizzaCuisine,italianCuisine,pizzaText,pizzaMenuEvidence,pizzaCommentEvidence,isPizzaVending,websimBaselineTags,supplementalEvidenceTags,eligibleElement,evidenceKind,promoteElement,strongPizzaPlace,classifyPlace,strictQuery,strictOverpass,googleReviewHasPizza,applyGoogleReviewEvidence,clearStaleCaches,install};
+return {MARKER,PIZZA,ITALIAN,PROVIDERS,text,pizzaCuisine,italianCuisine,pizzaText,pizzaMenuEvidence,pizzaCommentEvidence,isPizzaVending,plausibleFoodObject,websimBaselineTags,supplementalEvidenceTags,eligibleElement,evidenceKind,promoteElement,strongPizzaPlace,classifyPlace,strictQuery,strictOverpass,googleReviewHasPizza,applyGoogleReviewEvidence,clearStaleCaches,install};
 });
