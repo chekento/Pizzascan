@@ -6,9 +6,10 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v10';
+const MARKER='pizzascan-broad-defaults-v11';
 const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
-const SUPPLEMENT_BELOW=4;
+const DEFAULT_RADIUS=5;
+const SUPPLEMENT_BELOW=12;
 
 function allTypes(types){return Object.keys(types||{});}
 function normalizeConfig(base={},raw={},types={}){
@@ -20,9 +21,9 @@ function normalizeConfig(base={},raw={},types={}){
     unknownHours:has('unknownHours')?raw.unknownHours===true:false,
     includeItalian:has('includeItalian')?raw.includeItalian!==false:true,
     includeUnconfirmed:has('includeUnconfirmed')?raw.includeUnconfirmed!==false:true,
-    /* Match the original PizzaScan/WebSim behaviour: the visible map viewport is
-     * the search area and moving the map automatically regenerates the results. */
-    radius:has('radius')&&[0,1,3,5,10].includes(Number(raw.radius))?Number(raw.radius):0,
+    /* The original packaged baseline uses a 5 km area. A tiny viewport at zoom 14
+     * can otherwise contain only one or two venues even though many exist nearby. */
+    radius:has('radius')&&[0,1,3,5,10].includes(Number(raw.radius))?Number(raw.radius):DEFAULT_RADIUS,
     autoSearch:has('autoSearch')?raw.autoSearch!==false:true,
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,
     ratingsEnabled:has('ratingsEnabled')?raw.ratingsEnabled!==false:true,
@@ -38,7 +39,7 @@ function broadMigration(previous={},types={}){
     unknownHours:false,
     includeItalian:true,
     includeUnconfirmed:true,
-    radius:0,
+    radius:DEFAULT_RADIUS,
     autoSearch:true,
     hideVisited:false,
     ratingsEnabled:true,
@@ -62,9 +63,8 @@ function expandDiscoveryQuery(query,enabled=true){
   if(!enabled)return q;
   const area=queryAreaToken(q);
   if(!area||q.includes('pizzascan-legacy-result-coverage'))return q;
-  /* Keep the broad named-food query intact. This is what restores the large
-   * result set. The original PizzaScan/WebSim pizza selectors are added on top
-   * so pizza-specific objects are not lost when their amenity tagging is sparse. */
+  /* Keep the broad named-food query intact. Pizza-specific selectors are added on
+   * top so sparse tagging cannot make genuine pizza places disappear. */
   const extra=`/* pizzascan-legacy-result-coverage */`+
     `nwr["speciality"~"pizza",i](${area});`+
     `nwr["brand"~"pizza|pizzeria|pizzaria",i](${area});`+
@@ -96,12 +96,15 @@ function install(root){
     if(migrated)return;migrated=true;
     try{
       if(typeof settings==='undefined'||!settings||!root.localStorage||root.localStorage.getItem(MARKER))return;
+      /* v11 deliberately re-opens discovery once on existing installations. Old
+       * type/rating/radius filters from the sparse releases must not silently keep
+       * hiding restaurants after the discovery fix is installed. */
       settings.filters=broadMigration(settings.filters||{},PD.TYPES);
-      /* v10 intentionally drops old sparse/Photon map results once so an update
-       * immediately repopulates the current viewport from the restored broad query. */
       root.localStorage.removeItem('pizzascan-map-cache-v3');
       root.localStorage.removeItem('pizzascan-map-cache-v2');
       root.localStorage.removeItem('pizzascan-open-ratings-v1');
+      root.localStorage.removeItem('pizzascan-first-map-discovery-v1');
+      root.localStorage.removeItem('pizzascan-first-map-discovery-v2');
       for(let i=root.localStorage.length-1;i>=0;i--){const key=root.localStorage.key(i);if(key?.startsWith('pizzascan-search-'))root.localStorage.removeItem(key);}
       root.localStorage.setItem(MARKER,'1');
       if(typeof saveSettings==='function')saveSettings();
@@ -145,7 +148,7 @@ function install(root){
         const primary=await baseOverpass(q,options),elements=primary?.data?.elements||[];
         if(!shouldSupplement(elements)||String(primary?.source||'').includes('photon'))return primary;
         try{
-          options.onStatus?.('Weitere Pizza-Orte werden ergänzt …');
+          options.onStatus?.('Weitere Restaurants und Pizza-Orte werden ergänzt …');
           const extra=await this.nearbyFallback(q,options);
           if(extra?.length)return {data:{...primary.data,elements:mergeElements(elements,extra)},source:[primary.source,'photon.komoot.io'].filter(Boolean).join(' + ')};
         }catch(error){if(options.signal?.aborted)throw error;}
@@ -158,5 +161,5 @@ function install(root){
   }catch(error){console.warn('PizzaScan discovery supplement skipped',error);}
   root.PizzaScanBroadPolicy={marker:MARKER,defaults:()=>normalizeConfig({}, {}, PD.TYPES)};
 }
-return {MARKER,BROAD_AMENITIES,SUPPLEMENT_BELOW,allTypes,normalizeConfig,broadMigration,candidateVisible,queryAreaToken,expandDiscoveryQuery,mergeElements,shouldSupplement,install};
+return {MARKER,BROAD_AMENITIES,DEFAULT_RADIUS,SUPPLEMENT_BELOW,allTypes,normalizeConfig,broadMigration,candidateVisible,queryAreaToken,expandDiscoveryQuery,mergeElements,shouldSupplement,install};
 });
