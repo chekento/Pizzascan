@@ -4,7 +4,7 @@ const Poi=require('../web/poi-search.js');
 
 const distance=(a,b)=>Math.hypot(a.lat-b.lat,a.lng-b.lng)*111;
 const center={lat:53.6735,lng:10.2377};
-const venue=(id,type,name,evidence='search',states=[])=>({name,address:'Ahrensburg',kind:'venue',osmId:'node-'+id,lat:53.67+id/10000,lng:10.24,searchStates:states,place:{placeId:'node-'+id,name,address:'Ahrensburg',lat:53.67+id/10000,lng:10.24,type,pizzaEvidence:evidence,tags:{}}});
+const venue=(id,type,name,evidence='search',states=[],extra={})=>({name,address:'Ahrensburg',kind:'venue',osmId:'node-'+id,lat:53.67+id/10000,lng:10.24,searchStates:states,place:{placeId:'node-'+id,name,address:'Ahrensburg',lat:53.67+id/10000,lng:10.24,type,pizzaEvidence:evidence,tags:{},...extra}});
 
 test('submitted POI query is bounded, food-only and regex-safe',()=>{
  const q=Poi.buildQuery('Pizza Max (Ahrensburg)',center,10);
@@ -23,6 +23,15 @@ test('generic restaurant search returns named food POIs instead of arbitrary map
  assert.doesNotMatch(q,/tourism|supermarket/);
 });
 
+test('Italian restaurant vocabulary becomes a first-class OSM POI query',()=>{
+ for(const term of ['Italian','Italiener','Ristorante','Trattoria','Osteria']){
+  const q=Poi.buildQuery(term,center,10);
+  assert.ok(q,term);
+  assert.match(q,/cuisine.*italian/i,term+' cuisine query');
+  assert.match(q,/name.*ristorante.*trattoria.*osteria/i,term+' name query');
+ }
+});
+
 test('every legend POI category has an explicit submitted-search query',()=>{
  const cases={
   'Pizzeria':/cuisine.*pizza|name.*pizza/,
@@ -35,14 +44,16 @@ test('every legend POI category has an explicit submitted-search query',()=>{
  for(const [query,pattern] of Object.entries(cases)){const built=Poi.buildQuery(query,center,10);assert.ok(built,query+' must build a query');assert.match(built,pattern,query);}
 });
 
-test('category intent filters local venues by semantic type rather than name substring',()=>{
+test('category intent filters local venues by semantic type and Italian evidence',()=>{
  const location={name:'Ahrensburg',address:'Schleswig-Holstein',kind:'location',lat:53.67,lng:10.24};
- const items=[venue(1,'cafe','Kaffeeküche'),venue(2,'fast_food','Döner Ecke'),venue(3,'food_truck','Rolling Kitchen'),venue(4,'vending_pizza','24/7 Box','confirmed'),venue(5,'other','Sakura'),venue(6,'pizzeria','Roma','confirmed'),location];
+ const items=[venue(1,'cafe','Kaffeeküche'),venue(2,'fast_food','Döner Ecke'),venue(3,'food_truck','Rolling Kitchen'),venue(4,'vending_pizza','24/7 Box','confirmed'),venue(5,'other','Sakura'),venue(6,'pizzeria','Roma','confirmed'),venue(7,'other','Trattoria Bella','possible',[],{cuisine:'italian',tags:{cuisine:'italian'}}),location];
  assert.deepEqual(Poi.mergeRanked([items],'Café',center,distance).map(x=>x.osmId),['node-1']);
  assert.deepEqual(Poi.mergeRanked([items],'Imbiss',center,distance).map(x=>x.osmId),['node-2']);
  assert.deepEqual(Poi.mergeRanked([items],'Foodtruck',center,distance).map(x=>x.osmId),['node-3']);
  assert.deepEqual(Poi.mergeRanked([items],'Pizzaautomat',center,distance).map(x=>x.osmId),['node-4']);
  assert.deepEqual(Poi.mergeRanked([items],'Pizza',center,distance).map(x=>x.osmId).sort(),['node-4','node-6']);
+ assert.deepEqual(Poi.mergeRanked([items],'Trattoria',center,distance).map(x=>x.osmId),['node-7']);
+ assert.deepEqual(Poi.mergeRanked([items],'Italian',center,distance).map(x=>x.osmId),['node-7']);
  const restaurants=Poi.mergeRanked([items],'Restaurant',center,distance);
  assert.ok(restaurants.some(x=>x.osmId==='node-5'));
  assert.ok(restaurants.some(x=>x.osmId==='node-6'));
