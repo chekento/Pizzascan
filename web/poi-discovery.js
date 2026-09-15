@@ -9,15 +9,14 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-poi-discovery-v9';
+const MARKER='pizzascan-poi-discovery-v10';
 const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const FOOD_SET=new Set(FOOD_AMENITIES.split('|'));
 const PIZZA_WORDS='pizza|pizzeria|pizzaria|pizzerie|pizze';
 const ITALIAN_CUISINE='italian|italiano|italiana|pasta';
 const ITALIAN_NAME_WORDS='ristorante|trattoria|osteria|italian|italiano|italiana|italiener|italienisch';
-/* Photon free-text is the last rescue stage. The structured Photon reverse/tag
- * lookup below runs first and can recover dozens of ordinary restaurants from a
- * single request when Overpass is unavailable. */
+/* Alternate Overpass sources are attempted before Photon. Photon is the rescue
+ * path when broad OSM queries cannot produce a useful, diverse restaurant set. */
 const FALLBACK_TERMS=[
   'restaurant','pizzeria','pizza','cafe','fast food','takeaway','bar','pub','biergarten','food court','food truck',
   'italian restaurant','ristorante','trattoria','osteria','italienisches restaurant',
@@ -35,6 +34,7 @@ const SPARSE_BELOW=12;
 const ADEQUATE_POIS=24;
 const FALLBACK_TARGET=24;
 const PHOTON_LIMIT=50;
+const MIN_GENERIC_POIS=3;
 
 function extractArea(query){
   const q=String(query||'');
@@ -59,6 +59,15 @@ function pizzaTags(tags={}){
 }
 function elementPizza(element){return !!element&&pizzaTags(element.tags||{});}
 function pizzaCount(elements){return (elements||[]).filter(elementPizza).length;}
+function genericFoodElement(element){
+  const tags=element?.tags||{};
+  return !!tags.name&&FOOD_SET.has(tags.amenity||'')&&!elementPizza(element);
+}
+function genericFoodCount(elements){return (elements||[]).filter(genericFoodElement).length;}
+function broadEnough(elements){
+  const list=Array.isArray(elements)?elements:[];
+  return list.length>=ADEQUATE_POIS||(list.length>=SPARSE_BELOW&&genericFoodCount(list)>=MIN_GENERIC_POIS);
+}
 
 function robustQuery(area){
   if(!area)return '';
@@ -88,12 +97,7 @@ function mergeElements(...groups){
   return [...out.values()];
 }
 function evidence(place){return place&&pizzaTags({...place.tags,name:place.name,cuisine:place.cuisine})?'confirmed':place?.pizzaEvidence||'search';}
-function isSparse(result){
-  const elements=result?.data?.elements||[],source=String(result?.source||'').toLowerCase();
-  if(source.includes('photon'))return elements.length<ADEQUATE_POIS;
-  if(elements.length>=ADEQUATE_POIS)return false;
-  return elements.length<SPARSE_BELOW||pizzaCount(elements)<SPARSE_BELOW;
-}
+function isSparse(result){return !broadEnough(result?.data?.elements||[]);}
 function placeToElement(place,term='pizza'){
   const m=/^(node|way|relation)-(\d+)$/.exec(place?.placeId||'');
   if(!m||!Number.isFinite(place?.lat)||!Number.isFinite(place?.lng))return null;
@@ -160,7 +164,7 @@ async function structuredPhoton(service,info,options={},seed=[]){
         service.write?.(cacheKey,{time:Date.now(),data});
       }
       elements=mergeElements(elements,photonFeatureElements(data,info));
-      if(elements.length>=FALLBACK_TARGET)break;
+      if(elements.length>=FALLBACK_TARGET&&genericFoodCount(elements)>=MIN_GENERIC_POIS)break;
     }catch(error){if(options.signal?.aborted)throw error;}
   }
   return elements;
@@ -172,11 +176,11 @@ async function recoverProviders(service,query,options={},seed=[]){
   for(const endpoint of RECOVERY_PROVIDERS){
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
     try{
-      options.onStatus?.('Weitere Restaurants und Pizza-POIs werden über eine alternative Kartenquelle geladen …');
+      options.onStatus?.('Weitere Restaurants werden über eine alternative OpenStreetMap-Quelle geladen …');
       const data=await service.json(endpoint,{method:'POST',body:new URLSearchParams({data:rq})},options.signal,14000);
       if(Array.isArray(data?.elements)&&!data.remark&&data.elements.length){
         elements=mergeElements(elements,data.elements);sources.push(new URL(endpoint).hostname);
-        if(elements.length>=ADEQUATE_POIS)break;
+        if(broadEnough(elements))break;
       }
     }catch(error){if(options.signal?.aborted)throw error;}
   }
@@ -188,7 +192,7 @@ async function recoverPhoton(service,query,options={},seed=[]){
   let elements=mergeElements(seed);
   options.onStatus?.('Weitere Restaurants werden strukturiert aus OpenStreetMap ergänzt …');
   elements=await structuredPhoton(service,info,options,elements);
-  if(elements.length>=FALLBACK_TARGET)return elements;
+  if(broadEnough(elements))return elements;
   options.onStatus?.('Weitere Restaurants und Pizza-Orte werden über die Textsuche ergänzt …');
   for(const term of FALLBACK_TERMS){
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
@@ -197,7 +201,7 @@ async function recoverPhoton(service,query,options={},seed=[]){
       const extra=[];
       for(const item of items||[]){const p=item?.place;if(p&&inside(info,p)){const e=placeToElement(p,term);if(e)extra.push(e);}}
       elements=mergeElements(elements,extra);
-      if(elements.length>=FALLBACK_TARGET)break;
+      if(broadEnough(elements))break;
     }catch(error){if(options.signal?.aborted)throw error;}
   }
   return elements;
@@ -232,20 +236,18 @@ function install(root){
         try{primary=await base(query,options);}catch(error){primaryError=error;if(options.signal?.aborted)throw error;}
         if(primary&&!isSparse(primary))return primary;
         let elements=primary?.data?.elements||[],sources=[primary?.source].filter(Boolean);
-        /* In browsers, public Overpass POST/CORS availability is often the weak
-         * link. Structured Photon uses OSM tags directly and can recover a broad
-         * nearby restaurant set without pretending generic places are pizzerias. */
-        if(!root.PizzaNativeOverpass?.active){
-          elements=await recoverPhoton(service,query,options,elements);
-          if(elements.length>=ADEQUATE_POIS)return {data:{...(primary?.data||{}),elements},source:[...new Set([...sources,'photon.komoot.io'])].join(' + ')};
-        }
+
+        /* Do not make the user wait through a long sequence of Photon searches
+         * before trying the two additional Overpass servers. The previous order
+         * is what produced the misleading "Weitere Restaurants ..." stall. */
         const recovered=await recoverProviders(service,query,options,elements);
         elements=recovered.elements;sources=sources.concat(recovered.sources);
-        if(elements.length<ADEQUATE_POIS)elements=await recoverPhoton(service,query,options,elements);
-        if(elements.length){
-          if(elements.length>(primary?.data?.elements?.length||0))sources.push('photon.komoot.io');
-          return {data:{...(primary?.data||{}),elements},source:[...new Set(sources.filter(Boolean))].join(' + ')};
+        if(!broadEnough(elements)){
+          const before=elements.length;
+          elements=await recoverPhoton(service,query,options,elements);
+          if(elements.length>before)sources.push('photon.komoot.io');
         }
+        if(elements.length)return {data:{...(primary?.data||{}),elements},source:[...new Set(sources.filter(Boolean))].join(' + ')};
         if(primary)return primary;
         throw primaryError||Error('Keine Restaurant-/Pizza-POI-Datenquelle erreichbar.');
       };
@@ -255,5 +257,5 @@ function install(root){
   root.PizzaScanPoiDiscovery={marker:MARKER,terms:FALLBACK_TERMS.slice(),photonTags:PHOTON_TAGS.slice(),providers:RECOVERY_PROVIDERS.slice()};
 }
 
-return {MARKER,FOOD_AMENITIES,PIZZA_WORDS,ITALIAN_CUISINE,ITALIAN_NAME_WORDS,FALLBACK_TERMS,PHOTON_TAGS,RECOVERY_PROVIDERS,SPARSE_BELOW,ADEQUATE_POIS,FALLBACK_TARGET,PHOTON_LIMIT,extractArea,areaInfo,text,pizzaTags,elementPizza,pizzaCount,robustQuery,mergeElements,evidence,isSparse,placeToElement,inside,photonNearbyUrl,photonFeatureElements,structuredPhoton,install};
+return {MARKER,FOOD_AMENITIES,PIZZA_WORDS,ITALIAN_CUISINE,ITALIAN_NAME_WORDS,FALLBACK_TERMS,PHOTON_TAGS,RECOVERY_PROVIDERS,SPARSE_BELOW,ADEQUATE_POIS,FALLBACK_TARGET,PHOTON_LIMIT,MIN_GENERIC_POIS,extractArea,areaInfo,text,pizzaTags,elementPizza,pizzaCount,genericFoodElement,genericFoodCount,broadEnough,robustQuery,mergeElements,evidence,isSparse,placeToElement,inside,photonNearbyUrl,photonFeatureElements,structuredPhoton,recoverProviders,recoverPhoton,install};
 });
