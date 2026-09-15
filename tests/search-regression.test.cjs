@@ -30,7 +30,7 @@ test('default migration restores broad 5 km results and automatic search regener
  assert.equal(cfg.autoSearch,true);
  assert.equal(cfg.hideVisited,false);
  assert.equal(cfg.minRating,0);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v11');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v12');
  const fresh=B.normalizeConfig({}, {}, P.TYPES);
  assert.equal(fresh.includeUnconfirmed,true,'fresh installs keep broad restaurant visibility');
  assert.equal(fresh.radius,5,'fresh installs restore the original 5 km discovery baseline');
