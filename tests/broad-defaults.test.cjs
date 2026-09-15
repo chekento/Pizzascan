@@ -48,16 +48,18 @@ test('ordinary named food candidates remain visible when the broad baseline is e
  assert.equal(B.candidateVisible(place,{...broad,includeUnconfirmed:false},{visited:new Set()},()=>({state:'open'})),false);
 });
 
-test('generic food expansion is part of the broad baseline and can still be disabled explicitly',()=>{
+test('map query restores the compact 2.2/WebSim Italian and pizza POI search',()=>{
  const base='[out:json][timeout:15];(nwr["cuisine"~"pizza",i](around:10000,53.67,10.24);nwr["vending:pizza"="yes"](around:10000,53.67,10.24););out body center;';
- const expanded=B.expandDiscoveryQuery(base,true);
- assert.match(expanded,/pizzascan-broad-discovery/);
- assert.match(expanded,/restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten/);
- assert.match(expanded,/\["name"\]/);
- assert.match(expanded,/mobile"="yes/);
- assert.match(expanded,/around:10000,53\.67,10\.24/);
+ const restored=B.expandDiscoveryQuery(base,true);
+ assert.match(restored,/cuisine.*pizza\|pizzeria\|italian\|italiano\|italiana/i);
+ assert.match(restored,/ristorante\|trattoria\|osteria/);
+ assert.match(restored,/pizze/);
+ assert.match(restored,/speciality.*pizza/i);
+ assert.match(restored,/vending:pizza/);
+ assert.match(restored,/around:10000,53\.67,10\.24/);
+ assert.doesNotMatch(restored,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten"\]\["name"\]\(/,'must not request every named food venue');
  assert.equal(B.expandDiscoveryQuery(base,false),base);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v8');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v9');
 });
 
 test('supplemental pizza discovery keeps primary ids and deduplicates supplements',()=>{
