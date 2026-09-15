@@ -1,7 +1,7 @@
-/* PizzaScan 2.3.5: precise WebSim-baseline + evidence-driven Pizza discovery.
- * Nearby discovery may keep plausible Italian/WebSim candidates, but it must not
- * add obviously incompatible restaurants merely because a URL, weak note or broad
- * restaurant source happens to contain the word pizza. Manual POI search stays broad. */
+/* PizzaScan 2.3.5: precise, resilient pizza discovery.
+ * Nearby discovery keeps the original WebSim pizza/Italian baseline, excludes
+ * obviously incompatible cuisines, and falls back to pizza-specific Photon data
+ * instead of failing the whole map when Overpass is unavailable. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -9,9 +9,10 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-smart-discovery-v2';
+const MARKER='pizzascan-smart-discovery-v3';
 const PIZZA=/(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizze|pizzas)(?:[^a-z]|$)/i;
 const ITALIAN=/(?:^|[^a-z])(italian|italiano|italiana)(?:[^a-z]|$)/i;
+const ITALIAN_NAME=/(?:^|[^a-z])(ristorante|trattoria|osteria|italiener|italienisch|italian|italiano|italiana)(?:[^a-z]|$)/i;
 const INCOMPATIBLE=/(?:^|[^a-z])(asian|chinese|japanese|thai|vietnamese|korean|indian|sushi|ramen|nepalese|indonesian|malaysian|filipino|pakistani|bangladeshi|sri[_ -]?lankan|mongolian|cantonese|sichuan|dim[_ -]?sum)(?:[^a-z]|$)/i;
 const FOOD_AMENITIES=new Set(['restaurant','fast_food','cafe','food_truck','takeaway','food_court','bar','pub','biergarten']);
 const FOOD_SHOPS=new Set(['deli','bakery','convenience']);
@@ -21,6 +22,8 @@ const PROVIDERS=[
   'https://overpass.osm.jp/api/interpreter',
   'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
 ];
+const PHOTON_TAGS=['cuisine:pizza','cuisine:italian'];
+const PHOTON_TERMS=['pizza','pizzeria','ristorante','trattoria','osteria','italian restaurant','italienisches restaurant'];
 
 function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase();}
 function fields(tags={},keys=[]){return keys.map(k=>tags[k]).filter(Boolean).join(' ');}
@@ -28,6 +31,7 @@ function cuisine(tags={}){return text(tags.cuisine||'');}
 function pizzaCuisine(tags={}){return PIZZA.test(cuisine(tags));}
 function italianCuisine(tags={}){return ITALIAN.test(cuisine(tags));}
 function incompatibleCuisine(tags={}){return !pizzaCuisine(tags)&&INCOMPATIBLE.test(cuisine(tags));}
+function italianNameEvidence(tags={}){return ITALIAN_NAME.test(text(fields(tags,['name','brand','operator'])));}
 function isUrlLike(value){return /^\s*(?:https?:\/\/|www\.)/i.test(String(value||''));}
 function nonUrlFields(tags={},keys=[]){return keys.map(k=>tags[k]).filter(v=>v&&!isUrlLike(v)).join(' ');}
 function directPizzaEvidence(tags={}){
@@ -46,23 +50,16 @@ function plausibleFoodObject(tags={}){
   if(FOOD_AMENITIES.has(amenity)||amenity==='vending_machine'||FOOD_SHOPS.has(shop)||isPizzaVending(tags))return true;
   if(amenity)return false;
   if(shop&&!FOOD_SHOPS.has(shop))return false;
-  /* Untyped OSM objects are allowed only when they are not explicitly classified
-   * as another kind of POI. A hotel, attraction, office, station etc. must not become
-   * a PizzaScan result merely because a note or description mentions pizza. */
   if(tags.tourism||tags.leisure||tags.healthcare||tags.office||tags.aeroway||tags.railway||tags.public_transport||tags.historic)return false;
   return true;
 }
 
-/* Direct pizza evidence always wins. Italian-only WebSim candidates remain useful,
- * but an explicit incompatible cuisine is a veto unless the same OSM object also
- * carries direct pizza evidence. This prevents Asia/sushi/Thai/etc. restaurants from
- * becoming ambient PizzaScan candidates on weak metadata alone. */
 function websimBaselineTags(tags={}){
   const amenity=text(tags.amenity||''),direct=directPizzaEvidence(tags),conflict=incompatibleCuisine(tags);
   if(isPizzaVending(tags))return true;
   if(direct&&plausibleFoodObject(tags))return true;
   if(conflict)return false;
-  if(amenity==='restaurant'&&italianCuisine(tags))return true;
+  if(amenity==='restaurant'&&(italianCuisine(tags)||italianNameEvidence(tags)))return true;
   if(['cafe','fast_food','food_truck','takeaway'].includes(amenity)&&italianCuisine(tags))return true;
   if(['bar','pub'].includes(amenity)&&italianCuisine(tags))return true;
   if(pizzaCommentEvidence(tags)&&plausibleFoodObject(tags))return true;
@@ -124,6 +121,7 @@ function strictQuery(center,radius,bounds){
   return `[out:json][timeout:24];(`+
     `nwr["cuisine"~"pizza|pizzeria",i](${a});`+
     `nwr["amenity"="restaurant"]["cuisine"~"pizza|pizzeria|italian|italiano|italiana",i](${a});`+
+    `nwr["amenity"="restaurant"]["name"~"pizza|pizzeria|pizzaria|ristorante|trattoria|osteria|italien",i](${a});`+
     `nwr["amenity"~"cafe|fast_food|food_truck|takeaway"]["cuisine"~"pizza|pizzeria|italian|italiano|italiana",i](${a});`+
     `nwr["amenity"~"bar|pub"]["cuisine"~"pizza|pizzeria|italian|italiano|italiana",i](${a});`+
     `nwr["speciality"~"pizza",i](${a});`+
@@ -135,21 +133,101 @@ function strictQuery(center,radius,bounds){
     `nwr["amenity"="vending_machine"]["vending"~"pizza",i](${a});nwr["vending"~"pizza",i](${a});nwr["vending:pizza"="yes"](${a});`+
     `);out body center;`;
 }
-
-async function strictOverpass(service,query,{signal,onStatus}={}){
-  const errors=[];
-  for(let i=0;i<PROVIDERS.length;i++){
+function queryArea(query){
+  const q=String(query||'');
+  let m=/around:(\d+),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(q);
+  if(m)return {center:{lat:Number(m[2]),lng:Number(m[3])},radius:Math.max(.5,Math.min(10,Number(m[1])/1000))};
+  m=/\((-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\)/.exec(q);
+  if(!m)return null;
+  const south=Number(m[1]),west=Number(m[2]),north=Number(m[3]),east=Number(m[4]);
+  return {center:{lat:(south+north)/2,lng:(west+east)/2},radius:10,bounds:{south,west,north,east}};
+}
+function inside(info,lat,lng){
+  if(info?.bounds){const b=info.bounds;return lat>=b.south&&lat<=b.north&&(b.west<=b.east?lng>=b.west&&lng<=b.east:lng>=b.west||lng<=b.east);}
+  const dy=(lat-info.center.lat)*111.32,dx=(lng-info.center.lng)*111.32*Math.cos(info.center.lat*Math.PI/180);
+  return Math.hypot(dx,dy)<=Math.min(10,info.radius*1.15);
+}
+function mergeElements(...groups){
+  const out=new Map();
+  for(const group of groups)for(const e of group||[]){if(e&&['node','way','relation'].includes(e.type)&&e.id!=null)out.set(`${e.type}-${e.id}`,e);}
+  return [...out.values()];
+}
+function photonTagUrl(tag,center){
+  const u=new URL('https://photon.komoot.io/reverse');
+  u.search=new URLSearchParams({lon:String(center.lng),lat:String(center.lat),osm_tag:tag,limit:'50',lang:'de'});
+  return u.href;
+}
+function photonTagElements(data,tag,info){
+  const [filterKey,filterValue]=String(tag).split(':');
+  if(!Array.isArray(data?.features))return [];
+  return data.features.flatMap(feature=>{
+    const p=feature?.properties||{},coords=feature?.geometry?.coordinates||[],lng=Number(coords[0]),lat=Number(coords[1]);
+    const type={N:'node',W:'way',R:'relation',node:'node',way:'way',relation:'relation'}[p.osm_type],id=Number(p.osm_id);
+    if(!type||!Number.isInteger(id)||id<=0||!Number.isFinite(lat)||!Number.isFinite(lng)||!p.name||!inside(info,lat,lng))return [];
+    const tags={name:p.name,amenity:p.osm_key==='amenity'?p.osm_value||'restaurant':'restaurant'};
+    if(p.osm_key)tags[p.osm_key]=p.osm_value||'';
+    if(filterKey&&filterValue)tags[filterKey]=filterValue;
+    const element={type,id,lat,lon:lng,tags};
+    return eligibleElement(element)?[element]:[];
+  });
+}
+function photonItemElement(item,info){
+  const p=item?.place,m=/^(node|way|relation)-(\d+)$/.exec(p?.placeId||'');
+  if(!p||!m||!Number.isFinite(p.lat)||!Number.isFinite(p.lng)||!inside(info,p.lat,p.lng))return null;
+  const tags={...(p.tags||{}),name:p.name||item.name||''};
+  if(!tags.amenity&&!tags.shop)tags.amenity='restaurant';
+  if(italianNameEvidence(tags)&&!italianCuisine(tags))tags.cuisine=[tags.cuisine,'italian'].filter(Boolean).join(';');
+  const element={type:m[1],id:Number(m[2]),lat:p.lat,lon:p.lng,tags};
+  return eligibleElement(element)?element:null;
+}
+async function precisePhotonFallback(service,query,{signal,onStatus}={}){
+  const info=queryArea(query);if(!info)return [];
+  if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+  onStatus?.('Alternative Pizza- und Italiener-Suche wird geladen …');
+  const tagResults=await Promise.allSettled(PHOTON_TAGS.map(async tag=>{
+    const data=await service.json(photonTagUrl(tag,info.center),{},signal,9000);
+    return photonTagElements(data,tag,info);
+  }));
+  let elements=mergeElements(...tagResults.filter(x=>x.status==='fulfilled').map(x=>x.value));
+  if(elements.length>=6)return elements;
+  for(const term of PHOTON_TERMS){
     if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
-    const endpoint=PROVIDERS[i];
     try{
-      onStatus?.(i===0?'Pizza-Orte werden geprüft …':'Weitere Pizza-Datenquelle wird geprüft …');
-      const data=await service.json(endpoint,{method:'POST',body:new URLSearchParams({data:query})},signal,i<2?10000:13000);
-      if(!Array.isArray(data?.elements)||data.remark)throw new Error(data?.remark||'Unvollständige Kartendaten');
-      const elements=data.elements.filter(eligibleElement);
-      if(!elements.length){errors.push({source:new URL(endpoint).hostname,message:'Keine plausiblen Pizza-POIs'});continue;}
-      return {data:{...data,elements},source:new URL(endpoint).hostname};
-    }catch(error){if(signal?.aborted)throw error;errors.push({source:new URL(endpoint).hostname,message:error?.message||String(error)});}
+      const items=await service.photon(term,info.center,{signal});
+      elements=mergeElements(elements,(items||[]).map(item=>photonItemElement(item,info)).filter(Boolean));
+      if(elements.length>=8)break;
+    }catch(error){if(signal?.aborted)throw error;}
   }
+  return elements;
+}
+async function overpassCandidate(service,endpoint,query,options={},timeout=10000){
+  if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+  const data=await service.json(endpoint,{method:'POST',body:new URLSearchParams({data:query})},options.signal,timeout);
+  if(!Array.isArray(data?.elements)||data.remark)throw new Error(data?.remark||'Unvollständige Kartendaten');
+  const elements=data.elements.filter(eligibleElement);
+  if(!elements.length)throw new Error('Keine plausiblen Pizza-POIs');
+  return {data:{...data,elements},source:new URL(endpoint).hostname};
+}
+async function strictOverpass(service,query,{signal,onStatus}={}){
+  const options={signal,onStatus},errors=[];
+  onStatus?.('Pizza-Orte und Italiener werden geprüft …');
+  const first=[
+    overpassCandidate(service,PROVIDERS[0],query,options,10000),
+    overpassCandidate(service,PROVIDERS[1],query,options,10000),
+    precisePhotonFallback(service,query,options).then(elements=>{
+      if(!elements.length)throw new Error('Keine passenden Photon-Treffer');
+      return {data:{elements},source:'photon.komoot.io'};
+    })
+  ];
+  try{return await Promise.any(first);}catch(group){for(const e of group?.errors||[])errors.push({source:'primary',message:e?.message||String(e)});}
+  onStatus?.('Weitere Pizza-Datenquelle wird geprüft …');
+  try{
+    const result=await Promise.any([
+      overpassCandidate(service,PROVIDERS[2],query,options,13000),
+      overpassCandidate(service,PROVIDERS[3],query,options,13000)
+    ]);
+    return result;
+  }catch(group){for(const e of group?.errors||[])errors.push({source:'recovery',message:e?.message||String(e)});}
   service.lastErrors=errors;
   const error=new Error('Keine plausiblen Pizza-Orte aus den Kartenquellen erreichbar.');
   error.sources=errors;throw error;
@@ -183,7 +261,7 @@ function clearStaleCaches(root){
     root.localStorage.removeItem('pizzascan-map-cache-v2');
     root.localStorage.removeItem('pizzascan-first-map-discovery-v1');
     root.localStorage.removeItem('pizzascan-first-map-discovery-v2');
-    for(let i=root.localStorage.length-1;i>=0;i--){const k=root.localStorage.key(i);if(k?.startsWith('pizzascan-nearby-photon-'))root.localStorage.removeItem(k);}
+    for(let i=root.localStorage.length-1;i>=0;i--){const k=root.localStorage.key(i);if(k?.startsWith('pizzascan-nearby-photon-')||k?.startsWith('pizzascan-search-'))root.localStorage.removeItem(k);}
     root.localStorage.setItem(MARKER,'1');
   }catch{}
 }
@@ -194,9 +272,8 @@ function install(root){
   const oldFrom=PD.fromOverpass.bind(PD);
   if(!PD.fromOverpass.__smartDiscovery){
     const wrapped=function(elements,options={}){
-      const manual=options?.allowNamed===true;
-      const prepared=(manual?elements:(elements||[]).filter(eligibleElement)).map(promoteElement);
-      return oldFrom(prepared,options).map(p=>{
+      const prepared=(elements||[]).filter(eligibleElement).map(promoteElement);
+      return oldFrom(prepared,{...options,allowNamed:true}).map(p=>{
         const type=classifyPlace(p),strong=strongPizzaPlace(p);
         const next={...p,type,pizzaEvidence:strong?'confirmed':p.pizzaEvidence};
         try{return root.PizzaCore?.place?root.PizzaCore.place(next):next;}catch{return next;}
@@ -214,5 +291,5 @@ function install(root){
   installGoogleObserver(root);
 }
 
-return {MARKER,PIZZA,ITALIAN,INCOMPATIBLE,PROVIDERS,text,pizzaCuisine,italianCuisine,incompatibleCuisine,isUrlLike,directPizzaEvidence,pizzaText,pizzaMenuEvidence,pizzaCommentEvidence,isPizzaVending,plausibleFoodObject,websimBaselineTags,supplementalEvidenceTags,eligibleElement,evidenceKind,promoteElement,strongPizzaPlace,classifyPlace,strictQuery,strictOverpass,googleReviewHasPizza,applyGoogleReviewEvidence,clearStaleCaches,install};
+return {MARKER,PIZZA,ITALIAN,ITALIAN_NAME,INCOMPATIBLE,PROVIDERS,PHOTON_TAGS,PHOTON_TERMS,text,pizzaCuisine,italianCuisine,incompatibleCuisine,italianNameEvidence,isUrlLike,directPizzaEvidence,pizzaText,pizzaMenuEvidence,pizzaCommentEvidence,isPizzaVending,plausibleFoodObject,websimBaselineTags,supplementalEvidenceTags,eligibleElement,evidenceKind,promoteElement,strongPizzaPlace,classifyPlace,strictQuery,queryArea,inside,mergeElements,photonTagUrl,photonTagElements,photonItemElement,precisePhotonFallback,overpassCandidate,strictOverpass,googleReviewHasPizza,applyGoogleReviewEvidence,clearStaleCaches,install};
 });
