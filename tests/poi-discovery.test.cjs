@@ -23,8 +23,9 @@ test('Photon fallback searches pizza plus Italian restaurant terminology',()=>{
   for(const term of ['pizzeria','pizza','italian restaurant','ristorante','trattoria','osteria','italienisches restaurant'])assert.ok(D.FALLBACK_TERMS.includes(term),term);
   assert.ok(D.FALLBACK_TERMS.length>=10);
   assert.equal(D.SPARSE_BELOW,6);
+  assert.equal(D.ADEQUATE_POIS,18);
   assert.equal(D.FALLBACK_TARGET,18);
-  assert.equal(D.MARKER,'pizzascan-poi-discovery-v6');
+  assert.equal(D.MARKER,'pizzascan-poi-discovery-v7');
 });
 
 test('area extraction supports radius and map bounds',()=>{
@@ -41,11 +42,13 @@ test('Italian identity is a POI candidate but never fabricated as confirmed pizz
   assert.equal(D.evidence({name:'Cafe Nord',cuisine:'pizza',pizzaEvidence:'search',tags:{amenity:'cafe'}}),'confirmed');
 });
 
-test('sparsity still counts pizza evidence so Italian recovery can supplement generic map data',()=>{
+test('dense Overpass restaurant sets render immediately; only sparse or Photon sets need recovery',()=>{
   const generic=Array.from({length:40},(_,i)=>({type:'node',id:i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}));
+  const sparse=Array.from({length:4},(_,i)=>({type:'node',id:50+i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}));
   const pizza=Array.from({length:D.SPARSE_BELOW},(_,i)=>({type:'node',id:100+i,tags:{name:'Pizza '+i,amenity:'restaurant',cuisine:'pizza'}}));
   assert.equal(D.pizzaCount(generic),0);
-  assert.equal(D.isSparse({data:{elements:generic},source:'overpass-api.de'}),true);
+  assert.equal(D.isSparse({data:{elements:generic},source:'overpass-api.de'}),false,'dense Overpass POIs must not wait for Photon');
+  assert.equal(D.isSparse({data:{elements:sparse},source:'overpass-api.de'}),true);
   assert.equal(D.isSparse({data:{elements:pizza},source:'overpass-api.de'}),false);
   assert.equal(D.isSparse({data:{elements:pizza},source:'photon.komoot.io'}),true);
 });
