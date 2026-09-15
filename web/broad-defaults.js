@@ -52,7 +52,7 @@ function candidateVisible(place,cfg={},context={},hours=()=>({state:'unknown'}))
   if(Array.isArray(cfg.types)&&!cfg.types.includes(place.type))return false;
   if(cfg.hideVisited&&context.visited?.has?.(place.placeId))return false;
   if(cfg.onlyOpen){const state=hours(place)?.state;if(state!=='open'&&!(cfg.unknownHours&&state==='unknown'))return false;}
-  return place.pizzaEvidence==='search';
+  return place.pizzaEvidence==='search'||place.pizzaEvidence==='possible';
 }
 function queryAreaToken(query){
   const m=String(query||'').match(/\]\((around:[^)]+|-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?)\);/);
