@@ -2,9 +2,9 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const D=require('../web/poi-discovery.js');
 
-test('robust recovery query restores original Italian and pizza POI coverage',()=>{
+test('recovery query always includes all named food POIs before pizza enrichment',()=>{
   const q=D.robustQuery('around:10000,53.675,10.240');
-  assert.match(q,/restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten/);
+  assert.match(q,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten"\]\["name"\]/,'recovery itself must stay broad when primary Overpass servers fail');
   assert.match(q,/cuisine.*pizza/);
   assert.match(q,/cuisine.*italian/);
   assert.match(q,/name.*pizza/);
@@ -19,13 +19,14 @@ test('robust recovery query restores original Italian and pizza POI coverage',()
   assert.match(q,/amenity"="vending_machine/);
 });
 
-test('Photon fallback searches pizza plus Italian restaurant terminology',()=>{
-  for(const term of ['pizzeria','pizza','italian restaurant','ristorante','trattoria','osteria','italienisches restaurant'])assert.ok(D.FALLBACK_TERMS.includes(term),term);
-  assert.ok(D.FALLBACK_TERMS.length>=10);
-  assert.equal(D.SPARSE_BELOW,6);
-  assert.equal(D.ADEQUATE_POIS,18);
-  assert.equal(D.FALLBACK_TARGET,18);
-  assert.equal(D.MARKER,'pizzascan-poi-discovery-v7');
+test('last-resort text search covers generic restaurants as well as pizza and Italian terminology',()=>{
+  for(const term of ['restaurant','cafe','fast food','takeaway','bar','pub','biergarten','food court','pizzeria','pizza','italian restaurant','ristorante','trattoria','osteria','italienisches restaurant'])assert.ok(D.FALLBACK_TERMS.includes(term),term);
+  assert.ok(D.FALLBACK_TERMS.length>=18);
+  assert.equal(D.SPARSE_BELOW,12);
+  assert.equal(D.ADEQUATE_POIS,24);
+  assert.equal(D.FALLBACK_TARGET,24);
+  assert.equal(D.MARKER,'pizzascan-poi-discovery-v8');
+  assert.match(D.RECOVERY_PROVIDERS[0],/maps\.mail\.ru/,'healthy global recovery mirror is attempted before the certificate-problematic backup seen in CI');
 });
 
 test('area extraction supports radius and map bounds',()=>{
@@ -42,19 +43,24 @@ test('Italian identity is a POI candidate but never fabricated as confirmed pizz
   assert.equal(D.evidence({name:'Cafe Nord',cuisine:'pizza',pizzaEvidence:'search',tags:{amenity:'cafe'}}),'confirmed');
 });
 
-test('dense Overpass restaurant sets render immediately; only sparse or Photon sets need recovery',()=>{
+test('dense Overpass restaurant sets render immediately; thin or Photon sets get broad recovery',()=>{
   const generic=Array.from({length:40},(_,i)=>({type:'node',id:i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}));
-  const sparse=Array.from({length:4},(_,i)=>({type:'node',id:50+i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}));
+  const sparse=Array.from({length:8},(_,i)=>({type:'node',id:50+i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}));
   const pizza=Array.from({length:D.SPARSE_BELOW},(_,i)=>({type:'node',id:100+i,tags:{name:'Pizza '+i,amenity:'restaurant',cuisine:'pizza'}}));
   assert.equal(D.pizzaCount(generic),0);
-  assert.equal(D.isSparse({data:{elements:generic},source:'overpass-api.de'}),false,'dense Overpass POIs must not wait for Photon');
+  assert.equal(D.isSparse({data:{elements:generic},source:'overpass-api.de'}),false,'dense broad Overpass POIs must render immediately');
   assert.equal(D.isSparse({data:{elements:sparse},source:'overpass-api.de'}),true);
   assert.equal(D.isSparse({data:{elements:pizza},source:'overpass-api.de'}),false);
   assert.equal(D.isSparse({data:{elements:pizza},source:'photon.komoot.io'}),true);
 });
 
-test('Photon terms become correctly typed Italian or pizza POI elements',()=>{
+test('fallback terms become correctly typed generic, Italian and pizza POI elements',()=>{
  const place={placeId:'node-9',name:'Kaffeeküche',lat:53.67,lng:10.24,tags:{}};
+ const restaurant=D.placeToElement({...place,name:'Restaurant Nord'},'restaurant');
+ assert.equal(restaurant.tags.amenity,'restaurant');
+ assert.equal(D.elementPizza(restaurant),false);
+ const court=D.placeToElement({...place,name:'Food Hall'},'food court');
+ assert.equal(court.tags.amenity,'food_court');
  const cafe=D.placeToElement(place,'pizza cafe');
  assert.equal(cafe.tags.amenity,'cafe');
  assert.match(cafe.tags.cuisine,/pizza/);
