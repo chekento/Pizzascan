@@ -1,1 +1,1 @@
-f088f5f0398c441d6ae3fecbd3e9e4e7a4b955ee4115495a10e697dbce3c832a  downloads/PizzaScan-2.3.4.apk
+bf400d283ad5a1410a0879acee22791fb68cd34a83a7dc238431302bac32cc31  downloads/PizzaScan-2.3.4.apk
