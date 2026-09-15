@@ -12,7 +12,9 @@
     <string name="reply_error">Android response failed.</string>
     <string name="action_error">Android action failed</string>
     <string name="no_link_app">No app available to open this link.</string>
+    <string name="no_browser">No app available to open this link.</string>
     <string name="export_saved">JSON export saved.</string>
     <string name="export_error">Could not save the export.</string>
+    <string name="export_failed">Could not save the export.</string>
     <string name="review_clip">PizzaScan review</string>
 </resources>
