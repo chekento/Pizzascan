@@ -16,7 +16,7 @@
   <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk"><strong>⬇️ PizzaScan 2.3.5 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.5 · Build 28 · Android 8+ · Paket cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.5 · Build 29 · Android 8+ · Paket cloud.kosch.pizzascan</strong></p>
 
 Die aktuelle Direkt-APK trägt in App, Dateiname und Android-Paket nur den Namen **PizzaScan**. Sie enthält die Karten-/Pizza-Discovery, manuelle Restaurant-/POI-Suche, Ratingfilter, Restaurantdetails, Review Builder, fünf Sprachen und die lokale Fotoanalyse. Die veröffentlichte APK wird in CI signaturgeprüft, aus der tatsächlich gebauten APK heraus UI-getestet und zusätzlich auf Android 16 installiert und gestartet.
 
@@ -32,17 +32,17 @@ Die aktuelle Direkt-APK trägt in App, Dateiname und Android-Paket nur den Namen
 
 ## 🍕 2.3.5: intelligentere Pizza-Discovery
 
-Die automatische Umgebungskarte ist jetzt bewusst **pizza-spezifischer**. Sie übernimmt die POI-Gruppen, die bereits die ursprüngliche WebSim-App vorgesehen hatte, statt pauschal jedes Restaurant im Umkreis als Kandidaten zu behandeln. Darüber hinaus wird ein Ort nur ergänzt, wenn ein nachvollziehbares Pizza-Signal vorhanden ist.
+Die automatische Umgebungskarte ist bewusst **pizza-spezifisch**. Sie übernimmt die POI-Gruppen, die bereits die ursprüngliche WebSim-App vorgesehen hatte, statt pauschal jedes Restaurant im Umkreis als Kandidaten zu behandeln. Darüber hinaus wird ein Ort nur ergänzt, wenn ein nachvollziehbares Pizza- oder Italiener-Signal vorhanden ist.
 
 **WebSim-Basis bleibt erhalten:**
 
 - `cuisine=pizza` bzw. Pizza-/Pizzeria-Küchenangaben
-- italienische Restaurants aus der ursprünglichen WebSim-Auswahl
+- italienische Restaurants sowie typische Namen wie Ristorante, Trattoria und Osteria
 - Cafés, Imbisse, Foodtrucks, Takeaways sowie Bars/Pubs mit Pizza-/Italienisch-Küchenangabe
 - Pizza-Spezialität, Pizza im Namen oder in der Beschreibung
 - Pizzaautomaten (`vending=pizza` / `vending:pizza=yes`)
 
-**Zusätzliche Orte benötigen Pizza-Evidence.** PizzaScan berücksichtigt dafür Pizza-Hinweise in strukturierten OSM-Daten, Beschreibungen/Notizen, Produktangaben und Speisekarten-Metadaten. Ein beliebiges deutsches Restaurant, Café, Döner-Imbiss oder eine Bar ohne solchen Bezug wird nicht mehr allein wegen der Kategorie in die automatische Pizza-Karte aufgenommen.
+**Zusätzliche Orte benötigen Pizza-Evidence.** PizzaScan berücksichtigt dafür Pizza-Hinweise in strukturierten OSM-Daten, Beschreibungen/Notizen, Produktangaben und Speisekarten-Metadaten. Ein beliebiges deutsches Restaurant, Café, Döner-Imbiss oder eine Bar ohne solchen Bezug wird nicht mehr allein wegen der Kategorie in die automatische Pizza-Karte aufgenommen. Explizite Küchen wie Asia, Sushi, Thai, Chinese usw. werden bei schwachen Hinweisen verworfen; ein direkter Pizza-Nachweis kann sie weiterhin legitimieren.
 
 Die optionale Google-Maps-Integration bleibt freiwillig und wird nur mit eigenem Places-API-Key sowie auf ausdrückliches Laden verwendet. Enthält eine geladene Google-Rezension tatsächlich das Wort **Pizza**, kann PizzaScan diesen Ort für die laufende Sitzung als Pizza-belegt markieren. Google-Rezensionstexte werden weiterhin nicht dauerhaft gespeichert. Ein automatisches massenhaftes Abfragen von Google-Orten findet nicht statt.
 
@@ -55,7 +55,7 @@ Marker und Legende verwenden dieselben Kategorien:
 - 🍔 **Imbiss / Takeaway** – Fast Food oder Takeaway
 - 🚚 **Foodtruck** – mobile Gastronomie / Foodtruck
 - 🤖 **Pizzaautomat** – Pizza-Vending
-- 🍽️ **Restaurant / Bar / weiterer Pizza-Ort** – z. B. italienische WebSim-Basis, Bar/Pub oder sonstiger belegter Pizza-Ort, der nicht als Pizzeria umetikettiert werden soll
+- 🍽️ **Restaurant / Bar / möglicher Pizza-Ort** – z. B. italienische WebSim-Basis, Bar/Pub oder sonstiger belegter Pizza-Ort, der nicht als Pizzeria umetikettiert werden soll
 - ⭐ **Gemerkt**, ✓ **Besucht**, 📍 **Dein Standort** – lokale Zustände
 
 Dadurch ist das Symbol auf der Karte direkt aus derselben Typisierung abgeleitet, die auch in Kartenliste und Details verwendet wird. Ein italienisches Restaurant ohne direktes Pizza-Signal bleibt beispielsweise 🍽️ statt fälschlich 🍕 zu werden.
@@ -68,9 +68,11 @@ Bei abgesendeten Suchanfragen gleicht PizzaScan Kategorie, Name, Adresse, OSM-Id
 
 ## 🧭 Datenquellen und Ausfallsicherheit
 
-Für die automatische Pizza-Karte wird die pizza-spezifische Overpass-Abfrage nacheinander über mehrere Quellen versucht. Recovery erweitert dabei **nicht mehr** stillschweigend auf generische Restaurants, nur um eine Zielanzahl an POIs zu erreichen. Das verhindert insbesondere in kleineren Städten, dass fachfremde Gastro-POIs als vermeintliche Pizza-Orte auftauchen.
+Build 29 behebt den in Build 28 beobachteten Nulltreffer-Fall. Die automatische Pizza-Karte prüft die beiden primären Overpass-Quellen **parallel mit einer pizza-spezifischen Photon-Ausweichsuche**. Photon fragt dabei gezielt `cuisine=pizza`, `cuisine=italian` sowie Pizza-/Pizzeria-/Ristorante-/Trattoria-/Osteria-Namen ab. Erst wenn diese Wege keine plausiblen Treffer liefern, werden die weiteren Overpass-Mirrors geprüft.
 
-Ein neuer Discovery-Cache-Marker löscht bei einem Upgrade einmalig alte Karten-/Photon-Recovery-Caches, damit bereits zwischengespeicherte breite Treffer aus 2.3.4 nicht weiter auf der Karte stehen. Gemerkte Orte und persönliche Daten werden dadurch nicht gelöscht.
+Die Recovery erweitert dabei **nicht** stillschweigend auf beliebige Restaurants, nur um eine Zielanzahl an POIs zu erreichen. Dadurch bleibt die Karte relevant, fällt bei einem Overpass-Ausfall aber nicht mehr sofort auf `0 von 0 Orten` zurück. Manuelle Restaurant- und Detailabfragen verwenden weiterhin die breite bestehende Suchpipeline.
+
+Der Discovery-Cache-Marker `v3` löscht bei einem Upgrade einmalig alte Karten-/Photon-Recovery-Caches, damit veraltete Null- oder Breitensuchergebnisse nicht weiterverwendet werden. Gemerkte Orte und persönliche Daten werden dadurch nicht gelöscht.
 
 ## ⭐ Bewertungen und Restaurantdetails
 
@@ -91,7 +93,7 @@ Die Fotoanalyse verwendet 25 sichtbare Kriterien und 100 simulierte Gewichtungsp
 
 | Version | Status | Download |
 |---|---|---|
-| **2.3.5 · Build 28** | aktuelle Direktversion | [⬇️ PizzaScan-2.3.5.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk) |
+| **2.3.5 · Build 29** | aktuelle Direktversion | [⬇️ PizzaScan-2.3.5.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk) |
 | 2.3.4 | Archiv / breite POI-Regression | [Archiv öffnen](downloads/README.md) |
 | 2.3.3 | Archiv / Regression | [Archiv öffnen](downloads/README.md) |
 | 2.3.2 | Archiv / Regression | [Archiv öffnen](downloads/README.md) |
