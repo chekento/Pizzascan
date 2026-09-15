@@ -26,7 +26,8 @@ test('last-resort text and structured Photon search both cover generic restauran
   assert.equal(D.SPARSE_BELOW,12);
   assert.equal(D.ADEQUATE_POIS,24);
   assert.equal(D.FALLBACK_TARGET,24);
-  assert.equal(D.MARKER,'pizzascan-poi-discovery-v9');
+  assert.equal(D.MIN_GENERIC_POIS,3);
+  assert.equal(D.MARKER,'pizzascan-poi-discovery-v10');
   assert.match(D.RECOVERY_PROVIDERS[0],/maps\.mail\.ru/,'healthy global recovery mirror is attempted before the certificate-problematic backup seen in CI');
 });
 
@@ -59,6 +60,7 @@ test('structured Photon fallback merges categories until a useful broad result s
  assert.ok(out.length>=24,'structured tag recovery should not stop at the old one-to-three free-text result set');
  assert.equal(new URL(calls[0]).searchParams.get('osm_tag'),'amenity:restaurant');
  assert.ok(calls.length>=2,'a second food category is fetched when restaurants alone are still below the target');
+ assert.ok(D.genericFoodCount(out)>=D.MIN_GENERIC_POIS);
 });
 
 test('area extraction supports radius and map bounds',()=>{
@@ -75,14 +77,17 @@ test('Italian identity is a POI candidate but never fabricated as confirmed pizz
   assert.equal(D.evidence({name:'Cafe Nord',cuisine:'pizza',pizzaEvidence:'search',tags:{amenity:'cafe'}}),'confirmed');
 });
 
-test('dense Overpass restaurant sets render immediately; thin or Photon sets get broad recovery',()=>{
+test('restaurant diversity, not pizza density, determines whether recovery is complete',()=>{
   const generic=Array.from({length:40},(_,i)=>({type:'node',id:i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}));
   const sparse=Array.from({length:8},(_,i)=>({type:'node',id:50+i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}));
   const pizza=Array.from({length:D.SPARSE_BELOW},(_,i)=>({type:'node',id:100+i,tags:{name:'Pizza '+i,amenity:'restaurant',cuisine:'pizza'}}));
+  const mixed=[...pizza.slice(0,9),...Array.from({length:3},(_,i)=>({type:'node',id:300+i,tags:{name:'Generic '+i,amenity:'restaurant'}}))];
   assert.equal(D.pizzaCount(generic),0);
+  assert.equal(D.genericFoodCount(generic),40);
   assert.equal(D.isSparse({data:{elements:generic},source:'overpass-api.de'}),false,'dense broad Overpass POIs must render immediately');
   assert.equal(D.isSparse({data:{elements:sparse},source:'overpass-api.de'}),true);
-  assert.equal(D.isSparse({data:{elements:pizza},source:'overpass-api.de'}),false);
+  assert.equal(D.isSparse({data:{elements:pizza},source:'overpass-api.de'}),true,'a dozen pizza-only hits must still be supplemented with ordinary restaurants');
+  assert.equal(D.isSparse({data:{elements:mixed},source:'overpass-api.de'}),false,'12 results with several ordinary restaurants are broad enough to show');
   assert.equal(D.isSparse({data:{elements:Array.from({length:24},(_,i)=>({type:'node',id:500+i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}))},source:'photon.komoot.io'}),false,'a broad structured Photon set is already sufficient');
   assert.equal(D.isSparse({data:{elements:pizza},source:'photon.komoot.io'}),true);
 });
