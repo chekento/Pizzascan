@@ -4,13 +4,12 @@ const S=require('../web/smart-discovery.js');
 
 const el=(id,tags)=>({type:'node',id,lat:53.67,lon:10.24,tags});
 
-test('original WebSim pizza/Italian POI families remain baseline when cuisine is plausible',()=>{
+test('original WebSim pizza and Italian families remain the primary baseline',()=>{
  const baseline=[
   {cuisine:'pizza'},
   {amenity:'restaurant',cuisine:'italian'},
   {amenity:'restaurant',cuisine:'pizza;italian'},
   {amenity:'restaurant',name:'Ristorante Roma'},
-  {amenity:'restaurant',name:'Trattoria Bella'},
   {amenity:'cafe',cuisine:'pizza'},
   {amenity:'fast_food',cuisine:'italian'},
   {amenity:'food_truck',cuisine:'pizza'},
@@ -25,51 +24,53 @@ test('original WebSim pizza/Italian POI families remain baseline when cuisine is
  assert.ok(baseline.every(S.websimBaselineTags));
 });
 
-test('generic restaurants are not auto-added without pizza evidence',()=>{
+test('neutral restaurant candidates survive sparse recovery instead of collapsing to two results',()=>{
  for(const tags of [
-  {amenity:'restaurant',name:'Restaurant Nord',cuisine:'german'},
+  {amenity:'restaurant',name:'Restaurant Nord'},
+  {amenity:'restaurant',name:'Gasthaus Mitte',cuisine:'german'},
+  {amenity:'fast_food',name:'Snack Point'},
+  {amenity:'takeaway',name:'Takeaway Central'},
+  {amenity:'food_truck',name:'Street Food Truck'}
+ ])assert.equal(S.supplementalCandidateTags(tags),true,JSON.stringify(tags));
+ for(const tags of [
+  {amenity:'cafe',name:'Kaffeeküche'},
   {amenity:'bar',name:'Bar Central'},
-  {amenity:'cafe',name:'Kaffeeküche',cuisine:'coffee_shop'},
-  {amenity:'fast_food',name:'Döner Ecke',cuisine:'kebab'}
- ])assert.equal(S.eligibleElement(el(1,tags)),false,JSON.stringify(tags));
+  {amenity:'pub',name:'Pub Nord'}
+ ])assert.equal(S.supplementalCandidateTags(tags),false,JSON.stringify(tags));
 });
 
-test('explicit incompatible cuisines veto weak pizza hints but direct pizza evidence still wins',()=>{
+test('obvious specialised non-pizza cuisines and names are vetoed unless pizza is explicit',()=>{
  const rejected=[
-  {amenity:'restaurant',name:'Asia Haus',cuisine:'asian',note:'Pizza nearby'},
-  {amenity:'restaurant',name:'Sushi Bar',cuisine:'sushi',description:'Guests also mention pizza'},
-  {amenity:'restaurant',name:'Thai & Italian',cuisine:'thai;italian'},
-  {amenity:'restaurant',name:'China Town',cuisine:'chinese','website:menu':'https://example.test/pizza-menu'}
+  {amenity:'restaurant',name:'Asia Haus',cuisine:'asian'},
+  {amenity:'restaurant',name:'Sushi Bar',cuisine:'sushi'},
+  {amenity:'restaurant',name:'Thai Bistro',cuisine:'thai'},
+  {amenity:'restaurant',name:'China Town'},
+  {amenity:'fast_food',name:'Döner Ecke',cuisine:'kebab'},
+  {amenity:'restaurant',name:'Burger House',cuisine:'burger'}
  ];
  for(const tags of rejected)assert.equal(S.eligibleElement(el(20,tags)),false,JSON.stringify(tags));
  const direct=[
   {amenity:'restaurant',name:'Asia Pizza',cuisine:'asian'},
   {amenity:'restaurant',name:'Fusion',cuisine:'asian;pizza'},
-  {amenity:'restaurant',name:'Thai Bistro',cuisine:'thai',product:'pizza'}
+  {amenity:'restaurant',name:'Thai Bistro',cuisine:'thai',product:'pizza'},
+  {amenity:'fast_food',name:'Döner & Pizza',cuisine:'kebab;pizza'}
  ];
  for(const tags of direct)assert.equal(S.eligibleElement(el(21,tags)),true,JSON.stringify(tags));
 });
 
-test('real menu/comment/product evidence can add plausible food POIs, URLs alone cannot',()=>{
- const extras=[
-  {amenity:'restaurant',name:'Restaurant Nord',note:'Freitags gibt es Pizza'},
-  {amenity:'bar',name:'Bar Central',description:'Cocktails, snacks and pizza'},
-  {amenity:'biergarten',name:'Garten',products:'beer;pizza'},
-  {amenity:'cafe',name:'Café Test',menu:'Pizza Margherita; Kuchen'},
-  {shop:'bakery',name:'Backstube',product:'pizza'}
- ];
- assert.ok(extras.every(tags=>S.eligibleElement(el(2,tags))));
- assert.equal(S.eligibleElement(el(22,{amenity:'cafe',name:'Café URL','website:menu':'https://example.test/pizza-menu'})),false);
+test('real menu/comment/product evidence counts but URL strings alone do not',()=>{
+ assert.equal(S.pizzaMenuEvidence({menu:'Pizza Margherita; Pasta'}),true);
  assert.equal(S.pizzaMenuEvidence({'website:menu':'https://example.test/pizza-menu'}),false);
  assert.equal(S.pizzaText({website:'https://pizza.example.test'}),false);
+ assert.equal(S.websimBaselineTags({amenity:'restaurant',name:'Nord',description:'Steinofen Pizza am Abend'}),true);
 });
 
-test('non-food POIs do not enter the map merely because their text contains pizza',()=>{
+test('non-food POIs do not enter merely because their text contains pizza',()=>{
  assert.equal(S.eligibleElement(el(3,{amenity:'school',description:'Pizza day on Friday'})),false);
  assert.equal(S.eligibleElement(el(4,{tourism:'hotel',note:'Pizza nearby'})),false);
 });
 
-test('marker category follows the same semantic legend categories',()=>{
+test('marker category keeps semantic legend categories',()=>{
  const place=(amenity,tags={})=>({name:'Test',type:'other',pizzaEvidence:'confirmed',tags:{amenity,cuisine:'pizza',...tags}});
  assert.equal(S.classifyPlace(place('restaurant')),'pizzeria');
  assert.equal(S.classifyPlace(place('cafe')),'cafe');
@@ -80,56 +81,40 @@ test('marker category follows the same semantic legend categories',()=>{
  assert.equal(S.classifyPlace({name:'Box',tags:{amenity:'vending_machine',vending:'pizza'}}),'vending_pizza');
 });
 
-test('Italian-only WebSim restaurant stays available but is not mislabeled as a pizzeria',()=>{
- const p={name:'Ristorante Test',pizzaEvidence:'possible',cuisine:'italian',tags:{amenity:'restaurant',cuisine:'italian'}};
- assert.equal(S.websimBaselineTags(p.tags),true);
- assert.equal(S.strongPizzaPlace(p),false);
- assert.equal(S.classifyPlace(p),'other');
-});
-
-test('strict nearby query keeps pizza and Italian discovery without generic restaurant sweep or URL-menu selectors',()=>{
- const q=S.strictQuery({lat:53.675,lng:10.24},3,{south:53.6,west:10.1,north:53.7,east:10.3});
- assert.match(q,/amenity\"=\"restaurant/);
- assert.match(q,/cuisine\"~\"pizza\|pizzeria\|italian/);
- assert.match(q,/ristorante\|trattoria\|osteria/);
+test('WebSim query matches the original search families and contains no generic restaurant sweep',()=>{
+ const q=S.websimQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
+ assert.match(q,/pizzascan-websim-search-v4/);
+ assert.match(q,/cuisine\"=\"pizza/);
+ assert.match(q,/amenity\"=\"restaurant\"\]\[\"cuisine\"=\"italian/);
+ assert.match(q,/amenity\"=\"cafe\"\]\[\"cuisine\"~\"pizza\|italian/);
+ assert.match(q,/amenity\"=\"fast_food\"\]\[\"cuisine\"~\"pizza\|italian/);
+ assert.match(q,/amenity\"=\"food_truck\"\]\[\"cuisine\"~\"pizza\|italian/);
+ assert.match(q,/speciality\"~\"pizza/);
+ assert.match(q,/amenity\"~\"bar\|pub\"\]\[\"cuisine\"~\"pizza\|italian/);
+ assert.match(q,/name\"~\"pizza\|pizzeria\|pizze/);
  assert.match(q,/description\"~\"pizza/);
- assert.match(q,/note\"~\"pizza/);
- assert.match(q,/menu\"~\"pizza/);
- assert.doesNotMatch(q,/website:menu\"~\"pizza/);
- assert.doesNotMatch(q,/contact:menu\"~\"pizza/);
+ assert.match(q,/amenity\"=\"takeaway\"\]\[\"cuisine\"~\"pizza\|italian/);
  assert.doesNotMatch(q,/amenity\"~\"restaurant\|fast_food\|cafe[^\]]*\]\[\"name\"\]/);
- assert.equal(S.isStrictDiscoveryQuery(q),true);
- assert.equal(S.isStrictDiscoveryQuery('[out:json];node(1);out;'),false);
+ assert.equal(S.isWebsimDiscoveryQuery(q),true);
 });
 
-test('pizza-specific Photon fallback returns Italian/pizza POIs when Overpass is unavailable',async()=>{
- const q=S.strictQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
- const feature=(id,name)=>({type:'Feature',geometry:{coordinates:[10.24,53.675]},properties:{osm_type:'N',osm_id:id,name}});
- const service={
-  lastErrors:[],
-  async json(url){
-   if(String(url).startsWith('https://photon.komoot.io/reverse')){
-    const tag=new URL(url).searchParams.get('osm_tag');
-    return {features:tag==='cuisine:pizza'?[feature(100,'Pizza Max')]:[feature(101,'Ristorante Roma')]};
-   }
-   throw Error('Overpass unavailable');
-  },
-  async photon(){return [];}
- };
- const result=await S.strictOverpass(service,q,{});
- assert.equal(result.source,'photon.komoot.io');
- assert.equal(result.data.elements.length,2);
- assert.ok(result.data.elements.every(S.eligibleElement));
-});
-
-test('manual/detail overpass calls remain delegated to the pre-existing broad service',async()=>{
- let delegated='';
- const service={overpass:async query=>{delegated=query;return {data:{elements:[]},source:'broad'};}};
- const root={PizzaPlaces:{query(){},TYPES:{other:{},fast_food:{}}},placeService:service,localStorage:null};
- S.install(root);
- const result=await service.overpass('[out:json];node(1);out;');
- assert.equal(delegated,'[out:json];node(1);out;');
- assert.equal(result.source,'broad');
+test('ambient WebSim query keeps broad recovery but filters obvious mismatches; manual queries stay broad',async()=>{
+ const pizza=el(1,{amenity:'restaurant',name:'Pizza Max',cuisine:'pizza'});
+ const neutral=el(2,{amenity:'restaurant',name:'Restaurant Nord'});
+ const asia=el(3,{amenity:'restaurant',name:'Asia Haus',cuisine:'asian'});
+ let delegated=[];
+ const service={overpass:async q=>{delegated.push(q);return {data:{elements:[pizza,neutral,asia]},source:'broad-recovery'};}};
+ const root={PizzaPlaces:{query(){return 'old';}},placeService:service,localStorage:null};
+ global.placeService=service;
+ try{
+  S.install(root);
+  const q=root.PizzaPlaces.query({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
+  const ambient=await service.overpass(q);
+  assert.deepEqual(ambient.data.elements.map(x=>x.id),[1,2]);
+  const manual=await service.overpass('[out:json];node(1);out;');
+  assert.deepEqual(manual.data.elements.map(x=>x.id),[1,2,3]);
+  assert.equal(delegated.length,2);
+ }finally{delete global.placeService;}
 });
 
 test('Google review evidence only counts actual review text',()=>{
@@ -139,6 +124,6 @@ test('Google review evidence only counts actual review text',()=>{
  assert.equal(S.googleReviewHasPizza(noPizza),false);
 });
 
-test('precision cache marker advances for installed clients',()=>{
- assert.equal(S.MARKER,'pizzascan-smart-discovery-v3');
+test('hybrid cache marker advances for installed clients',()=>{
+ assert.equal(S.MARKER,'pizzascan-smart-discovery-v4');
 });
