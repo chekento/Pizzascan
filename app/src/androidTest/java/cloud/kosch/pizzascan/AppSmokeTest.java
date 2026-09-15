@@ -5,6 +5,7 @@ import android.os.SystemClock;
 import android.webkit.WebView;
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import java.lang.reflect.Field;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -13,10 +14,17 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class AppSmokeTest {
+    private WebView web(MainActivity activity) {
+        try {
+            Field field = MainActivity.class.getDeclaredField("web");
+            field.setAccessible(true);
+            return (WebView) field.get(activity);
+        } catch (Exception e) { throw new RuntimeException(e); }
+    }
     private String js(ActivityScenario<MainActivity> scenario, String script) throws Exception {
         AtomicReference<String> value = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
-        scenario.onActivity(a -> a.webViewForTest().evaluateJavascript(script, result -> { value.set(result); latch.countDown(); }));
+        scenario.onActivity(a -> web(a).evaluateJavascript(script, result -> { value.set(result); latch.countDown(); }));
         assertTrue("WebView callback timed out", latch.await(10, TimeUnit.SECONDS));
         return value.get();
     }
@@ -34,8 +42,8 @@ public class AppSmokeTest {
             assertEquals("true", js(scenario, "PizzaScan.diagnostics().native"));
             assertEquals("true", js(scenario, "!!window.L && location.protocol === 'https:'"));
             scenario.onActivity(a -> {
-                assertFalse(a.webViewForTest().getSettings().getAllowFileAccess());
-                assertEquals(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW, a.webViewForTest().getSettings().getMixedContentMode());
+                assertFalse(web(a).getSettings().getAllowFileAccess());
+                assertEquals(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW, web(a).getSettings().getMixedContentMode());
             });
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click(); document.getElementById('nav-photo').click();");
             assertEquals("true", js(scenario, "document.getElementById('photo-view').classList.contains('active')"));
