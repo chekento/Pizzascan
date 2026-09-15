@@ -1,6 +1,7 @@
-/* Resilient restaurant/pizza-place recovery. Loaded after broad-defaults.js.
- * The original WebSim app intentionally searched OSM broadly for Italian/pizza
- * venues; this module preserves that behavior as additive recovery. */
+/* Resilient broad restaurant/POI recovery. Loaded after broad-defaults.js.
+ * Every recovery path keeps ordinary named food venues as the baseline; pizza and
+ * Italian selectors are additive so provider failures can never collapse the map
+ * into a pizza/Italian-only result set. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -8,23 +9,25 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-poi-discovery-v7';
+const MARKER='pizzascan-poi-discovery-v8';
 const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const PIZZA_WORDS='pizza|pizzeria|pizzaria|pizzerie|pizze';
 const ITALIAN_CUISINE='italian|italiano|italiana|pasta';
 const ITALIAN_NAME_WORDS='ristorante|trattoria|osteria|italian|italiano|italiana|italiener|italienisch';
+/* Photon is the last resort. Keep generic food categories in the same recovery
+ * sequence as pizza terms so an Overpass outage still produces a useful map. */
 const FALLBACK_TERMS=[
-  'pizzeria','pizza','italian restaurant','ristorante','trattoria','osteria',
-  'italienisches restaurant','pizza cafe','pizza imbiss','pizza food truck',
-  'pizza vending','pizza takeaway'
+  'restaurant','pizzeria','pizza','cafe','fast food','takeaway','bar','pub','biergarten','food court','food truck',
+  'italian restaurant','ristorante','trattoria','osteria','italienisches restaurant',
+  'pizza cafe','pizza imbiss','pizza food truck','pizza vending','pizza takeaway'
 ];
 const RECOVERY_PROVIDERS=[
-  'https://overpass.osm.jp/api/interpreter',
-  'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass.osm.jp/api/interpreter'
 ];
-const SPARSE_BELOW=6;
-const ADEQUATE_POIS=18;
-const FALLBACK_TARGET=18;
+const SPARSE_BELOW=12;
+const ADEQUATE_POIS=24;
+const FALLBACK_TARGET=24;
 
 function extractArea(query){
   const q=String(query||'');
@@ -53,6 +56,9 @@ function pizzaCount(elements){return (elements||[]).filter(elementPizza).length;
 function robustQuery(area){
   if(!area)return '';
   return `[out:json][timeout:28];(`+
+    /* This selector is the crucial broad baseline. It must be present in recovery
+     * as well as in the primary query. */
+    `nwr["amenity"~"${FOOD_AMENITIES}"]["name"](${area});`+
     `nwr["cuisine"~"${PIZZA_WORDS}",i](${area});`+
     `nwr["amenity"="restaurant"]["cuisine"~"${ITALIAN_CUISINE}",i](${area});`+
     `nwr["amenity"~"${FOOD_AMENITIES}"]["cuisine"~"${PIZZA_WORDS}|${ITALIAN_CUISINE}",i](${area});`+
@@ -80,8 +86,8 @@ function evidence(place){return place&&pizzaTags({...place.tags,name:place.name,
 function isSparse(result){
   const elements=result?.data?.elements||[],source=String(result?.source||'').toLowerCase();
   if(source.includes('photon'))return true;
-  /* A dense Overpass result is already the desired old-WebSim experience. Do not
-   * block rendering merely because only a small share is explicitly tagged pizza. */
+  /* A dense broad Overpass set is already useful even when only a few entries are
+   * explicitly tagged pizza. Sparse sets get a second broad provider pass. */
   if(elements.length>=ADEQUATE_POIS)return false;
   return elements.length<SPARSE_BELOW||pizzaCount(elements)<SPARSE_BELOW;
 }
@@ -93,6 +99,7 @@ function placeToElement(place,term='pizza'){
   else{
     if(/cafe/.test(t))tags.amenity='cafe';
     else if(/food truck/.test(t)){tags.amenity='food_truck';tags.mobile='yes';}
+    else if(/food court/.test(t))tags.amenity='food_court';
     else if(/imbiss|fast food/.test(t))tags.amenity='fast_food';
     else if(/takeaway/.test(t))tags.amenity='takeaway';
     else if(/biergarten/.test(t))tags.amenity='biergarten';
@@ -120,12 +127,10 @@ async function recoverProviders(service,query,options={},seed=[]){
   for(const endpoint of RECOVERY_PROVIDERS){
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
     try{
-      options.onStatus?.('Zusätzliche Restaurant- und Pizza-POIs werden abgefragt …');
+      options.onStatus?.('Weitere Restaurants und Pizza-POIs werden über eine alternative Kartenquelle geladen …');
       const data=await service.json(endpoint,{method:'POST',body:new URLSearchParams({data:rq})},options.signal,22000);
       if(Array.isArray(data?.elements)&&!data.remark&&data.elements.length){
         elements=mergeElements(elements,data.elements);sources.push(new URL(endpoint).hostname);
-        /* One healthy recovery provider with a useful POI set is enough. Rendering
-         * should not be held hostage by slower fallbacks. */
         if(elements.length>=ADEQUATE_POIS)break;
       }
     }catch(error){if(options.signal?.aborted)throw error;}
@@ -136,7 +141,7 @@ async function recoverProviders(service,query,options={},seed=[]){
 async function recoverPhoton(service,query,options={},seed=[]){
   const info=areaInfo(extractArea(query));if(!info)return seed;
   let elements=mergeElements(seed);
-  options.onStatus?.('Weitere italienische Restaurants und Pizza-Orte werden ergänzt …');
+  options.onStatus?.('Weitere Restaurants und Pizza-Orte werden über die Textsuche ergänzt …');
   for(const term of FALLBACK_TERMS){
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
     try{
@@ -144,7 +149,7 @@ async function recoverPhoton(service,query,options={},seed=[]){
       const extra=[];
       for(const item of items||[]){const p=item?.place;if(p&&inside(info,p)){const e=placeToElement(p,term);if(e)extra.push(e);}}
       elements=mergeElements(elements,extra);
-      if(elements.length>=ADEQUATE_POIS)break;
+      if(elements.length>=FALLBACK_TARGET)break;
     }catch(error){if(options.signal?.aborted)throw error;}
   }
   return elements;
@@ -154,6 +159,7 @@ function clearOldCaches(root){
   try{
     if(!root.localStorage||root.localStorage.getItem(MARKER))return;
     root.localStorage.removeItem('pizzascan-map-cache-v3');
+    root.localStorage.removeItem('pizzascan-map-cache-v2');
     for(let i=root.localStorage.length-1;i>=0;i--){const k=root.localStorage.key(i);if(k?.startsWith('pizzascan-search-'))root.localStorage.removeItem(k);}
     root.localStorage.setItem(MARKER,'1');
   }catch{}
@@ -180,8 +186,7 @@ function install(root){
         const seed=primary?.data?.elements||[];
         const recovered=await recoverProviders(service,query,options,seed);
         let elements=recovered.elements;
-        /* Photon is a last resort only. A successful Overpass recovery should be
-         * returned immediately, exactly as the original WebSim app did. */
+        /* Photon remains the final rescue path, but is broad as well. */
         if((!recovered.sources.length||elements.length<ADEQUATE_POIS)&&elements.length<ADEQUATE_POIS){
           elements=await recoverPhoton(service,query,options,elements);
         }
@@ -194,7 +199,7 @@ function install(root){
       };
       wrapped.__poiDiscovery=true;service.overpass=wrapped;
     }
-  }catch(error){console.warn('PizzaScan restaurant/pizza discovery recovery skipped',error);}
+  }catch(error){console.warn('PizzaScan broad restaurant/pizza discovery recovery skipped',error);}
   root.PizzaScanPoiDiscovery={marker:MARKER,terms:FALLBACK_TERMS.slice(),providers:RECOVERY_PROVIDERS.slice()};
 }
 
