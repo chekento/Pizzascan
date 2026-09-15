@@ -19,17 +19,21 @@ test('pizza enrichment loads after recovery and before app initialization',()=>{
  assert.ok(map>=0&&native>map&&review>native&&broad>review&&poi>broad&&only>poi&&app>only,'pizza enrichment must install after recovery and before app initialization');
 });
 
-test('default migration restores broad restaurants while keeping all map categories',()=>{
- const cfg=B.broadMigration({types:['pizzeria'],onlyOpen:true,includeItalian:false,includeUnconfirmed:false,radius:1,hideVisited:true,minRating:4.9},P.TYPES);
+test('default migration restores broad viewport results and automatic search regeneration',()=>{
+ const cfg=B.broadMigration({types:['pizzeria'],onlyOpen:true,includeItalian:false,includeUnconfirmed:false,radius:1,autoSearch:false,hideVisited:true,minRating:4.9},P.TYPES);
  assert.deepEqual(cfg.types,Object.keys(P.TYPES));
  assert.equal(cfg.onlyOpen,false);
  assert.equal(cfg.includeItalian,true);
  assert.equal(cfg.includeUnconfirmed,true);
- assert.equal(cfg.radius,10);
+ assert.equal(cfg.radius,0);
+ assert.equal(cfg.autoSearch,true);
  assert.equal(cfg.hideVisited,false);
  assert.equal(cfg.minRating,0);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v9');
- assert.equal(B.normalizeConfig({}, {}, P.TYPES).includeUnconfirmed,true,'fresh installs keep broad restaurant visibility');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v10');
+ const fresh=B.normalizeConfig({}, {}, P.TYPES);
+ assert.equal(fresh.includeUnconfirmed,true,'fresh installs keep broad restaurant visibility');
+ assert.equal(fresh.radius,0,'fresh installs search the visible map viewport like the original app');
+ assert.equal(fresh.autoSearch,true,'moving the map regenerates results by default');
 });
 
 test('generic restaurants remain visible while pizza evidence is still classified separately',()=>{
@@ -41,21 +45,22 @@ test('generic restaurants remain visible while pizza evidence is still classifie
   {type:'node',id:5,lat:53.674,lon:10.244,tags:{name:'Pub West',amenity:'pub'}}
  ];
  const list=P.fromOverpass(elements,{allowNamed:true});
- assert.equal(list.length,5,'broad named food venues can still remain visible once returned');
+ assert.equal(list.length,5,'broad named food venues remain normal map results');
  assert.deepEqual(list.filter(O.directPizza).map(p=>p.placeId),['node-1','node-4'],'pizza evidence remains available for enrichment/badges');
  const cfg=B.normalizeConfig({}, {}, P.TYPES);
  for(const id of ['node-2','node-3','node-5'])assert.equal(B.candidateVisible(list.find(p=>p.placeId===id),cfg),true,id+' should stay visible as a primary restaurant/POI');
 });
 
-test('legacy Italian/pizza query is primary and supplements still deduplicate by OSM identity',()=>{
- const base=P.query({lat:53.67,lng:10.24},10,{south:53.6,west:10.1,north:53.8,east:10.4});
+test('broad named-food query is primary and original PizzaScan selectors are additive',()=>{
+ const base=P.query({lat:53.67,lng:10.24},0,{south:53.6,west:10.1,north:53.8,east:10.4});
  const q=B.expandDiscoveryQuery(base,true);
- assert.match(q,/pizza\|pizzeria\|italian\|italiano\|italiana/i);
- assert.match(q,/ristorante\|trattoria\|osteria/);
- assert.match(q,/pizze/);
+ assert.match(q,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|bar\|pub\|biergarten\|takeaway\|food_court"\]\["name"\]/,'all named food venues must remain in the result-generating query');
+ assert.match(q,/pizzascan-legacy-result-coverage/);
  assert.match(q,/speciality.*pizza/i);
- assert.match(q,/vending:pizza/);
- assert.doesNotMatch(q,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten"\]\["name"\]\(/,'must not query every named food venue and force Photon fallback');
+ assert.match(q,/description.*pizza/i);
+ assert.match(q,/name.*pizza\|pizzeria\|pizzaria\|pizze/i);
+ assert.match(q,/cuisine.*italian\|italiano\|italiana/i);
+ assert.match(q,/53\.6,10\.1,53\.8,10\.4/,'viewport bounds must drive the query when radius is zero');
  const primary=[{type:'node',id:1,tags:{name:'Restaurant Nord'}},{type:'node',id:2,tags:{name:'Pizza Uno'}}];
  const pizzaSupplement=[{type:'node',id:2,tags:{name:'Pizza Uno',cuisine:'pizza'}},{type:'node',id:3,tags:{name:'Pizza Extra',cuisine:'pizza'}}];
  const merged=B.mergeElements(primary,pizzaSupplement);
