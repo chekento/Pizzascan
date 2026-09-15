@@ -3,10 +3,11 @@ const assert=require('node:assert/strict');
 const B=require('../web/broad-defaults.js');
 const TYPES={pizzeria:{},cafe:{},fast_food:{},food_truck:{},vending_pizza:{},other:{}};
 
-test('fresh installs default to viewport auto-search with all broad place types enabled',()=>{
- const cfg=B.normalizeConfig({sort:'distance',travelMode:'walking',autoSearch:false,radius:5}, {}, TYPES);
+test('fresh installs default to broad 5 km auto-search with all place types enabled',()=>{
+ const cfg=B.normalizeConfig({sort:'distance',travelMode:'walking',autoSearch:false,radius:3}, {}, TYPES);
  assert.deepEqual(cfg.types,Object.keys(TYPES));
- assert.equal(cfg.radius,0);
+ assert.equal(cfg.radius,5);
+ assert.equal(B.DEFAULT_RADIUS,5);
  assert.equal(cfg.autoSearch,true);
  assert.equal(cfg.onlyOpen,false);
  assert.equal(cfg.unknownHours,false);
@@ -18,18 +19,18 @@ test('fresh installs default to viewport auto-search with all broad place types 
  assert.equal(cfg.includeUnrated,false);
 });
 
-test('explicit user filters still narrow broad place defaults',()=>{
+test('explicit user filters still narrow broad place defaults after migration',()=>{
  const cfg=B.normalizeConfig({}, {types:['pizzeria'],radius:3,autoSearch:false,onlyOpen:true,unknownHours:false,includeItalian:false,includeUnconfirmed:false,hideVisited:true,ratingsEnabled:true,minRating:4.6,includeUnrated:false}, TYPES);
  assert.deepEqual(cfg.types,['pizzeria']);
  assert.equal(cfg.radius,3);
  assert.equal(cfg.autoSearch,false);
  assert.equal(cfg.onlyOpen,true);
- assert.equal(cfg.includeUnconfirmed,false,'explicit user choice may still narrow generic POIs');
+ assert.equal(cfg.includeUnconfirmed,false,'explicit user choice may still narrow generic POIs after the v11 reset has run');
  assert.equal(cfg.minRating,4.6);
  assert.equal(cfg.includeUnrated,false);
 });
 
-test('migration restores broad categories, viewport search and automatic result regeneration',()=>{
+test('migration reopens broad categories, ratings and 5 km automatic discovery',()=>{
  const next=B.broadMigration({sort:'name',travelMode:'bicycling',autoSearch:false,minRating:4.8,onlyOpen:true,types:['pizzeria'],includeUnconfirmed:false,radius:1},TYPES);
  assert.equal(next.sort,'name');
  assert.equal(next.travelMode,'bicycling');
@@ -40,7 +41,7 @@ test('migration restores broad categories, viewport search and automatic result 
  assert.equal(next.minRating,0);
  assert.equal(next.includeUnrated,false);
  assert.equal(next.includeUnconfirmed,true);
- assert.equal(next.radius,0);
+ assert.equal(next.radius,5);
 });
 
 test('ordinary named food candidates remain visible when the broad baseline is enabled',()=>{
@@ -51,7 +52,7 @@ test('ordinary named food candidates remain visible when the broad baseline is e
 });
 
 test('map query keeps broad named food results and adds original PizzaScan coverage',()=>{
- const base='[out:json][timeout:20];(nwr["amenity"~"restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten"]["name"](53.60,10.10,53.80,10.40);nwr["vending:pizza"="yes"](53.60,10.10,53.80,10.40););out body center;';
+ const base='[out:json][timeout:20];(nwr["amenity"~"restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten"]["name"](around:5000,53.67,10.24);nwr["vending:pizza"="yes"](around:5000,53.67,10.24););out body center;';
  const restored=B.expandDiscoveryQuery(base,true);
  assert.match(restored,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten"\]\["name"\]/,'broad named food venues must remain primary results');
  assert.match(restored,/pizzascan-legacy-result-coverage/);
@@ -59,15 +60,15 @@ test('map query keeps broad named food results and adds original PizzaScan cover
  assert.match(restored,/name.*pizza\|pizzeria\|pizzaria\|pizze/i);
  assert.match(restored,/description.*pizza/i);
  assert.match(restored,/cuisine.*italian\|italiano\|italiana/i);
- assert.match(restored,/53\.60,10\.10,53\.80,10\.40/);
+ assert.match(restored,/around:5000,53\.67,10\.24/);
  assert.equal(B.expandDiscoveryQuery(base,false),base);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v10');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v11');
 });
 
-test('supplemental pizza discovery keeps primary ids and deduplicates supplements',()=>{
- assert.equal(B.SUPPLEMENT_BELOW,4);
- assert.equal(B.shouldSupplement([{id:1},{id:2},{id:3}]),true);
- assert.equal(B.shouldSupplement([{id:1},{id:2},{id:3},{id:4}]),false);
+test('thin result sets are supplemented before they collapse to a handful of venues',()=>{
+ assert.equal(B.SUPPLEMENT_BELOW,12);
+ assert.equal(B.shouldSupplement(Array.from({length:11},(_,id)=>({id}))),true);
+ assert.equal(B.shouldSupplement(Array.from({length:12},(_,id)=>({id}))),false);
  const merged=B.mergeElements([{type:'node',id:1,tags:{name:'Restaurant A'}},{type:'node',id:2,tags:{name:'Restaurant B'}}], [{type:'node',id:1,tags:{name:'Restaurant A',cuisine:'pizza'}},{type:'way',id:3,tags:{name:'Pizza Extra'}}]);
  assert.equal(merged.length,3);
  assert.equal(merged.find(x=>x.type==='node'&&x.id===1).tags.cuisine,'pizza');
