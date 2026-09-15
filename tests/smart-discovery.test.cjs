@@ -4,7 +4,7 @@ const S=require('../web/smart-discovery.js');
 
 const el=(id,tags)=>({type:'node',id,lat:53.67,lon:10.24,tags});
 
-test('original WebSim pizza/Italian POI families remain baseline',()=>{
+test('original WebSim pizza/Italian POI families remain baseline when cuisine is plausible',()=>{
  const baseline=[
   {cuisine:'pizza'},
   {amenity:'restaurant',cuisine:'italian'},
@@ -32,15 +32,34 @@ test('generic restaurants are not auto-added without pizza evidence',()=>{
  ])assert.equal(S.eligibleElement(el(1,tags)),false,JSON.stringify(tags));
 });
 
-test('additional food POIs are admitted when menu/comment/product evidence says pizza',()=>{
+test('explicit incompatible cuisines veto weak pizza hints but direct pizza evidence still wins',()=>{
+ const rejected=[
+  {amenity:'restaurant',name:'Asia Haus',cuisine:'asian',note:'Pizza nearby'},
+  {amenity:'restaurant',name:'Sushi Bar',cuisine:'sushi',description:'Guests also mention pizza'},
+  {amenity:'restaurant',name:'Thai & Italian',cuisine:'thai;italian'},
+  {amenity:'restaurant',name:'China Town',cuisine:'chinese','website:menu':'https://example.test/pizza-menu'}
+ ];
+ for(const tags of rejected)assert.equal(S.eligibleElement(el(20,tags)),false,JSON.stringify(tags));
+ const direct=[
+  {amenity:'restaurant',name:'Asia Pizza',cuisine:'asian'},
+  {amenity:'restaurant',name:'Fusion',cuisine:'asian;pizza'},
+  {amenity:'restaurant',name:'Thai Bistro',cuisine:'thai',product:'pizza'}
+ ];
+ for(const tags of direct)assert.equal(S.eligibleElement(el(21,tags)),true,JSON.stringify(tags));
+});
+
+test('real menu/comment/product evidence can add plausible food POIs, URLs alone cannot',()=>{
  const extras=[
   {amenity:'restaurant',name:'Restaurant Nord',note:'Freitags gibt es Pizza'},
   {amenity:'bar',name:'Bar Central',description:'Cocktails, snacks and pizza'},
   {amenity:'biergarten',name:'Garten',products:'beer;pizza'},
-  {amenity:'cafe',name:'Café Test','website:menu':'https://example.test/pizza-menu'},
+  {amenity:'cafe',name:'Café Test',menu:'Pizza Margherita; Kuchen'},
   {shop:'bakery',name:'Backstube',product:'pizza'}
  ];
  assert.ok(extras.every(tags=>S.eligibleElement(el(2,tags))));
+ assert.equal(S.eligibleElement(el(22,{amenity:'cafe',name:'Café URL','website:menu':'https://example.test/pizza-menu'})),false);
+ assert.equal(S.pizzaMenuEvidence({'website:menu':'https://example.test/pizza-menu'}),false);
+ assert.equal(S.pizzaText({website:'https://pizza.example.test'}),false);
 });
 
 test('non-food POIs do not enter the map merely because their text contains pizza',()=>{
@@ -66,13 +85,15 @@ test('Italian-only WebSim restaurant stays available but is not mislabeled as a 
  assert.equal(S.classifyPlace(p),'other');
 });
 
-test('strict nearby query contains WebSim baseline plus explicit menu/comment evidence and no generic named restaurant sweep',()=>{
+test('strict nearby query keeps pizza and Italian discovery without generic restaurant sweep or URL-menu selectors',()=>{
  const q=S.strictQuery({lat:53.675,lng:10.24},3,{south:53.6,west:10.1,north:53.7,east:10.3});
  assert.match(q,/amenity\"=\"restaurant/);
  assert.match(q,/cuisine\"~\"pizza\|pizzeria\|italian/);
  assert.match(q,/description\"~\"pizza/);
  assert.match(q,/note\"~\"pizza/);
- assert.match(q,/website:menu\"~\"pizza/);
+ assert.match(q,/menu\"~\"pizza/);
+ assert.doesNotMatch(q,/website:menu\"~\"pizza/);
+ assert.doesNotMatch(q,/contact:menu\"~\"pizza/);
  assert.doesNotMatch(q,/amenity\"~\"restaurant\|fast_food\|cafe[^\]]*\]\[\"name\"\]/);
 });
 
@@ -81,4 +102,8 @@ test('Google review evidence only counts actual review text',()=>{
  const noPizza={querySelectorAll:()=>[{textContent:'Great coffee and cake'}]};
  assert.equal(S.googleReviewHasPizza(pizzaText),true);
  assert.equal(S.googleReviewHasPizza(noPizza),false);
+});
+
+test('precision cache marker advances for installed clients',()=>{
+ assert.equal(S.MARKER,'pizzascan-smart-discovery-v2');
 });
