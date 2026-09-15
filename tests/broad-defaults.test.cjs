@@ -3,10 +3,11 @@ const assert=require('node:assert/strict');
 const B=require('../web/broad-defaults.js');
 const TYPES={pizzeria:{},cafe:{},fast_food:{},food_truck:{},vending_pizza:{},other:{}};
 
-test('fresh installs default to all place types with broad named restaurants enabled',()=>{
- const cfg=B.normalizeConfig({sort:'distance',travelMode:'walking'}, {}, TYPES);
+test('fresh installs default to viewport auto-search with all broad place types enabled',()=>{
+ const cfg=B.normalizeConfig({sort:'distance',travelMode:'walking',autoSearch:false,radius:5}, {}, TYPES);
  assert.deepEqual(cfg.types,Object.keys(TYPES));
- assert.equal(cfg.radius,10);
+ assert.equal(cfg.radius,0);
+ assert.equal(cfg.autoSearch,true);
  assert.equal(cfg.onlyOpen,false);
  assert.equal(cfg.unknownHours,false);
  assert.equal(cfg.includeItalian,true);
@@ -18,17 +19,18 @@ test('fresh installs default to all place types with broad named restaurants ena
 });
 
 test('explicit user filters still narrow broad place defaults',()=>{
- const cfg=B.normalizeConfig({}, {types:['pizzeria'],radius:3,onlyOpen:true,unknownHours:false,includeItalian:false,includeUnconfirmed:false,hideVisited:true,ratingsEnabled:true,minRating:4.6,includeUnrated:false}, TYPES);
+ const cfg=B.normalizeConfig({}, {types:['pizzeria'],radius:3,autoSearch:false,onlyOpen:true,unknownHours:false,includeItalian:false,includeUnconfirmed:false,hideVisited:true,ratingsEnabled:true,minRating:4.6,includeUnrated:false}, TYPES);
  assert.deepEqual(cfg.types,['pizzeria']);
  assert.equal(cfg.radius,3);
+ assert.equal(cfg.autoSearch,false);
  assert.equal(cfg.onlyOpen,true);
  assert.equal(cfg.includeUnconfirmed,false,'explicit user choice may still narrow generic POIs');
  assert.equal(cfg.minRating,4.6);
  assert.equal(cfg.includeUnrated,false);
 });
 
-test('migration restores broad categories and broad restaurant visibility',()=>{
- const next=B.broadMigration({sort:'name',travelMode:'bicycling',autoSearch:true,minRating:4.8,onlyOpen:true,types:['pizzeria'],includeUnconfirmed:false},TYPES);
+test('migration restores broad categories, viewport search and automatic result regeneration',()=>{
+ const next=B.broadMigration({sort:'name',travelMode:'bicycling',autoSearch:false,minRating:4.8,onlyOpen:true,types:['pizzeria'],includeUnconfirmed:false,radius:1},TYPES);
  assert.equal(next.sort,'name');
  assert.equal(next.travelMode,'bicycling');
  assert.equal(next.autoSearch,true);
@@ -38,7 +40,7 @@ test('migration restores broad categories and broad restaurant visibility',()=>{
  assert.equal(next.minRating,0);
  assert.equal(next.includeUnrated,false);
  assert.equal(next.includeUnconfirmed,true);
- assert.equal(next.radius,10);
+ assert.equal(next.radius,0);
 });
 
 test('ordinary named food candidates remain visible when the broad baseline is enabled',()=>{
@@ -48,18 +50,18 @@ test('ordinary named food candidates remain visible when the broad baseline is e
  assert.equal(B.candidateVisible(place,{...broad,includeUnconfirmed:false},{visited:new Set()},()=>({state:'open'})),false);
 });
 
-test('map query restores the compact 2.2/WebSim Italian and pizza POI search',()=>{
- const base='[out:json][timeout:15];(nwr["cuisine"~"pizza",i](around:10000,53.67,10.24);nwr["vending:pizza"="yes"](around:10000,53.67,10.24););out body center;';
+test('map query keeps broad named food results and adds original PizzaScan coverage',()=>{
+ const base='[out:json][timeout:20];(nwr["amenity"~"restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten"]["name"](53.60,10.10,53.80,10.40);nwr["vending:pizza"="yes"](53.60,10.10,53.80,10.40););out body center;';
  const restored=B.expandDiscoveryQuery(base,true);
- assert.match(restored,/cuisine.*pizza\|pizzeria\|italian\|italiano\|italiana/i);
- assert.match(restored,/ristorante\|trattoria\|osteria/);
- assert.match(restored,/pizze/);
+ assert.match(restored,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten"\]\["name"\]/,'broad named food venues must remain primary results');
+ assert.match(restored,/pizzascan-legacy-result-coverage/);
  assert.match(restored,/speciality.*pizza/i);
- assert.match(restored,/vending:pizza/);
- assert.match(restored,/around:10000,53\.67,10\.24/);
- assert.doesNotMatch(restored,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten"\]\["name"\]\(/,'must not request every named food venue');
+ assert.match(restored,/name.*pizza\|pizzeria\|pizzaria\|pizze/i);
+ assert.match(restored,/description.*pizza/i);
+ assert.match(restored,/cuisine.*italian\|italiano\|italiana/i);
+ assert.match(restored,/53\.60,10\.10,53\.80,10\.40/);
  assert.equal(B.expandDiscoveryQuery(base,false),base);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v9');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v10');
 });
 
 test('supplemental pizza discovery keeps primary ids and deduplicates supplements',()=>{
