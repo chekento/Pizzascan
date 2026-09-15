@@ -19,14 +19,46 @@ test('recovery query always includes all named food POIs before pizza enrichment
   assert.match(q,/amenity"="vending_machine/);
 });
 
-test('last-resort text search covers generic restaurants as well as pizza and Italian terminology',()=>{
+test('last-resort text and structured Photon search both cover generic restaurants',()=>{
   for(const term of ['restaurant','cafe','fast food','takeaway','bar','pub','biergarten','food court','pizzeria','pizza','italian restaurant','ristorante','trattoria','osteria','italienisches restaurant'])assert.ok(D.FALLBACK_TERMS.includes(term),term);
-  assert.ok(D.FALLBACK_TERMS.length>=18);
+  for(const tag of ['amenity:restaurant','amenity:fast_food','amenity:cafe','amenity:food_court','amenity:pub','amenity:bar','amenity:biergarten'])assert.ok(D.PHOTON_TAGS.includes(tag),tag);
+  assert.equal(D.PHOTON_LIMIT,50);
   assert.equal(D.SPARSE_BELOW,12);
   assert.equal(D.ADEQUATE_POIS,24);
   assert.equal(D.FALLBACK_TARGET,24);
-  assert.equal(D.MARKER,'pizzascan-poi-discovery-v8');
+  assert.equal(D.MARKER,'pizzascan-poi-discovery-v9');
   assert.match(D.RECOVERY_PROVIDERS[0],/maps\.mail\.ru/,'healthy global recovery mirror is attempted before the certificate-problematic backup seen in CI');
+});
+
+test('structured Photon request is tag-filtered and converts only nearby named food POIs',()=>{
+ const info=D.areaInfo('around:5000,53.6735,10.2377');
+ const url=new URL(D.photonNearbyUrl('amenity:restaurant',info.center));
+ assert.equal(url.origin,'https://photon.komoot.io');
+ assert.equal(url.pathname,'/reverse');
+ assert.equal(url.searchParams.get('osm_tag'),'amenity:restaurant');
+ assert.equal(url.searchParams.get('limit'),'50');
+ const data={features:[
+  {geometry:{coordinates:[10.238,53.674]},properties:{name:'Restaurant Nord',osm_type:'N',osm_id:1,osm_key:'amenity',osm_value:'restaurant',city:'Ahrensburg',countrycode:'DE'}},
+  {geometry:{coordinates:[10.239,53.675]},properties:{name:'Cafe Mitte',osm_type:'N',osm_id:2,osm_key:'amenity',osm_value:'cafe',city:'Ahrensburg',countrycode:'DE'}},
+  {geometry:{coordinates:[11.5,54.5]},properties:{name:'Zu weit weg',osm_type:'N',osm_id:3,osm_key:'amenity',osm_value:'restaurant'}},
+  {geometry:{coordinates:[10.238,53.674]},properties:{name:'Kein Gastro-POI',osm_type:'N',osm_id:4,osm_key:'shop',osm_value:'supermarket'}}
+ ]};
+ const out=D.photonFeatureElements(data,info);
+ assert.deepEqual(out.map(x=>x.id),[1,2]);
+ assert.equal(out[0].tags.amenity,'restaurant');
+ assert.equal(out[1].tags.amenity,'cafe');
+});
+
+test('structured Photon fallback merges categories until a useful broad result set exists',async()=>{
+ const info=D.areaInfo('around:5000,53.6735,10.2377'),calls=[];
+ const service={
+  read(){return null;},write(){return true;},
+  async json(url){calls.push(url);const tag=new URL(url).searchParams.get('osm_tag'),base=tag==='amenity:restaurant'?100:200;return {features:Array.from({length:20},(_,i)=>({geometry:{coordinates:[10.2377+(i%5)*.001,53.6735+Math.floor(i/5)*.001]},properties:{name:`${tag} ${i}`,osm_type:'N',osm_id:base+i,osm_key:'amenity',osm_value:tag.split(':')[1],city:'Ahrensburg',countrycode:'DE'}}))};}
+ };
+ const out=await D.structuredPhoton(service,info,{},[]);
+ assert.ok(out.length>=24,'structured tag recovery should not stop at the old one-to-three free-text result set');
+ assert.equal(new URL(calls[0]).searchParams.get('osm_tag'),'amenity:restaurant');
+ assert.ok(calls.length>=2,'a second food category is fetched when restaurants alone are still below the target');
 });
 
 test('area extraction supports radius and map bounds',()=>{
@@ -51,6 +83,7 @@ test('dense Overpass restaurant sets render immediately; thin or Photon sets get
   assert.equal(D.isSparse({data:{elements:generic},source:'overpass-api.de'}),false,'dense broad Overpass POIs must render immediately');
   assert.equal(D.isSparse({data:{elements:sparse},source:'overpass-api.de'}),true);
   assert.equal(D.isSparse({data:{elements:pizza},source:'overpass-api.de'}),false);
+  assert.equal(D.isSparse({data:{elements:Array.from({length:24},(_,i)=>({type:'node',id:500+i,tags:{name:'Restaurant '+i,amenity:'restaurant'}}))},source:'photon.komoot.io'}),false,'a broad structured Photon set is already sufficient');
   assert.equal(D.isSparse({data:{elements:pizza},source:'photon.komoot.io'}),true);
 });
 
