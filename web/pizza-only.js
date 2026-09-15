@@ -6,7 +6,7 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-pizza-only-v3';
+const MARKER='pizzascan-pizza-only-v4';
 const PIZZA_WORD=/(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizzas)(?:[^a-z]|$)/i;
 function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase();}
 function directPizza(place){
@@ -25,8 +25,13 @@ function currentLocationItem(item,query,helper){
   const states=new Set(item.searchStates||[]);
   return states.has('location')&&!!helper?.stateIntent?.(query)?.includes('location');
 }
+function geographicLocationItem(item){
+  /* Cities, addresses and GPS positions are navigation/search targets, not food venues.
+   * They must remain selectable even while every visible venue/marker stays pizza-only. */
+  return item?.kind==='location'&&!item?.place&&Number.isFinite(Number(item.lat))&&Number.isFinite(Number(item.lng));
+}
 function pizzaOnlyGroups(groups,query,helper,root=globalThis){
-  return (groups||[]).map(group=>(group||[]).filter(item=>currentLocationItem(item,query,helper)||eligible(item?.place||item,root)));
+  return (groups||[]).map(group=>(group||[]).filter(item=>geographicLocationItem(item)||currentLocationItem(item,query,helper)||eligible(item?.place||item,root)));
 }
 function asVenue(place){return {...place,kind:'venue',place,osmId:place.placeId};}
 function wrapPoiHelper(helper,root){
@@ -62,7 +67,7 @@ function installAutocompleteGuard(root,PD){
      * that contract ensures a pizza-only autocomplete result still opens details. */
     try{root.showSearchResults?.(list,true);}catch{}
     const status=root.document.getElementById('search-status');
-    if(status)status.textContent=list.length?`${list.length} Pizza-Ort${list.length===1?'':'e'} aus der geladenen Karte · „Suchen“ prüft weitere Pizza-Orte.`:'„Suchen“ prüft weitere Pizza-Orte in der Umgebung.';
+    if(status)status.textContent=list.length?`${list.length} Pizza-Ort${list.length===1?'':'e'} aus der geladenen Karte · „Suchen“ prüft weitere Pizza-Orte und Ortsziele.`:'„Suchen“ prüft weitere Pizza-Orte, Städte und Adressen.';
   },true);
 }
 function installUiPolicy(root){
@@ -116,5 +121,5 @@ function install(root){
   installUiPolicy(root);
   root.PizzaScanPizzaOnly={marker:MARKER,eligible:place=>eligible(place,root)};
 }
-return {MARKER,PIZZA_WORD,text,directPizza,reviewPizza,eligible,currentLocationItem,pizzaOnlyGroups,asVenue,wrapPoiHelper,installUiPolicy,install};
+return {MARKER,PIZZA_WORD,text,directPizza,reviewPizza,eligible,currentLocationItem,geographicLocationItem,pizzaOnlyGroups,asVenue,wrapPoiHelper,installUiPolicy,install};
 });
