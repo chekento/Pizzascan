@@ -189,7 +189,7 @@ function install(root){
     };
     wrapped.__websimFocused=true;wrapped.__websimFocusedInner=base;service.overpass=wrapped;
   }
-  if(PD.TYPES?.other)PD.TYPES.other={...PD.TYPES.other,emoji:'🍝',name:'Italiener / Pizza-Kandidat'};
+  if(PD.TYPES?.other)PD.TYPES.other={...PD.TYPES.other,emoji:'🇮🇹',name:'Italiener / Pizza-Kandidat'};
   if(PD.TYPES?.pizzeria)PD.TYPES.pizzeria={...PD.TYPES.pizzeria,emoji:'🍕',name:'Pizzeria / Pizza-Ort'};
   root.PizzaScanSmartDiscovery={marker:MARKER,mode:'websim-relevant-only',query:'websim-plus-hidden-review-candidates',focusedFallback:true,genericRestaurantsVisible:false,reviewEvidence:true,menuEvidence:true};
 }
