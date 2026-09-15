@@ -11,7 +11,7 @@ const helper={
 };
 const noReviews={PizzaRatingsUI:{summary:()=>({pizzaMentions:0})}};
 
-test('all map categories are allowed only when the place has pizza evidence',()=>{
+test('pizza evidence is classified without making it a visibility requirement',()=>{
  const allowed=[
   place(1,'pizzeria','Pizza Roma','pizza'),
   place(2,'cafe','Café Centro','pizza;coffee_shop'),
@@ -26,7 +26,7 @@ test('all map categories are allowed only when the place has pizza evidence',()=
   place(11,'fast_food','Döner Ecke','kebab'),
   place(12,'other','Ristorante Roma','italian'),
   place(13,'other','Restaurant Nord','german')
- ])assert.equal(O.directPizza(p),false,p.name+' must not become a PizzaScan map place');
+ ])assert.equal(O.directPizza(p),false,p.name+' must remain a non-pizza classification');
 });
 
 test('Italian identity alone is never treated as proof that pizza is sold',()=>{
@@ -36,50 +36,42 @@ test('Italian identity alone is never treated as proof that pizza is sold',()=>{
  assert.equal(O.directPizza(place(21,'other','Ristorante Roma','italian;pizza')),true);
 });
 
-test('open-review pizza evidence can promote a generic internal candidate without exposing others',()=>{
+test('open-review pizza evidence can enrich a generic restaurant without hiding other restaurants',()=>{
  const candidate=place(30,'cafe','Café Test','coffee_shop');
  const yesRoot={PizzaRatingsUI:{summary:p=>({pizzaMentions:p.placeId==='node-30'?2:0})}};
  assert.equal(O.eligible(candidate,yesRoot),true);
  assert.equal(O.eligible(candidate,noReviews),false);
 });
 
-test('pizza-specific search stays strict while preserving geographic navigation targets',()=>{
- const groups=[[
-  {kind:'venue',name:'Pizza Uno',place:place(1,'pizzeria','Pizza Uno','pizza')},
-  {kind:'venue',name:'Kaffeeküche',place:place(2,'cafe','Kaffeeküche','coffee_shop')},
-  {kind:'location',name:'Ahrensburg',address:'Schleswig-Holstein',lat:53.6759,lng:10.2393},
-  {kind:'location',name:'Dein Standort',lat:53.55,lng:10.0,searchStates:['location']}
- ]];
- const pizza=O.pizzaOnlyGroups(groups,'pizza',helper,noReviews)[0];
- assert.deepEqual(pizza.map(x=>x.name),['Pizza Uno','Ahrensburg','Dein Standort']);
- assert.equal(O.restrictSearchToPizza('Pizza',helper),true);
- assert.equal(O.geographicLocationItem({kind:'location',lat:53.6759,lng:10.2393}),true);
- assert.equal(O.geographicLocationItem({kind:'location',lat:'x',lng:10.2393}),false);
-});
-
-test('explicit restaurant/category/name searches restore generic food POIs from the 2.2 search behaviour',()=>{
+test('pizza enrichment never discards primary restaurant, location or saved results',()=>{
  const groups=[[
   {kind:'venue',name:'Pizza Uno',place:place(1,'pizzeria','Pizza Uno','pizza')},
   {kind:'venue',name:'Restaurant Nord',place:place(2,'other','Restaurant Nord','german',{amenity:'restaurant'})},
   {kind:'venue',name:'Kaffeeküche',place:place(3,'cafe','Kaffeeküche','coffee_shop',{amenity:'cafe'})},
-  {kind:'location',name:'Ahrensburg',address:'Schleswig-Holstein',lat:53.6759,lng:10.2393}
+  {kind:'location',name:'Ahrensburg',address:'Schleswig-Holstein',lat:53.6759,lng:10.2393},
+  {kind:'venue',name:'Generic Saved',searchStates:['saved'],place:place(4,'other','Generic Saved','german',{amenity:'restaurant'})}
  ]];
- for(const query of ['Restaurant','Restaurant Nord','Kaffeeküche','Café']){
+ for(const query of ['pizza','Restaurant','Restaurant Nord','Kaffeeküche','Café','gemerkt']){
   const results=O.pizzaOnlyGroups(groups,query,helper,noReviews)[0];
-  assert.deepEqual(results.map(x=>x.name),groups[0].map(x=>x.name),query+' must not discard generic food POIs');
-  assert.equal(O.restrictSearchToPizza(query,helper),false,query);
+  assert.deepEqual(results.map(x=>x.name),groups[0].map(x=>x.name),query+' must preserve the primary result set');
+  assert.equal(O.restrictSearchToPizza(query,helper),false,query+' must never activate a destructive filter');
  }
+ assert.equal(O.explicitPizzaSearch('Pizza',helper),true,'pizza intent detection remains available for additive discovery/ranking');
+ assert.equal(O.geographicLocationItem({kind:'location',lat:53.6759,lng:10.2393}),true);
+ assert.equal(O.geographicLocationItem({kind:'location',lat:'x',lng:10.2393}),false);
 });
 
-test('saved and visited state do not bypass pizza eligibility',()=>{
- const groups=[[
-  {kind:'venue',name:'Pizza Saved',searchStates:['saved'],place:place(1,'pizzeria','Pizza Saved','pizza')},
-  {kind:'venue',name:'Generic Saved',searchStates:['saved'],place:place(2,'cafe','Generic Saved','coffee_shop')}
- ]];
- const filtered=O.pizzaOnlyGroups(groups,'gemerkt',helper,noReviews)[0];
- assert.deepEqual(filtered.map(x=>x.name),['Pizza Saved']);
+test('installation leaves the normal restaurant filter and suggestions functions untouched',()=>{
+ const filter=()=>['restaurant-baseline'];
+ const suggestions=()=>['restaurant-suggestion'];
+ const root={PizzaPlaces:{filter,suggestions}};
+ O.install(root);
+ assert.equal(root.PizzaPlaces.filter,filter);
+ assert.equal(root.PizzaPlaces.suggestions,suggestions);
+ assert.equal(root.PizzaScanPizzaEnrichment.marker,O.MARKER);
+ assert.equal(root.PizzaScanPizzaOnly,root.PizzaScanPizzaEnrichment,'legacy diagnostics alias stays compatible');
 });
 
-test('pizza-only cache marker advances so installed clients drop stale search caches once',()=>{
- assert.equal(O.MARKER,'pizzascan-pizza-only-v5');
+test('pizza enrichment cache marker advances so installed clients drop stale restrictive caches once',()=>{
+ assert.equal(O.MARKER,'pizzascan-pizza-only-v6');
 });
