@@ -24,15 +24,26 @@
  function ensureFallbackFrame(){if(fallbackFrameReady)return fallbackFrameReady;fallbackFrameReady=new Promise((resolve,reject)=>{fallbackFrame=document.createElement('iframe');fallbackFrame.hidden=true;fallbackFrame.setAttribute('aria-hidden','true');fallbackFrame.tabIndex=-1;fallbackFrame.src='geocoder-proxy.html';const timer=setTimeout(()=>reject(Error('Fallback-Ortsdienst konnte nicht vorbereitet werden')),5000);fallbackFrame.onload=()=>{clearTimeout(timer);resolve(fallbackFrame.contentWindow);};fallbackFrame.onerror=()=>{clearTimeout(timer);reject(Error('Fallback-Ortsdienst konnte nicht geladen werden'));};document.body.appendChild(fallbackFrame);});return fallbackFrameReady;}
  function fallbackRequest(query,center,signal){const key='pizzascan-search-fallback-v1-'+PlaceData.text(query)+'|'+center.lat.toFixed(2)+'|'+center.lng.toFixed(2),stored=placeService.read(key);if(stored&&Date.now()-stored.time<86400000&&Array.isArray(stored.items))return Promise.resolve(stored.items);return ensureFallbackFrame().then(target=>new Promise((resolve,reject)=>{if(signal?.aborted)return reject(new DOMException('Abgebrochen','AbortError'));const id='geo-'+Date.now()+'-'+(++fallbackSequence),timer=setTimeout(()=>{fallbackPending.delete(id);reject(Error('Fallback-Ortssuche hat zu lange gedauert'));},18000);const abort=()=>{clearTimeout(timer);fallbackPending.delete(id);reject(new DOMException('Abgebrochen','AbortError'));};signal?.addEventListener('abort',abort,{once:true});fallbackPending.set(id,{resolve:rows=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);try{const items=fallbackItems(rows);placeService.write(key,{time:Date.now(),items});resolve(items);}catch(error){reject(error);}},reject:error=>{clearTimeout(timer);signal?.removeEventListener('abort',abort);reject(error);}});target.postMessage({type:'pizzascan-geocode',id,query,language:(document.documentElement.lang||'de').slice(0,2)},location.origin);}));}
  function installFallback(){addEventListener('message',event=>{if(event.origin!==location.origin||!fallbackFrame||event.source!==fallbackFrame.contentWindow)return;const message=event.data||{};if(message.type!=='pizzascan-geocode-result')return;const pending=fallbackPending.get(message.id);if(!pending)return;fallbackPending.delete(message.id);message.ok?pending.resolve(message.data):pending.reject(Error(message.error||'Fallback-Suche fehlgeschlagen'));});const originalPhoton=placeService.photon.bind(placeService);placeService.photon=async function(query,center,options={}){const token=fallbackNext&&fallbackNext.query===query&&Date.now()-fallbackNext.time<6000?fallbackNext:null;if(token)fallbackNext=null;try{const items=await originalPhoton(query,center,options);if(token&&!options.signal?.aborted&&Array.isArray(items)&&items.length===0){const status=byId('search-status');if(status)status.textContent='Primäre Ortssuche ohne Treffer · alternative OpenStreetMap-Suche läuft …';return fallbackRequest(query,center,options.signal);}return items;}catch(error){if(!token||options.signal?.aborted)throw error;const status=byId('search-status');if(status)status.textContent='Primäre Ortssuche nicht erreichbar · alternative OpenStreetMap-Suche läuft …';return fallbackRequest(query,center,options.signal);}};}
+ async function firstPoiResponse(endpoints,overpass,signal){
+  let lastError=null;
+  const attempts=endpoints.map(async endpoint=>{
+   if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+   try{
+    const data=await placeService.json(endpoint,{method:'POST',body:new URLSearchParams({data:overpass})},signal,7000);
+    if(!Array.isArray(data?.elements)||data.remark)throw Error(data?.remark||'Unvollständige POI-Antwort');
+    return {endpoint,data};
+   }catch(error){lastError=error;throw error;}
+  });
+  try{return await Promise.any(attempts);}
+  catch(error){if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');throw lastError||error;}
+ }
  async function directPoiSearch(query,center,signal,helper){
   const cfg=typeof mapConfig==='function'?mapConfig():{radius:10};
   const overpass=helper.buildQuery(query,center,cfg.radius||10);if(!overpass)return [];
   let lastError=null;
-  for(const endpoint of POI_ENDPOINTS){
-   if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+  for(const endpoints of [POI_ENDPOINTS.slice(0,2),POI_ENDPOINTS.slice(2)]){
    try{
-    const data=await placeService.json(endpoint,{method:'POST',body:new URLSearchParams({data:overpass})},signal,10000);
-    if(!Array.isArray(data?.elements)||data.remark)throw Error(data?.remark||'Unvollständige POI-Antwort');
+    const {endpoint,data}=await firstPoiResponse(endpoints,overpass,signal);
     return PlaceData.fromOverpass(data.elements,{allowNamed:true}).map(p=>({...p,kind:'venue',place:p,osmId:p.placeId,poiSource:new URL(endpoint).hostname}));
    }catch(error){lastError=error;if(signal?.aborted)throw error;}
   }
