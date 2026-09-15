@@ -46,6 +46,10 @@ function plausibleFoodObject(tags={}){
   if(FOOD_AMENITIES.has(amenity)||amenity==='vending_machine'||FOOD_SHOPS.has(shop)||isPizzaVending(tags))return true;
   if(amenity)return false;
   if(shop&&!FOOD_SHOPS.has(shop))return false;
+  /* Untyped OSM objects are allowed only when they are not explicitly classified
+   * as another kind of POI. A hotel, attraction, office, station etc. must not become
+   * a PizzaScan result merely because a note or description mentions pizza. */
+  if(tags.tourism||tags.leisure||tags.healthcare||tags.office||tags.aeroway||tags.railway||tags.public_transport||tags.historic)return false;
   return true;
 }
 
