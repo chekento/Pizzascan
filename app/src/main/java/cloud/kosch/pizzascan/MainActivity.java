@@ -54,6 +54,7 @@ public class MainActivity extends Activity {
     static final String START_URL = ORIGIN + "/assets/index.html";
     private static final int LOCATION = 41, PICK_FILE = 42, SAVE_FILE = 43;
     private static final int MAX_OVERPASS_BYTES = 8 * 1024 * 1024;
+    private static final int MAX_OVERPASS_TIMEOUT_MS = 30000;
     private WebView web;
     private PersistentModelStore modelStore;
     private ValueCallback<Uri[]> fileCallback;
@@ -213,7 +214,7 @@ public class MainActivity extends Activity {
     private static String fetchOverpass(String endpoint, String query, int requestedTimeout) throws Exception {
         if (!isAllowedOverpass(endpoint)) throw new SecurityException("Overpass endpoint not allowed");
         if (query == null || query.isEmpty() || query.length() > 120000) throw new IllegalArgumentException("Invalid Overpass query");
-        int timeout = Math.max(5000, Math.min(14000, requestedTimeout));
+        int timeout = Math.max(5000, Math.min(MAX_OVERPASS_TIMEOUT_MS, requestedTimeout));
         HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
         try {
             connection.setRequestMethod("POST");
@@ -298,7 +299,7 @@ public class MainActivity extends Activity {
                 case "overpass": {
                     String endpoint = request.optString("endpoint");
                     String query = request.optString("query");
-                    int timeout = request.optInt("timeout", 12000);
+                    int timeout = request.optInt("timeout", 22000);
                     if (!isAllowedOverpass(endpoint) || query.isEmpty()) throw new SecurityException("Invalid Overpass request");
                     new Thread(() -> {
                         try {
@@ -319,64 +320,56 @@ public class MainActivity extends Activity {
                 default: throw new IllegalArgumentException("Unbekannte Android-Aktion");
             }
             reply(request, "ok", null);
-        } catch (Exception e) { reply(request, "", ui(R.string.action_error) + ": " + e.getClass().getSimpleName()); }
+        } catch (Exception e) { reply(request, "", ui(R.string.action_error)); }
     }
+
     private void openExternal(Uri uri) {
-        String scheme = uri.getScheme();
-        if (!("https".equals(scheme) || "http".equals(scheme) || "tel".equals(scheme) || "geo".equals(scheme))) return;
-        if (("https".equals(scheme) || "http".equals(scheme)) && (uri.getHost() == null || isLocal(uri))) return;
-        try { startActivity(new Intent("tel".equals(scheme) ? Intent.ACTION_DIAL : Intent.ACTION_VIEW, uri)); }
-        catch (Exception e) { toast(ui(R.string.no_link_app)); }
+        if (uri == null || !"https".equals(uri.getScheme())) return;
+        try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
+        catch (Exception e) { toast(ui(R.string.no_browser)); }
     }
-    @Override protected void onActivityResult(int request, int result, Intent data) {
-        super.onActivityResult(request, result, data);
-        if (request == PICK_FILE && fileCallback != null) {
-            Uri[] uris = null;
-            if (result == RESULT_OK) {
-                if (data != null && data.getData() != null) uris = new Uri[]{data.getData()};
-                else if (captureUri != null && captureFile != null && captureFile.length() > 0) uris = new Uri[]{captureUri};
-            }
-            fileCallback.onReceiveValue(uris);
-            fileCallback = null;
-            captureUri = null;
-        }
-        if (request == SAVE_FILE) {
-            String text = pendingExport;
-            pendingExport = null;
-            if (result == RESULT_OK && data != null && data.getData() != null && text != null) {
-                Uri uri = data.getData();
-                new Thread(() -> {
-                    try (OutputStream output = getContentResolver().openOutputStream(uri, "wt")) {
-                        if (output == null) throw new java.io.IOException("No output stream");
-                        output.write(text.getBytes(StandardCharsets.UTF_8));
-                        toast(ui(R.string.export_saved));
-                    } catch (Exception e) { toast(ui(R.string.export_error)); }
-                }, "pizzascan-export").start();
-            }
-        }
-    }
-    private void handleBack() {
-        web.evaluateJavascript("window.PizzaScan ? window.PizzaScan.back() : false", consumed -> {
-            if (!"true".equals(consumed)) new AlertDialog.Builder(this)
-                    .setTitle(ui(R.string.exit_title)).setMessage(ui(R.string.exit_message))
-                    .setPositiveButton(ui(R.string.exit_close), (d, w) -> finish()).setNegativeButton(ui(R.string.exit_stay), null).show();
-        });
-    }
-    @SuppressWarnings("deprecation") @Override public void onBackPressed() { handleBack(); }
-    private String ui(int resource) {
-        Configuration config = new Configuration(getResources().getConfiguration());
-        config.setLocale(Locale.forLanguageTag(appLanguage.matches("de|en|it|es|fr") ? appLanguage : "de"));
-        return createConfigurationContext(config).getString(resource);
+    private String ui(int id) {
+        try {
+            Locale locale = Locale.forLanguageTag(appLanguage == null ? "" : appLanguage);
+            if (locale.getLanguage().isEmpty()) locale = Locale.getDefault();
+            Configuration configuration = new Configuration(getResources().getConfiguration());
+            configuration.setLocale(locale);
+            return createConfigurationContext(configuration).getResources().getString(id);
+        } catch (Exception ignored) { return getString(id); }
     }
     private void toast(String text) { runOnUiThread(() -> Toast.makeText(this, text, Toast.LENGTH_LONG).show()); }
-    @Override protected void onPause() { web.onPause(); super.onPause(); }
-    @Override protected void onResume() { super.onResume(); if (web != null) web.onResume(); }
+
+    @Override public void onBackPressed() { handleBack(); }
+    private void handleBack() {
+        web.evaluateJavascript("window.PizzaScan?.back?.() === true", value -> {
+            if (!"true".equals(value)) runOnUiThread(() -> {
+                if (web.canGoBack()) web.goBack(); else finish();
+            });
+        });
+    }
+    @Override protected void onActivityResult(int code, int result, Intent data) {
+        super.onActivityResult(code, result, data);
+        if (code == PICK_FILE) {
+            if (fileCallback != null) {
+                Uri uri = result == RESULT_OK && data != null ? data.getData() : null;
+                if (uri == null && result == RESULT_OK && captureUri != null) uri = captureUri;
+                fileCallback.onReceiveValue(uri == null ? null : new Uri[]{uri}); fileCallback = null;
+            }
+            if (captureFile != null && (captureUri == null || result != RESULT_OK)) captureFile.delete();
+            captureUri = null; captureFile = null;
+        } else if (code == SAVE_FILE) {
+            if (result == RESULT_OK && data != null && pendingExport != null) {
+                try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
+                    out.write(pendingExport.getBytes(StandardCharsets.UTF_8)); toast(ui(R.string.export_saved));
+                } catch (Exception e) { toast(ui(R.string.export_failed)); }
+            }
+            pendingExport = null;
+        }
+    }
+
     @Override protected void onDestroy() {
-        if (fileCallback != null) fileCallback.onReceiveValue(null);
-        if (geoCallback != null) geoCallback.invoke(geoOrigin, false, false);
-        web.stopLoading();
-        web.destroy();
+        if (geoCallback != null) { geoCallback.invoke(geoOrigin, false, false); geoCallback = null; }
+        if (web != null) { web.stopLoading(); web.loadUrl("about:blank"); web.removeAllViews(); web.destroy(); }
         super.onDestroy();
     }
-    WebView webViewForTest() { return web; }
 }
