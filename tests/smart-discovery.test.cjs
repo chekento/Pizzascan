@@ -1,190 +1,95 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const S=require('../web/smart-discovery.js');
-
 const el=(id,tags)=>({type:'node',id,lat:53.67,lon:10.24,tags});
 
-test('WebSim pizza and Italian families remain the primary baseline',()=>{
- const baseline=[
+test('original ZIP selector families are reproduced exactly',()=>{
+ const yes=[
   {cuisine:'pizza'},
   {amenity:'restaurant',cuisine:'italian'},
-  {amenity:'restaurant',cuisine:'pizza;italian'},
-  {amenity:'restaurant',name:'Ristorante Roma'},
-  {amenity:'restaurant',name:'Trattoria Bella'},
-  {amenity:'restaurant',name:'Osteria Uno'},
-  {amenity:'cafe',cuisine:'pizza'},
-  {amenity:'fast_food',cuisine:'italian'},
-  {amenity:'food_truck',cuisine:'pizza'},
+  {amenity:'restaurant',cuisine:'pizzeria'},
+  {vending:'pizza'},
+  {'vending:pizza':'yes'},
+  {amenity:'cafe',cuisine:'italian'},
+  {amenity:'fast_food',cuisine:'pizza'},
+  {amenity:'food_truck',cuisine:'italian'},
+  {speciality:'Neapolitan pizza'},
   {amenity:'bar',cuisine:'pizza'},
-  {amenity:'pub',name:'Pizza Pub',cuisine:'pizza'},
-  {amenity:'takeaway',cuisine:'pizza'},
-  {shop:'bakery',name:'Italian Bakeshop'},
-  {shop:'deli',product:'pizza'},
-  {speciality:'pizza'},
-  {name:'Pizza Max'},
-  {description:'Hausgemachte Pizza aus dem Steinofen'},
-  {amenity:'vending_machine',vending:'pizza'}
+  {amenity:'pub',cuisine:'italian'},
+  {name:'Pizze e Pasta'},
+  {description:'Stone-baked pizza'},
+  {amenity:'takeaway',cuisine:'italian'}
  ];
- assert.ok(baseline.every(S.websimBaselineTags));
+ for(const tags of yes)assert.equal(S.originalWebsimTags(tags),true,JSON.stringify(tags));
 });
 
-test('ordinary restaurants are hidden without pizza or Italian evidence',()=>{
+test('ordinary restaurants are not ambient ZIP hits',()=>{
  for(const tags of [
-  {amenity:'restaurant',name:'Restaurant Nord'},
-  {amenity:'restaurant',name:'Gasthaus Mitte',cuisine:'german'},
   {amenity:'restaurant',name:'BLOCK HOUSE',cuisine:'steak'},
   {amenity:'restaurant',name:'New Long',cuisine:'chinese'},
-  {amenity:'fast_food',name:'Snack Point'},
-  {amenity:'takeaway',name:'Takeaway Central'}
- ])assert.equal(S.eligibleElement(el(1,tags)),false,JSON.stringify(tags));
+  {amenity:'restaurant',name:'Restaurant Nord'},
+  {amenity:'restaurant',name:'Trattoria Roma'},
+  {amenity:'restaurant',name:'Ristorante Uno'}
+ ])assert.equal(S.originalWebsimTags(tags),false,JSON.stringify(tags));
 });
 
-test('normal restaurants may enter through real menu or description evidence',()=>{
- const evidence=[
-  {amenity:'restaurant',name:'Restaurant Nord',menu:'Pizza Margherita; Pasta'},
-  {amenity:'restaurant',name:'Gasthaus Mitte',description:'Freitags Steinofen-Pizza'},
-  {amenity:'restaurant',name:'Asia Haus',menu:'Pizza Hawaii; Pizza Funghi'}
- ];
- for(const tags of evidence)assert.equal(S.eligibleElement(el(2,tags)),true,JSON.stringify(tags));
- assert.equal(S.pizzaMenuEvidence({'website:menu':'https://example.test/pizza-menu'}),false);
- assert.equal(S.pizzaText({website:'https://pizza.example.test'}),false);
+test('menu and review evidence remain additive without changing original baseline',()=>{
+ const generic={amenity:'restaurant',name:'Restaurant Nord'};
+ assert.equal(S.originalWebsimTags(generic),false);
+ assert.equal(S.deepEvidenceTags({...generic,menu:'Pasta; Pizza Margherita'}),true);
+ const place={name:'Restaurant Nord',tags:generic};
+ assert.equal(S.placeRelevant(place,{summary:()=>({pizzaMentions:1})}),true);
 });
 
-test('review evidence can reveal a hidden generic restaurant',()=>{
- const p={name:'Restaurant Nord',type:'other',pizzaEvidence:'search',tags:{amenity:'restaurant',name:'Restaurant Nord'}};
- const yes={summary:()=>({pizzaMentions:2})},no={summary:()=>({pizzaMentions:0})};
- assert.equal(S.placeRelevant(p,no),false);
- assert.equal(S.placeRelevant(p,yes),true);
+test('query matches uploaded ZIP families and 60-second timeout',()=>{
+ const q=S.websimQuery({lat:53.67,lng:10.24},5,{south:53.62,west:10.17,north:53.72,east:10.31});
+ assert.match(q,/timeout:60/);
+ assert.match(q,/pizzascan-original-zip-search-v1/);
+ assert.match(q,/node\["cuisine"="pizza"\]\(53\.62,10\.17,53\.72,10\.31\)/);
+ assert.match(q,/amenity"="restaurant"\]\["cuisine"="italian"/);
+ assert.match(q,/amenity"="restaurant"\]\["cuisine"~"pizza\|pizzeria"/);
+ assert.match(q,/amenity"="cafe"\]\["cuisine"~"pizza\|italian"/);
+ assert.match(q,/amenity"="fast_food"\]\["cuisine"~"pizza\|italian"/);
+ assert.match(q,/amenity"="food_truck"\]\["cuisine"~"pizza\|italian"/);
+ assert.match(q,/speciality"~"pizza",i/);
+ assert.match(q,/amenity"~"bar\|pub"\]\["cuisine"~"pizza\|italian"/);
+ assert.match(q,/name"~"pizza\|pizzeria\|pizze",i/);
+ assert.match(q,/description"~"pizza",i/);
+ assert.match(q,/amenity"="takeaway"\]\["cuisine"~"pizza\|italian"/);
+ assert.doesNotMatch(q,/trattoria|osteria|ristorante|every named restaurant/i);
 });
 
-test('non-food POIs do not enter merely because their text contains pizza',()=>{
- assert.equal(S.eligibleElement(el(3,{amenity:'school',description:'Pizza day on Friday'})),false);
- assert.equal(S.eligibleElement(el(4,{tourism:'hotel',note:'Pizza nearby'})),false);
+test('current viewport bbox wins over synthetic radius like the original ZIP',()=>{
+ assert.equal(S.area({lat:53.67,lng:10.24},5,{south:1,west:2,north:3,east:4}),'1,2,3,4');
 });
 
-test('marker category distinguishes Italian candidates from actual pizza places',()=>{
- const place=(amenity,tags={})=>({name:'Test',type:'other',pizzaEvidence:'confirmed',tags:{amenity,cuisine:'pizza',...tags}});
- assert.equal(S.classifyPlace(place('restaurant')),'pizzeria');
- assert.equal(S.classifyPlace(place('cafe')),'cafe');
- assert.equal(S.classifyPlace(place('fast_food')),'fast_food');
- assert.equal(S.classifyPlace(place('takeaway')),'fast_food');
- assert.equal(S.classifyPlace(place('food_truck')),'food_truck');
- assert.equal(S.classifyPlace(place('bar')),'pizzeria');
- assert.equal(S.classifyPlace({name:'Ristorante Roma',tags:{amenity:'restaurant',cuisine:'italian'}}),'other');
- assert.equal(S.classifyPlace({name:'Box',tags:{amenity:'vending_machine',vending:'pizza'}}),'vending_pizza');
-});
-
-test('WebSim query restores the original families without listing every restaurant',()=>{
- const q=S.websimQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
- assert.match(q,/pizzascan-websim-search-v9/);
- assert.match(q,/cuisine\"~\"pizza\|pizzeria/);
- assert.match(q,/amenity\"=\"restaurant\"\]\[\"cuisine\"~\"italian\|italiano\|italiana/);
- assert.match(q,/ristorante\|trattoria\|osteria/);
- assert.match(q,/bar\|pub\|biergarten/);
- assert.match(q,/shop\"~\"bakery\|deli/);
- assert.match(q,/menu\"~\"pizza/);
- assert.match(q,/description\"~\"pizza/);
- assert.match(q,/vending:pizza\"=\"yes/);
- assert.doesNotMatch(q,/amenity\"=\"restaurant\"\]\[\"name\"\]\(around:/,'primary WebSim query must not fetch every named restaurant');
- assert.equal(S.isWebsimDiscoveryQuery(q),true);
-});
-
-test('focused fallback preserves semantic Italian candidates when Photon omits cuisine metadata',async()=>{
+test('ambient fallback uses original query on fixed Overpass mirrors, never Photon inference',async()=>{
  const calls=[];
- const item=(id,name,tags={})=>({place:{placeId:'node-'+id,name,lat:53.675,lng:10.24,tags:{amenity:'restaurant',name,...tags}}});
- const service={async photon(term){
-  calls.push(term);
-  if(term==='pizzeria')return [item(1,'Pizza Max')];
-  if(term==='italian restaurant')return [item(2,'Casa Verde')];
-  if(term==='ristorante')return [item(3,'Da Franco')];
-  if(term==='trattoria')return [item(4,'Trattoria Roma')];
-  if(term==='osteria')return [item(5,'Osteria Uno')];
-  return [];
- }};
- const q=S.websimQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
- const out=await S.focusedRecovery(service,q,{},[]);
- assert.ok(calls.includes('italian restaurant'));
- assert.ok(calls.includes('ristorante'));
- assert.ok(calls.includes('trattoria'));
- const casa=out.find(x=>x.tags.name==='Casa Verde');
- assert.ok(casa,'neutral-name Italian search result must survive as a candidate');
- assert.equal(casa.tags[S.SEARCH_FAMILY],'italian');
- assert.equal(S.directPizzaEvidence(casa.tags),false,'semantic candidate is not fabricated as confirmed pizza evidence');
- assert.equal(S.italianEvidence(casa.tags),false,'semantic candidate does not fabricate cuisine=italian');
- assert.equal(S.italianCandidate({name:casa.tags.name,tags:casa.tags}),true);
- assert.ok(S.relevantCount(out)>=5);
+ const service={async json(endpoint,options){calls.push({endpoint,query:options.body.get('data')});if(endpoint.includes('osm.jp'))return {elements:[el(1,{amenity:'restaurant',cuisine:'italian',name:'Da Franco'})]};throw Error('offline');}};
+ const q=S.websimQuery({lat:53.67,lng:10.24},5,{south:53.62,west:10.17,north:53.72,east:10.31});
+ const out=await S.firstOriginalProvider(service,q,{});
+ assert.equal(out.data.elements.length,1);
+ assert.equal(out.data.elements[0].tags.name,'Da Franco');
+ assert.equal(calls.length,4);
+ assert.ok(calls.every(x=>x.query.includes(S.QUERY_MARKER)));
 });
 
-test('semantic fallback rejects obvious cuisine contradictions',()=>{
- const candidates=[
-  S.focusedElement({place:{placeId:'node-21',name:'New Long',lat:53.67,lng:10.24,tags:{amenity:'restaurant',name:'New Long',cuisine:'chinese'}}},'italian restaurant'),
-  S.focusedElement({place:{placeId:'node-22',name:'Bangkok',lat:53.67,lng:10.24,tags:{amenity:'restaurant',name:'Bangkok'}}},'ristorante'),
-  S.focusedElement({place:{placeId:'node-23',name:'BLOCK HOUSE',lat:53.67,lng:10.24,tags:{amenity:'restaurant',name:'BLOCK HOUSE',cuisine:'steak'}}},'italienisches restaurant'),
-  S.focusedElement({place:{placeId:'node-24',name:'PokeBowl Sushi House',lat:53.67,lng:10.24,tags:{amenity:'restaurant',name:'PokeBowl Sushi House'}}},'trattoria')
- ];
- assert.deepEqual(candidates,[null,null,null,null]);
-});
-
-test('focused fallback terms cover requested WebSim venue vocabulary',()=>{
- for(const term of ['pizzeria','pizza','italian restaurant','italienisches restaurant','ristorante','trattoria','osteria','pizza cafe','pizza takeaway','pizza pub','pizza bar','pizza bakery','pizza bakeshop','pizza food truck','pizza vending'])assert.ok(S.FOCUSED_TERMS.includes(term),term);
- assert.equal(S.FOCUSED_TARGET,8);
-});
-
-test('precise provider recovery filters ordinary restaurants but keeps Italian cuisine',async()=>{
- const service={async json(){return {elements:[el(61,{amenity:'restaurant',name:'BLOCK HOUSE',cuisine:'steak'}),el(62,{amenity:'restaurant',name:'Da Franco',cuisine:'italian'}),el(63,{amenity:'restaurant',name:'Pizza Uno',cuisine:'pizza'})]};}};
- const q=S.websimQuery({lat:53.67,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
- const out=await S.preciseProviderRecovery(service,q,{},[]);
- assert.ok(out.elements.some(x=>x.tags.name==='Da Franco'));
- assert.ok(out.elements.some(x=>x.tags.name==='Pizza Uno'));
- assert.ok(!out.elements.some(x=>x.tags.name==='BLOCK HOUSE'));
-});
-
-test('install patches Service.prototype so the later-created app service really gets focused recovery',async()=>{
- class Service{
-  async overpass(){return {data:{elements:[el(50,{amenity:'restaurant',name:'Restaurant Nord'})]},source:'base'};}
-  async photon(term){if(term==='italian restaurant')return [{place:{placeId:'node-51',name:'Casa Verde',lat:53.67,lng:10.24,tags:{amenity:'restaurant',name:'Casa Verde'}}}];return [];}
- }
- const PD={Service,TYPES:{pizzeria:{emoji:'🍕',name:'Pizzeria'},other:{emoji:'🍽️',name:'Weitere Orte'}},query(){return 'old';},filter(list){return list;}};
+test('install replaces broad discovery with original ZIP query and hides generic pool',()=>{
+ class Service{async overpass(){return {data:{elements:[]},source:'base'};}async nearbyFallback(){return [el(9,{amenity:'restaurant',name:'Generic'})];}async json(){return {elements:[el(10,{amenity:'restaurant',cuisine:'italian',name:'Da Franco'})]};}}
+ const PD={Service,TYPES:{pizzeria:{emoji:'🍕'},other:{emoji:'🍽️'}},query(){return 'broad';},filter(list){return list;}};
  const root={PizzaPlaces:PD,PizzaRatingsUI:{summary:()=>({pizzaMentions:0})},localStorage:null};
  S.install(root);
- const service=new Service();
- const q=PD.query({lat:53.67,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
- const result=await service.overpass(q);
- const hit=result.data.elements.find(x=>x.tags?.name==='Casa Verde');
- assert.ok(hit);
- assert.equal(hit.tags[S.SEARCH_FAMILY],'italian');
- assert.equal(service.overpass.__websimFocused,true);
-});
-
-test('legacy generic Photon fallback is bypassed before a future Service instance is created',()=>{
- class Service{async overpass(){return {data:{elements:[]},source:'base'};}async nearbyFallback(){return [el(70,{amenity:'fast_food',name:'Burger Only'})];}}
- const PD={Service,TYPES:{pizzeria:{emoji:'🍕'},other:{emoji:'🍽️'}},query(){return 'old';},filter(list){return list;}};
- S.install({PizzaPlaces:PD,PizzaRatingsUI:{summary:()=>({pizzaMentions:0})},localStorage:null});
+ const q=PD.query({lat:53.67,lng:10.24},5,{south:53.62,west:10.17,north:53.72,east:10.31});
+ assert.ok(q.includes(S.QUERY_MARKER));
+ const visible=PD.filter([
+  {name:'Da Franco',tags:{amenity:'restaurant',cuisine:'italian'}},
+  {name:'BLOCK HOUSE',tags:{amenity:'restaurant',cuisine:'steak'}}
+ ],{},null,()=>({state:'unknown'}));
+ assert.deepEqual(visible.map(x=>x.name),['Da Franco']);
  assert.equal(Service.prototype.nearbyFallback.__websimBypass,true);
+ assert.equal(root.PizzaScanSmartDiscovery.mode,'original-zip-exact');
 });
 
-test('installed map filter hides generic candidate pool and exposes relevant semantic/review candidates',()=>{
- const pizza={name:'Pizza Max',type:'pizzeria',pizzaEvidence:'confirmed',tags:{amenity:'restaurant',name:'Pizza Max',cuisine:'pizza'}};
- const neutral={name:'Restaurant Nord',type:'other',pizzaEvidence:'search',tags:{amenity:'restaurant',name:'Restaurant Nord'}};
- const semantic={name:'Casa Verde',type:'other',pizzaEvidence:'search',tags:{amenity:'restaurant',name:'Casa Verde',[S.SEARCH_FAMILY]:'italian'}};
- const reviewed={name:'Restaurant Review',type:'other',pizzaEvidence:'search',tags:{amenity:'restaurant',name:'Restaurant Review'}};
- const PD={TYPES:{pizzeria:{emoji:'🍕',name:'Pizzeria'},other:{emoji:'🍽️',name:'Weitere Orte'}},query(){return 'old';},filter(list){return list;}};
- const ratings={summary:p=>({pizzaMentions:p.name==='Restaurant Review'?1:0})};
- const root={PizzaPlaces:PD,PizzaRatingsUI:ratings,localStorage:null};
- S.install(root);
- const visible=PD.filter([pizza,neutral,semantic,reviewed],{},null,()=>({state:'unknown'}));
- assert.deepEqual(visible.map(p=>p.name),['Pizza Max','Casa Verde','Restaurant Review']);
- assert.equal(PD.TYPES.other.emoji,'🍝');
- assert.equal(PD.TYPES.pizzeria.emoji,'🍕');
-});
-
-test('Google review evidence only counts actual review text',()=>{
- const pizzaText={querySelectorAll:()=>[{textContent:'Great pizza and friendly staff'}]};
- const noPizza={querySelectorAll:()=>[{textContent:'Great coffee and cake'}]};
- assert.equal(S.googleReviewHasPizza(pizzaText),true);
- assert.equal(S.googleReviewHasPizza(noPizza),false);
-});
-
-test('relevance cache marker advances for installed clients',()=>{
- assert.equal(S.MARKER,'pizzascan-smart-discovery-v9');
+test('cache marker advances so installed builds discard stale restrictive results',()=>{
+ assert.equal(S.MARKER,'pizzascan-smart-discovery-v10');
 });
