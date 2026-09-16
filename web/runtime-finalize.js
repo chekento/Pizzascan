@@ -10,6 +10,7 @@ let installed=false;
 
 function request(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('PizzaScan-Speicherzugriff fehlgeschlagen.'));});}
 function all(db,store){return request(db.transaction(store,'readonly').objectStore(store).getAll());}
+function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 
 async function loadAllHistory(){
   const runtime=root.PizzaPlaceHistoryRuntime;
@@ -19,8 +20,8 @@ async function loadAllHistory(){
   for(const row of visits||[])if(row?.placeId)runtime.visitedIds?.add(row.placeId);
   const visitPlaces=(visits||[]).map(row=>row?.place).filter(Boolean);
   mapPool=PlaceData.merge(mapPool,PlaceData.merge(cached||[],visitPlaces));
-  if(typeof refreshArea==='function')refreshArea();
-  if(typeof renderPlaces==='function')renderPlaces();
+  if(typeof map!=='undefined'&&map&&typeof refreshArea==='function')refreshArea();
+  if(typeof map!=='undefined'&&map&&typeof renderPlaces==='function')renderPlaces();
   return {places:(cached||[]).length,visits:(visits||[]).length};
 }
 
@@ -69,22 +70,33 @@ function installCompleteProviderUnion(){
   return true;
 }
 
+async function waitForMap(maxMs=10000){
+  const started=Date.now();
+  while(Date.now()-started<maxMs){
+    if(typeof map!=='undefined'&&map&&typeof loadPlaces==='function')return true;
+    await delay(50);
+  }
+  return false;
+}
+
 async function finalize(){
   if(installed)return;installed=true;
   try{
     installCompleteProviderUnion();
     const restored=await loadAllHistory();
     try{await navigator.storage?.persist?.();}catch{}
-    /* The Build 37 initial request may already be running with the old 3.5 s
-       return path. Cancel it only after the persistent cache is restored, then
-       immediately replace it with the complete all-provider union. */
-    try{if(typeof mapRequest!=='undefined'&&mapRequest?.abort)mapRequest.abort();}catch{}
-    if(typeof loadPlaces==='function'&&typeof map!=='undefined'&&map){
+    const mapReady=await waitForMap();
+    if(mapReady){
+      /* The Build 37 initial request may already be running with the old 3.5 s
+         return path. Cancel it only after the persistent cache is restored, then
+         immediately replace it with the complete all-provider union. */
+      try{if(typeof mapRequest!=='undefined'&&mapRequest?.abort)mapRequest.abort();}catch{}
+      if(typeof refreshArea==='function')refreshArea();
       const status=document.getElementById('map-status');
       if(status)status.textContent=`${restored.places} gespeicherte Orte geladen · vollständige Suche läuft …`;
       setTimeout(()=>loadPlaces({force:true}),0);
     }
-    root.PizzaBuild38Runtime={installed:true,restored,completeProviderUnion:true,noResultCap:true,persistentHistory:true};
+    root.PizzaBuild38Runtime={installed:true,restored,mapReady,completeProviderUnion:true,noResultCap:true,persistentHistory:true};
   }catch(error){
     console.warn('PizzaScan Build 38 finalization failed',error);
     root.PizzaBuild38Runtime={installed:false,error:String(error?.message||error)};
