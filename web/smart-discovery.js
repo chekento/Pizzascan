@@ -10,7 +10,7 @@
 })(globalThis,function(){
 'use strict';
 
-const MARKER='pizzascan-smart-discovery-v7';
+const MARKER='pizzascan-smart-discovery-v8';
 const PIZZA=/(?:^|[^a-z])(pizza|pizzeria|pizzaria|pizzerie|pizze|pizzas|pizzaplace|pizza[ _-]?place)(?:[^a-z]|$)/i;
 const ITALIAN=/(?:^|[^a-z])(italian|italiano|italiana|italia|ristorante|trattoria|osteria|italiener|italienisch)(?:[^a-z]|$)/i;
 const FOOD_AMENITIES=new Set(['restaurant','fast_food','cafe','food_truck','takeaway','food_court','bar','pub','biergarten']);
@@ -18,6 +18,7 @@ const FOOD_SHOPS=new Set(['bakery','deli','convenience']);
 const FOCUSED_TERMS=['pizzeria','pizza','italian restaurant','italienisches restaurant','ristorante','trattoria','osteria','pizza cafe','pizza fast food','pizza takeaway','pizza pub','pizza bar','pizza bakery','pizza bakeshop','pizza food truck','pizza vending'];
 const FOCUSED_TARGET=6;
 const FOCUSED_MAX_CALLS=8;
+const RECOVERY_PROVIDERS=['https://maps.mail.ru/osm/tools/overpass/api/interpreter','https://overpass.osm.jp/api/interpreter'];
 
 function text(value){return String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase();}
 function fields(tags={},keys=[]){return keys.map(k=>tags[k]).filter(Boolean).join(' ');}
@@ -92,9 +93,9 @@ function area(center,radius,bounds){
 }
 function websimQuery(center,radius,bounds){
   const a=area(center,radius,bounds);
-  /* This deliberately mirrors the original WebSim query: cuisine=italian is a
-   * first-class hit even when the word pizza is nowhere in the venue name. */
-  return `[out:json][timeout:24];(/* pizzascan-websim-search-v7 */`+
+  /* This mirrors the original WebSim query: cuisine=italian is a first-class hit
+   * even when the venue name contains neither Pizza nor Pizzeria. */
+  return `[out:json][timeout:24];(/* pizzascan-websim-search-v8 */`+
     `nwr["cuisine"~"pizza|pizzeria",i](${a});`+
     `nwr["amenity"="restaurant"]["cuisine"~"italian|italiano|italiana",i](${a});`+
     `nwr["amenity"="restaurant"]["name"~"pizza|pizzeria|pizzaria|pizze|ristorante|trattoria|osteria|italian|italiano|italiana|italien",i](${a});`+
@@ -114,11 +115,11 @@ function websimQuery(center,radius,bounds){
     `);out body center;`;
 }
 const strictQuery=websimQuery;
-function isWebsimDiscoveryQuery(query){return String(query||'').includes('pizzascan-websim-search-v7');}
+function isWebsimDiscoveryQuery(query){return String(query||'').includes('pizzascan-websim-search-v8');}
 const isStrictDiscoveryQuery=isWebsimDiscoveryQuery;
 function mergeElements(...groups){const out=new Map();for(const group of groups)for(const e of group||[])if(e&&['node','way','relation'].includes(e.type)&&e.id!=null)out.set(`${e.type}-${e.id}`,e);return [...out.values()];}
 function filterCandidates(elements){return (elements||[]).filter(eligibleElement);}
-function relevantCount(elements){return (elements||[]).filter(eligibleElement).length;}
+function relevantCount(elements){return filterCandidates(elements).length;}
 function googleReviewHasPizza(container){return [...(container?.querySelectorAll?.('*')||[])].some(node=>PIZZA.test(text(node?.textContent||'')));}
 function queryAreaInfo(query){
   const q=String(query||'');let m=/around:(\d+),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(q);
@@ -135,34 +136,63 @@ function focusedElement(item){
   const p=item?.place,m=/^(node|way|relation)-(\d+)$/.exec(p?.placeId||'');if(!p||!m)return null;
   const tags={...(p.tags||{}),name:p.name||item.name||''};
   const element={type:m[1],id:Number(m[2]),lat:p.lat,lon:p.lng,tags};
-  /* Never fabricate cuisine=pizza/italian from the search phrase itself. Photon
-   * may return a generic restaurant for such a phrase; it only survives when its
-   * own OSM/name evidence matches the WebSim families. */
+  /* Search wording is never promoted to evidence. A generic restaurant returned
+   * for “Italian restaurant” stays generic unless its own OSM/name data says so. */
   return eligibleElement(element)?element:null;
 }
 async function focusedRecovery(service,query,options={},seed=[]){
-  const info=queryAreaInfo(query);if(!info||typeof service?.photon!=='function')return seed;
-  let elements=mergeElements(seed);if(relevantCount(elements)>=FOCUSED_TARGET)return elements;
+  const info=queryAreaInfo(query);if(!info||typeof service?.photon!=='function')return filterCandidates(seed);
+  let elements=filterCandidates(mergeElements(seed));if(relevantCount(elements)>=FOCUSED_TARGET)return elements;
   options.onStatus?.('Weitere Pizzerien, Italiener, Ristoranti und Trattorien werden gesucht …');
   for(const term of FOCUSED_TERMS.slice(0,FOCUSED_MAX_CALLS)){
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
     try{
       const items=await service.photon(term,info.center,{signal:options.signal}),extra=[];
       for(const item of items||[]){const e=focusedElement(item);if(e&&inside(info,{lat:e.lat,lng:e.lon}))extra.push(e);}
-      elements=mergeElements(elements,extra);
+      elements=filterCandidates(mergeElements(elements,extra));
       if(relevantCount(elements)>=FOCUSED_TARGET)break;
     }catch(error){if(options.signal?.aborted)throw error;}
   }
   return elements;
 }
+async function preciseProviderRecovery(service,query,options={},seed=[]){
+  let elements=filterCandidates(mergeElements(seed)),sources=[];
+  if(typeof service?.json!=='function')return {elements,sources};
+  for(const endpoint of RECOVERY_PROVIDERS){
+    if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+    try{
+      options.onStatus?.('Weitere OpenStreetMap-Quelle für Pizza & Italiener wird geprüft …');
+      const data=await service.json(endpoint,{method:'POST',body:new URLSearchParams({data:query})},options.signal,18000);
+      if(Array.isArray(data?.elements)&&!data.remark){elements=filterCandidates(mergeElements(elements,data.elements));if(data.elements.length)sources.push(new URL(endpoint).hostname);}
+      if(relevantCount(elements)>=FOCUSED_TARGET)break;
+    }catch(error){if(options.signal?.aborted)throw error;}
+  }
+  return {elements,sources};
+}
+function bypassLegacyFallback(target){
+  if(!target||typeof target.nearbyFallback!=='function'||target.nearbyFallback.__websimBypass)return false;
+  const legacy=target.nearbyFallback;
+  const bypass=async function(_query,{signal}={}){if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');return [];};
+  bypass.__websimBypass=true;bypass.__websimLegacy=legacy;target.nearbyFallback=bypass;return true;
+}
 function wrapOverpass(target){
   if(!target||typeof target.overpass!=='function'||target.overpass.__websimFocused)return false;
+  bypassLegacyFallback(target);
   const base=target.overpass;
   const wrapped=async function(query,options={}){
-    const result=await base.call(this,query,options);if(!isWebsimDiscoveryQuery(query))return result;
-    const before=result?.data?.elements||[];if(relevantCount(before)>=FOCUSED_TARGET)return result;
-    const elements=await focusedRecovery(this,query,options,before);if(elements.length===before.length)return result;
-    return {data:{...(result.data||{}),elements},source:String(result.source||'OpenStreetMap')+' + WebSim focused fallback'};
+    let result=null,baseError=null;
+    try{result=await base.call(this,query,options);}catch(error){baseError=error;if(options.signal?.aborted)throw error;}
+    if(!isWebsimDiscoveryQuery(query)){if(result)return result;throw baseError;}
+    let elements=filterCandidates(result?.data?.elements||[]),sources=[result?.source].filter(Boolean);
+    if(relevantCount(elements)<FOCUSED_TARGET){
+      try{const recovered=await preciseProviderRecovery(this,query,options,elements);elements=recovered.elements;sources=sources.concat(recovered.sources);}catch(error){if(options.signal?.aborted)throw error;}
+    }
+    if(relevantCount(elements)<FOCUSED_TARGET){
+      try{elements=await focusedRecovery(this,query,options,elements);if(elements.length)sources.push('photon.komoot.io');}catch(error){if(options.signal?.aborted)throw error;}
+    }
+    if(elements.length)return {data:{...(result?.data||{}),elements},source:[...new Set(sources.filter(Boolean))].join(' + ')||'WebSim pizza discovery'};
+    if(baseError)throw baseError;
+    return {data:{...(result?.data||{}),elements:[]},source:result?.source||''};
   };
   wrapped.__websimFocused=true;wrapped.__websimFocusedInner=base;target.overpass=wrapped;return true;
 }
@@ -171,6 +201,7 @@ function clearOldCaches(root){
     if(!root.localStorage||root.localStorage.getItem(MARKER))return;
     root.localStorage.removeItem('pizzascan-map-cache-v3');
     root.localStorage.removeItem('pizzascan-map-cache-v2');
+    root.localStorage.removeItem('pizzascan-smart-discovery-v7');
     root.localStorage.removeItem('pizzascan-smart-discovery-v6');
     for(let i=root.localStorage.length-1;i>=0;i--){const k=root.localStorage.key(i);if(k?.startsWith('pizzascan-search-')||k?.startsWith('pizzascan-nearby-photon-'))root.localStorage.removeItem(k);}
     root.localStorage.setItem(MARKER,'1');
@@ -181,14 +212,12 @@ function install(root){
   const query=function(center,radius,bounds){return websimQuery(center,radius,bounds);};query.__websimRelevant=true;PD.query=query;
   if(!PD.filter.__websimRelevant){const baseFilter=PD.filter.bind(PD);PD.filter=function(list,cfg,context,hours){return baseFilter(list,cfg,context,hours).filter(place=>placeRelevant(place,root.PizzaRatingsUI));};PD.filter.__websimRelevant=true;}
   /* Modules load before script.js creates placeService. Patch the Service prototype
-   * so every future instance actually receives the focused recovery. The old code
-   * tried to wrap a not-yet-created instance, which is why Build 32 fell back to
-   * generic Photon searches and then showed only the few names containing Pizza. */
+   * so future instances receive both native OSM transport and precise recovery. */
   wrapOverpass(PD.Service?.prototype);
   if(root.placeService)wrapOverpass(root.placeService);
   if(PD.TYPES?.other)PD.TYPES.other={...PD.TYPES.other,emoji:'🍝',name:'Italiener / Pizza-Kandidat'};
   if(PD.TYPES?.pizzeria)PD.TYPES.pizzeria={...PD.TYPES.pizzeria,emoji:'🍕',name:'Pizzeria / Pizza-Ort'};
-  root.PizzaScanSmartDiscovery={marker:MARKER,mode:'original-websim-families',query:'websim-original-plus-menu-review-evidence',focusedFallback:true,genericRestaurantsVisible:false,reviewEvidence:true,menuEvidence:true,prototypeRecovery:true};
+  root.PizzaScanSmartDiscovery={marker:MARKER,mode:'original-websim-families',query:'websim-original-plus-menu-review-evidence',focusedFallback:true,preciseProviderRecovery:true,legacyGenericFallback:false,genericRestaurantsVisible:false,reviewEvidence:true,menuEvidence:true,prototypeRecovery:true};
 }
-return {MARKER,PIZZA,ITALIAN,FOOD_AMENITIES,FOOD_SHOPS,FOCUSED_TERMS,FOCUSED_TARGET,FOCUSED_MAX_CALLS,text,directPizzaEvidence,pizzaMenuEvidence,pizzaCommentEvidence,pizzaText,italianEvidence,plausibleFoodObject,websimBaselineTags,deepEvidenceTags,eligibleElement,reviewPizzaMentions,placeRelevant,strongPizzaPlace,classifyPlace,area,websimQuery,strictQuery,isWebsimDiscoveryQuery,isStrictDiscoveryQuery,mergeElements,filterCandidates,relevantCount,googleReviewHasPizza,queryAreaInfo,inside,focusedElement,focusedRecovery,wrapOverpass,clearOldCaches,install};
+return {MARKER,PIZZA,ITALIAN,FOOD_AMENITIES,FOOD_SHOPS,FOCUSED_TERMS,FOCUSED_TARGET,FOCUSED_MAX_CALLS,RECOVERY_PROVIDERS,text,directPizzaEvidence,pizzaMenuEvidence,pizzaCommentEvidence,pizzaText,italianEvidence,plausibleFoodObject,websimBaselineTags,deepEvidenceTags,eligibleElement,reviewPizzaMentions,placeRelevant,strongPizzaPlace,classifyPlace,area,websimQuery,strictQuery,isWebsimDiscoveryQuery,isStrictDiscoveryQuery,mergeElements,filterCandidates,relevantCount,googleReviewHasPizza,queryAreaInfo,inside,focusedElement,focusedRecovery,preciseProviderRecovery,bypassLegacyFallback,wrapOverpass,clearOldCaches,install};
 });
