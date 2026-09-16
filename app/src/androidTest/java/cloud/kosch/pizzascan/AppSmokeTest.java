@@ -22,17 +22,43 @@ public class AppSmokeTest {
         } catch (Exception e) { throw new RuntimeException(e); }
     }
     private String js(ActivityScenario<MainActivity> scenario, String script) throws Exception {
-        AtomicReference<String> value = new AtomicReference<>();
-        CountDownLatch latch = new CountDownLatch(1);
-        scenario.onActivity(a -> web(a).evaluateJavascript(script, result -> { value.set(result); latch.countDown(); }));
-        // GitHub's API-36 emulator can spend several seconds scheduling WebView work
-        // immediately after a cold boot/recreation while network/map initialization is
-        // still active. This is a smoke-test transport timeout, not an app deadline.
-        assertTrue("WebView callback timed out for: " + script, latch.await(30, TimeUnit.SECONDS));
-        return value.get();
+        // API-36 hosted emulators occasionally drop/delay the first WebView callback
+        // directly after a cold boot or Activity recreation. Re-submit the exact same
+        // read/evaluation instead of turning a transient scheduler hiccup into a false
+        // product failure. App assertions still fail normally when JavaScript returns.
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            AtomicReference<String> value = new AtomicReference<>();
+            AtomicReference<Throwable> failure = new AtomicReference<>();
+            CountDownLatch latch = new CountDownLatch(1);
+            scenario.onActivity(a -> {
+                WebView view = web(a);
+                boolean posted = view.post(() -> {
+                    try {
+                        view.evaluateJavascript(script, result -> {
+                            value.set(result);
+                            latch.countDown();
+                        });
+                    } catch (Throwable t) {
+                        failure.set(t);
+                        latch.countDown();
+                    }
+                });
+                if (!posted) {
+                    failure.set(new IllegalStateException("WebView rejected UI task"));
+                    latch.countDown();
+                }
+            });
+            if (latch.await(25, TimeUnit.SECONDS)) {
+                if (failure.get() != null) throw new RuntimeException("WebView evaluation failed", failure.get());
+                if (value.get() != null) return value.get();
+            }
+            SystemClock.sleep(500L * attempt);
+        }
+        fail("WebView callback timed out after retries for: " + script);
+        return null;
     }
     private void ready(ActivityScenario<MainActivity> scenario) throws Exception {
-        long deadline = SystemClock.elapsedRealtime() + 60000;
+        long deadline = SystemClock.elapsedRealtime() + 90000;
         while (SystemClock.elapsedRealtime() < deadline) {
             if ("true".equals(js(scenario, "!!window.PizzaScan?.ready"))) return;
             SystemClock.sleep(250);
