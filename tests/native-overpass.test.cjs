@@ -6,8 +6,8 @@ test('native Overpass transport uses only the fixed HTTPS allowlist',()=>{
  for(const endpoint of N.ENDPOINTS)assert.equal(N.allowed(endpoint),true);
  assert.equal(N.allowed('http://overpass-api.de/api/interpreter'),false);
  assert.equal(N.allowed('https://example.com/api/interpreter'),false);
- assert.ok(N.NATIVE_TIMEOUT>=25000&&N.NATIVE_TIMEOUT<=30000);
- assert.ok(N.DIRECT_FALLBACK_TIMEOUT>=20000);
+ assert.ok(N.NATIVE_TIMEOUT>=60000&&N.NATIVE_TIMEOUT<=70000);
+ assert.ok(N.DIRECT_FALLBACK_TIMEOUT>=60000);
 });
 
 test('native Overpass extracts only the Overpass POST query',()=>{
