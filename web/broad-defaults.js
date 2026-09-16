@@ -21,8 +21,7 @@ function normalizeConfig(base={},raw={},types={}){
     unknownHours:has('unknownHours')?raw.unknownHours===true:false,
     includeItalian:has('includeItalian')?raw.includeItalian!==false:true,
     includeUnconfirmed:has('includeUnconfirmed')?raw.includeUnconfirmed!==false:true,
-    /* The original packaged baseline uses a 5 km area. A tiny viewport at zoom 14
-     * can otherwise contain only one or two venues even though many exist nearby. */
+    /* The packaged baseline is 5 km. */
     radius:has('radius')&&[0,1,3,5,10].includes(Number(raw.radius))?Number(raw.radius):DEFAULT_RADIUS,
     autoSearch:has('autoSearch')?raw.autoSearch!==false:true,
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,
@@ -63,8 +62,6 @@ function expandDiscoveryQuery(query,enabled=true){
   if(!enabled)return q;
   const area=queryAreaToken(q);
   if(!area||q.includes('pizzascan-legacy-result-coverage'))return q;
-  /* Keep the broad named-food query intact. Pizza-specific selectors are added on
-   * top so sparse tagging cannot make genuine pizza places disappear. */
   const extra=`/* pizzascan-legacy-result-coverage */`+
     `nwr["speciality"~"pizza",i](${area});`+
     `nwr["brand"~"pizza|pizzeria|pizzaria",i](${area});`+
@@ -93,12 +90,14 @@ function install(root){
   const PD=root.PizzaPlaces;if(!PD)return;
   let migrated=false;
   function migrateOnce(){
-    if(migrated)return;migrated=true;
+    if(migrated)return;
     try{
-      if(typeof settings==='undefined'||!settings||!root.localStorage||root.localStorage.getItem(MARKER))return;
-      /* v12 deliberately re-opens discovery once on existing installations. Old
-       * type/rating/radius filters from sparse releases must not silently keep
-       * hiding restaurants after the discovery fix is installed. */
+      /* broad-defaults.js is loaded before script.js. Do not consume the one-time
+       migration merely because an early module queried mapConfig before the
+       application-level `settings` binding exists. */
+      if(typeof settings==='undefined'||!settings||!root.localStorage)return;
+      migrated=true;
+      if(root.localStorage.getItem(MARKER))return;
       settings.filters=broadMigration(settings.filters||{},PD.TYPES);
       root.localStorage.removeItem('pizzascan-map-cache-v3');
       root.localStorage.removeItem('pizzascan-map-cache-v2');
@@ -144,11 +143,6 @@ function install(root){
     };
     PD.filter.__pizzaBroadDefaults=true;
   }
-  /* Sparse-result recovery used to run a second, sequential Photon text search
-   * here before poi-discovery.js got a chance to use alternate Overpass servers
-   * or structured OSM-tag lookups. That made the UI appear to skip/stop while
-   * "Weitere Restaurants …" was shown. Recovery now has a single owner:
-   * poi-discovery.js, loaded immediately after this module. */
   root.PizzaScanBroadPolicy={marker:MARKER,defaults:()=>normalizeConfig({}, {}, PD.TYPES),recoveryOwner:'poi-discovery'};
 }
 return {MARKER,BROAD_AMENITIES,DEFAULT_RADIUS,SUPPLEMENT_BELOW,allTypes,normalizeConfig,broadMigration,candidateVisible,queryAreaToken,expandDiscoveryQuery,mergeElements,shouldSupplement,install};
