@@ -118,7 +118,7 @@ test('installed map filter hides generic candidate pool and exposes review-confi
  S.install(root);
  const visible=PD.filter([pizza,neutral,reviewed],{},null,()=>({state:'unknown'}));
  assert.deepEqual(visible.map(p=>p.name),['Pizza Max','Restaurant Review']);
- assert.equal(PD.TYPES.other.emoji,'🇮🇹');
+ assert.equal(PD.TYPES.other.emoji,'🍝');
  assert.equal(PD.TYPES.pizzeria.emoji,'🍕');
 });
 
