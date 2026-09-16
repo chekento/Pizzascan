@@ -1,5 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
 const B=require('../web/broad-defaults.js');
 const TYPES={pizzeria:{},cafe:{},fast_food:{},food_truck:{},vending_pizza:{},other:{}};
 
@@ -42,6 +44,13 @@ test('migration reopens broad categories, ratings and 5 km automatic discovery',
  assert.equal(next.includeUnrated,false);
  assert.equal(next.includeUnconfirmed,true);
  assert.equal(next.radius,5);
+});
+
+test('early mapConfig access cannot consume the one-time broad migration before settings exist',()=>{
+ const source=fs.readFileSync(path.join(__dirname,'../web/broad-defaults.js'),'utf8');
+ const guard=source.indexOf("if(typeof settings==='undefined'||!settings||!root.localStorage)return;");
+ const consumed=source.indexOf('migrated=true;',guard);
+ assert.ok(guard>=0&&consumed>guard,'migrated=true must only run after application settings exist');
 });
 
 test('ordinary named food candidates remain visible when the broad baseline is enabled',()=>{
