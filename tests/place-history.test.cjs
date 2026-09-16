@@ -1,0 +1,46 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const H=require('../web/place-history.js');
+
+function place(id=1,name='Trattoria Roma'){return {placeId:`node-${id}`,name,lat:53.67+id/10000,lng:10.23+id/10000,type:'other',address:'Teststraße 1',tags:{amenity:'restaurant',cuisine:'italian'}};}
+
+test('Markdown visit archive round-trips visited places and ratings',()=>{
+  const row=H.mergeVisitRecords(null,{placeId:'node-1',place:place(1),events:[{id:'photo:a',rating:8.7,notes:'Sehr gute Pizza',source:'photo',updatedAt:'2026-09-16T10:00:00.000Z'}]});
+  const md=H.archiveToMarkdown([row]);
+  assert.match(md,/PizzaScan Besuchsarchiv/);
+  assert.match(md,/8\.7\/10/);
+  const restored=H.archiveFromMarkdown(md);
+  assert.equal(restored.length,1);
+  assert.equal(restored[0].placeId,'node-1');
+  assert.equal(restored[0].events[0].rating,8.7);
+});
+
+test('Visited records keep earlier events and update matching event ids',()=>{
+  const first=H.mergeVisitRecords(null,{placeId:'node-2',place:place(2),events:[{id:'photo:x',rating:7.1,source:'photo'}]});
+  const next=H.mergeVisitRecords(first,{placeId:'node-2',place:{...place(2),address:'Neue Adresse'},events:[{id:'photo:x',rating:9.2,source:'photo'},{id:'draft:node-2',rating:8.4,source:'review'}]});
+  assert.equal(next.events.length,2);
+  assert.equal(next.events.find(x=>x.id==='photo:x').rating,9.2);
+  assert.equal(next.place.address,'Neue Adresse');
+  assert.equal(next.firstVisitedAt,first.firstVisitedAt);
+});
+
+test('Element union has no artificial count limit and deduplicates OSM identity',()=>{
+  const a=Array.from({length:3200},(_,i)=>({type:'node',id:i+1,tags:{name:'Pizza '+i}}));
+  const b=Array.from({length:3200},(_,i)=>({type:'node',id:i+1601,tags:{name:'Pizza newer '+i}}));
+  const merged=H.dedupeElements(a,b);
+  assert.equal(merged.length,4800);
+  assert.equal(merged.find(x=>x.id===1601).tags.name,'Pizza newer 0');
+});
+
+test('Cached PizzaScan place can be reconstructed as an Overpass element',()=>{
+  const e=H.placeToElement(place(55,'Osteria Verde'));
+  assert.equal(e.type,'node');
+  assert.equal(e.id,55);
+  assert.equal(e.tags.cuisine,'italian');
+  assert.equal(e.tags.name,'Osteria Verde');
+});
+
+test('Archive parser rejects arbitrary Markdown',()=>{
+  assert.throws(()=>H.archiveFromMarkdown('# unrelated'),/kein PizzaScan/);
+});
