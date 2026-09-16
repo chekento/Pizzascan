@@ -7,9 +7,13 @@ const {server,until}=require('./helpers.cjs');
  const page=await browser.newPage({viewport:{width:393,height:851}});
  const tile=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z1SIAAAAASUVORK5CYII=','base64');
  await page.route('**/tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:tile}));
+ /* Build 38 deliberately queries every trusted Overpass mirror in parallel. Give
+    the startup search a deterministic result before testing the transport in
+    isolation, otherwise background provider calls pollute the retry counter. */
+ await page.route(/(?:overpass-api\.de|overpass\.private\.coffee|overpass\.osm\.jp|maps\.mail\.ru).*interpreter/,r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({elements:[{type:'node',id:990001,lat:53.6735,lon:10.2377,tags:{name:'Security Test Pizza',amenity:'restaurant',cuisine:'pizza'}}]})}));
  try{
   await page.goto(url);
-  await until(page,()=>PizzaScan.ready&&!!globalThis.PizzaMapNetwork);
+  await until(page,()=>PizzaScan.ready&&!!globalThis.PizzaMapNetwork&&!PizzaScan.diagnostics().mapLoading,30000);
   const result=await page.evaluate(async()=>{
    const calls=[];
    placeService.fetcher=async (requestUrl,options)=>{
