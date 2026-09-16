@@ -1,11 +1,13 @@
 /* PizzaScan Build 38 runtime finalizer.
  * Restores the complete local place/visit history after the map has initialized,
- * and replaces sparse early-return discovery with an uncapped all-provider union.
+ * replaces sparse early-return discovery with an uncapped all-provider union,
+ * and exposes the persistent visit history as a map filter without changing the
+ * proven PizzaScan/WebSim discovery query or candidate semantics.
  */
 (function(root){
 'use strict';
 const PROVIDER_TIMEOUT=65000;
-let installed=false,completeSearchStarted=false,completeSearchFinished=false;
+let installed=false,completeSearchStarted=false,completeSearchFinished=false,visitedFilterInstalled=false;
 
 function request(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('PizzaScan-Speicherzugriff fehlgeschlagen.'));});}
 function all(db,store){return request(db.transaction(store,'readonly').objectStore(store).getAll());}
@@ -22,6 +24,36 @@ async function loadAllHistory(){
   if(typeof map!=='undefined'&&map&&typeof refreshArea==='function')refreshArea();
   if(typeof map!=='undefined'&&map&&typeof renderPlaces==='function')renderPlaces();
   return {places:(cached||[]).length,visits:(visits||[]).length};
+}
+
+/* This is deliberately a display filter only. It does not alter the map query,
+   provider union, cache, ranking, Pizza/Italian evidence or result count. */
+function installVisitedOnlyFilter(){
+  if(visitedFilterInstalled||typeof filterForm!=='function'||typeof readFilterForm!=='function'||typeof visiblePlaces!=='function')return false;
+  visitedFilterInstalled=true;
+  const runtime=root.PizzaPlaceHistoryRuntime;
+  const baseFilterForm=filterForm,baseReadFilterForm=readFilterForm,baseVisiblePlaces=visiblePlaces;
+  filterForm=function(){
+    const cfg=mapConfig(),html=baseFilterForm();
+    return html+`<label class="check"><input id="filter-only-visited" type="checkbox" ${cfg.onlyVisited?'checked':''}><span>Nur besuchte und selbst bewertete Orte anzeigen</span></label><p class="hint">Besuchte Orte stammen aus deinem dauerhaften lokalen Besuchsarchiv und bleiben auch erhalten, wenn eine spätere Kartensuche den Ort gerade nicht liefert.</p>`;
+  };
+  readFilterForm=function(){
+    baseReadFilterForm();
+    const only=document.getElementById('filter-only-visited');
+    if(only){settings.filters={...(settings.filters||{}),onlyVisited:only.checked};if(only.checked)settings.filters.hideVisited=false;}
+  };
+  visiblePlaces=function(){
+    const list=baseVisiblePlaces(),cfg=mapConfig();
+    return cfg.onlyVisited?list.filter(place=>runtime?.visitedIds?.has(place.placeId)):list;
+  };
+  if(typeof handleMapAction==='function'){
+    const baseHandleMapAction=handleMapAction;
+    handleMapAction=async function(button){
+      if(button?.dataset?.action==='clear-filters'&&settings?.filters)settings.filters.onlyVisited=false;
+      return baseHandleMapAction(button);
+    };
+  }
+  return true;
 }
 
 function cachedElementsFor(query,smart){
@@ -98,6 +130,7 @@ async function finalize(){
        IndexedDB history only after the map exists. That prevents initMap from
        overwriting the full persistent pool. */
     const restored=await loadAllHistory();
+    installVisitedOnlyFilter();
     try{await navigator.storage?.persist?.();}catch{}
 
     if(mapReady){
@@ -112,7 +145,7 @@ async function finalize(){
         if(!completeSearchFinished&&typeof loadPlaces==='function')await loadPlaces({force:true});
       }
     }
-    root.PizzaBuild38Runtime={installed:true,restored,mapReady,completeProviderUnion:true,completeSearchStarted,completeSearchFinished,noResultCap:true,persistentHistory:true};
+    root.PizzaBuild38Runtime={installed:true,restored,mapReady,completeProviderUnion:true,completeSearchStarted,completeSearchFinished,noResultCap:true,persistentHistory:true,visitedOnlyFilter:visitedFilterInstalled};
   }catch(error){
     console.warn('PizzaScan Build 38 finalization failed',error);
     root.PizzaBuild38Runtime={installed:false,error:String(error?.message||error)};
