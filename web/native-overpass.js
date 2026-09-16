@@ -11,8 +11,10 @@ const ENDPOINTS=[
  'https://overpass.osm.jp/api/interpreter',
  'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
 ];
-const NATIVE_TIMEOUT=28000;
-const DIRECT_FALLBACK_TIMEOUT=22000;
+/* The original WebSim source uses [timeout:60]. Keep the Android bridge alive
+ * long enough for that same query instead of cutting it off at ~28 seconds. */
+const NATIVE_TIMEOUT=65000;
+const DIRECT_FALLBACK_TIMEOUT=60000;
 const pending=new Map();
 function allowed(url){try{return ENDPOINTS.includes(new URL(url).href);}catch{return false;}}
 function queryFrom(options={}){const body=options.body;if(body instanceof URLSearchParams)return body.get('data')||'';if(typeof body==='string')return new URLSearchParams(body).get('data')||'';return '';}
@@ -76,8 +78,7 @@ function makeWrapped(root,base){
 function install(root){
  let installed=false;
  /* native-overpass.js is loaded before script.js. Patch the Service prototype so
-  * the later-created placeService inherits the native transport. The former
-  * instance-only installer silently did nothing on a normal app startup. */
+  * the later-created placeService inherits the native transport. */
  const proto=root.PizzaPlaces?.Service?.prototype;
  if(proto&&typeof proto.json==='function'&&!proto.json.__nativeOverpass){proto.json=makeWrapped(root,proto.json);installed=true;}
  if(root.placeService&&typeof root.placeService.json==='function'&&!root.placeService.json.__nativeOverpass){root.placeService.json=makeWrapped(root,root.placeService.json);installed=true;}
