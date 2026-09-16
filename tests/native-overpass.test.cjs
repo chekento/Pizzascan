@@ -21,7 +21,7 @@ test('packaged Android uses the long raw native channel before WebView Overpass'
  let posted=null,webCalls=0,bridgeCalls=0;
  const root={
   crypto:{randomUUID:()=> 'native-overpass-test'},
-  navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.4 (+https://github.com/chekento/Pizzascan)'},
+  navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.5 (+https://github.com/chekento/Pizzascan)'},
   PizzaScanBridge:{reply(){throw Error('unhandled reply');}},
   PizzaScanNative:{postMessage(message){
    posted=JSON.parse(message);
@@ -45,7 +45,7 @@ test('packaged Android uses the long raw native channel before WebView Overpass'
 test('packaged Android falls back to direct Overpass when native transport fails',async()=>{
  let bridgeCalls=0,webCalls=0,seenTimeout=0;
  const root={
-  navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.4 (+https://github.com/chekento/Pizzascan)'},
+  navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.5 (+https://github.com/chekento/Pizzascan)'},
   PizzaScanNative:{},
   bridge:async()=>{bridgeCalls++;throw Error('native provider failure');},
   placeService:{json:async(url,options,signal,timeout)=>{webCalls++;seenTimeout=timeout;return {elements:[{type:'node',id:1}]};}}
@@ -66,4 +66,17 @@ test('ordinary browser keeps the existing web transport',async()=>{
  const result=await root.placeService.json(N.ENDPOINTS[0],{method:'POST',body:new URLSearchParams({data:'x'})});
  assert.equal(webCalls,1);
  assert.deepEqual(result,{elements:[1]});
+});
+
+test('installer patches Service.prototype before script.js creates placeService',async()=>{
+ let webCalls=0;
+ class Service{async json(){webCalls++;return {elements:[{type:'node',id:7}]};}}
+ const root={PizzaPlaces:{Service},navigator:{userAgent:'Mozilla/5.0 Chrome'},PizzaScanNative:{},bridge:async()=>{throw Error('must not run');}};
+ assert.equal(N.install(root),true);
+ const service=new Service();
+ assert.equal(service.json.__nativeOverpass,true);
+ const result=await service.json(N.ENDPOINTS[0],{method:'POST',body:new URLSearchParams({data:'[out:json];node(7);out;'})});
+ assert.equal(webCalls,1);
+ assert.equal(result.elements[0].id,7);
+ assert.equal(root.PizzaScanNativeOverpass.prototype,true);
 });
