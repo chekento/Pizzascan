@@ -1,6 +1,8 @@
 'use strict';
 const test=require('node:test');
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
 const H=require('../web/place-history.js');
 
 function place(id=1,name='Trattoria Roma'){return {placeId:`node-${id}`,name,lat:53.67+id/10000,lng:10.23+id/10000,type:'other',address:'Teststraße 1',tags:{amenity:'restaurant',cuisine:'italian'}};}
@@ -43,4 +45,23 @@ test('Cached PizzaScan place can be reconstructed as an Overpass element',()=>{
 
 test('Archive parser rejects arbitrary Markdown',()=>{
   assert.throws(()=>H.archiveFromMarkdown('# unrelated'),/kein PizzaScan/);
+});
+
+test('Build 38 finalizer restores IndexedDB history before forcing one complete refresh',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'../web/runtime-finalize.js'),'utf8');
+  assert.match(source,/loadAllHistory\(\)/);
+  assert.match(source,/objectStore\(store\)\.getAll\(\)/);
+  assert.match(source,/mapPool=PlaceData\.merge\(mapPool/);
+  assert.match(source,/mapRequest\?\.abort/);
+  assert.match(source,/loadPlaces\(\{force:true\}\)/);
+});
+
+test('Build 38 finalizer waits for every Overpass mirror and unions cached discoveries without a count cap',()=>{
+  const source=fs.readFileSync(path.join(__dirname,'../web/runtime-finalize.js'),'utf8');
+  assert.match(source,/Promise\.allSettled\(tasks\)/);
+  assert.match(source,/smart\.PROVIDERS/);
+  assert.match(source,/cachedElementsFor\(query,smart\)/);
+  assert.match(source,/smart\.mergeElements/);
+  assert.doesNotMatch(source,/slice\(0,\s*(?:12|20|50|100)\)/);
+  assert.doesNotMatch(source,/3500/);
 });
