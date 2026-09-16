@@ -25,11 +25,14 @@ public class AppSmokeTest {
         AtomicReference<String> value = new AtomicReference<>();
         CountDownLatch latch = new CountDownLatch(1);
         scenario.onActivity(a -> web(a).evaluateJavascript(script, result -> { value.set(result); latch.countDown(); }));
-        assertTrue("WebView callback timed out", latch.await(10, TimeUnit.SECONDS));
+        // GitHub's API-36 emulator can spend several seconds scheduling WebView work
+        // immediately after a cold boot/recreation while network/map initialization is
+        // still active. This is a smoke-test transport timeout, not an app deadline.
+        assertTrue("WebView callback timed out for: " + script, latch.await(30, TimeUnit.SECONDS));
         return value.get();
     }
     private void ready(ActivityScenario<MainActivity> scenario) throws Exception {
-        long deadline = SystemClock.elapsedRealtime() + 25000;
+        long deadline = SystemClock.elapsedRealtime() + 60000;
         while (SystemClock.elapsedRealtime() < deadline) {
             if ("true".equals(js(scenario, "!!window.PizzaScan?.ready"))) return;
             SystemClock.sleep(250);
