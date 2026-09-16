@@ -74,38 +74,55 @@ test('marker category distinguishes Italian candidates from actual pizza places'
  assert.equal(S.classifyPlace({name:'Box',tags:{amenity:'vending_machine',vending:'pizza'}}),'vending_pizza');
 });
 
-test('WebSim query has precise venue families plus hidden restaurant candidates for deep review evidence',()=>{
+test('WebSim query restores the original families without listing every restaurant',()=>{
  const q=S.websimQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
- assert.match(q,/pizzascan-websim-search-v6/);
+ assert.match(q,/pizzascan-websim-search-v7/);
  assert.match(q,/cuisine\"~\"pizza\|pizzeria/);
  assert.match(q,/amenity\"=\"restaurant\"\]\[\"cuisine\"~\"italian\|italiano\|italiana/);
  assert.match(q,/ristorante\|trattoria\|osteria/);
- assert.match(q,/pizza pub\|pizza bar/);
+ assert.match(q,/bar\|pub\|biergarten/);
  assert.match(q,/shop\"~\"bakery\|deli/);
  assert.match(q,/menu\"~\"pizza/);
  assert.match(q,/description\"~\"pizza/);
  assert.match(q,/vending:pizza\"=\"yes/);
- assert.match(q,/amenity\"=\"restaurant\"\]\[\"name\"\]\(around:/);
+ assert.doesNotMatch(q,/amenity\"=\"restaurant\"\]\[\"name\"\]\(around:/,'primary WebSim query must not fetch every named restaurant');
  assert.equal(S.isWebsimDiscoveryQuery(q),true);
 });
 
-test('focused fallback still searches Italian families when broad recovery already returned many generic restaurants',async()=>{
+test('focused fallback searches Italian families but never fabricates cuisine from the search phrase',async()=>{
  const seed=Array.from({length:25},(_,i)=>el(100+i,{amenity:'restaurant',name:'Generic '+i}));
  const calls=[];
- const item=(id,name)=>({place:{placeId:'node-'+id,name,lat:53.675,lng:10.24,tags:{amenity:'restaurant',name}}});
- const service={async photon(term){calls.push(term);if(term==='pizzeria')return [item(1,'Da Anna')];if(term==='italian restaurant')return [item(2,'Bella Italia')];if(term==='trattoria')return [item(3,'Trattoria Roma')];if(term==='osteria')return [item(4,'Osteria Uno')];return [];}};
+ const item=(id,name,tags={})=>({place:{placeId:'node-'+id,name,lat:53.675,lng:10.24,tags:{amenity:'restaurant',name,...tags}}});
+ const service={async photon(term){calls.push(term);if(term==='pizzeria')return [item(1,'Pizza Max')];if(term==='italian restaurant')return [item(2,'Bella Italia')];if(term==='trattoria')return [item(3,'Trattoria Roma')];if(term==='osteria')return [item(4,'Osteria Uno')];if(term==='ristorante')return [item(5,'Restaurant Nord')];return [];}};
  const q=S.websimQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
  const out=await S.focusedRecovery(service,q,{},seed);
  assert.ok(calls.includes('italian restaurant'));
  assert.ok(calls.includes('trattoria'));
  assert.ok(calls.includes('osteria'));
+ assert.ok(out.some(x=>x.tags.name==='Pizza Max'));
+ assert.ok(out.some(x=>x.tags.name==='Bella Italia'));
+ assert.ok(!out.some(x=>x.tags.name==='Restaurant Nord'),'generic result returned for an Italian search phrase must not be relabeled as Italian');
  assert.ok(S.relevantCount(out)>=4);
- assert.ok(out.some(x=>/italian/.test(x.tags.cuisine||'')));
 });
 
 test('focused fallback terms cover requested WebSim venue vocabulary',()=>{
  for(const term of ['pizzeria','pizza','italian restaurant','italienisches restaurant','ristorante','trattoria','osteria','pizza cafe','pizza takeaway','pizza pub','pizza bar','pizza bakery','pizza bakeshop','pizza food truck','pizza vending'])assert.ok(S.FOCUSED_TERMS.includes(term),term);
- assert.equal(S.FOCUSED_TARGET,8);
+ assert.equal(S.FOCUSED_TARGET,6);
+});
+
+test('install patches Service.prototype so the later-created app service really gets focused recovery',async()=>{
+ class Service{
+  async overpass(){return {data:{elements:[el(50,{amenity:'restaurant',name:'Restaurant Nord'})]},source:'base'};}
+  async photon(term){if(term==='trattoria')return [{place:{placeId:'node-51',name:'Trattoria Roma',lat:53.67,lng:10.24,tags:{amenity:'restaurant',name:'Trattoria Roma'}}}];return [];}
+ }
+ const PD={Service,TYPES:{pizzeria:{emoji:'🍕',name:'Pizzeria'},other:{emoji:'🍽️',name:'Weitere Orte'}},query(){return 'old';},filter(list){return list;}};
+ const root={PizzaPlaces:PD,PizzaRatingsUI:{summary:()=>({pizzaMentions:0})},localStorage:null};
+ S.install(root);
+ const service=new Service();
+ const q=PD.query({lat:53.67,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
+ const result=await service.overpass(q);
+ assert.ok(result.data.elements.some(x=>x.tags?.name==='Trattoria Roma'));
+ assert.equal(service.overpass.__websimFocused,true);
 });
 
 test('installed map filter hides generic candidate pool and exposes review-confirmed restaurants',()=>{
@@ -130,5 +147,5 @@ test('Google review evidence only counts actual review text',()=>{
 });
 
 test('relevance cache marker advances for installed clients',()=>{
- assert.equal(S.MARKER,'pizzascan-smart-discovery-v6');
+ assert.equal(S.MARKER,'pizzascan-smart-discovery-v7');
 });
