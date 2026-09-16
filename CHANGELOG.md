@@ -1,8 +1,37 @@
 # PizzaScan Changelog
 
-## 2.3.5 — aktuelle Direktversion · 15.09.2026
+## 2.3.5 — aktuelle Direktversion · 16.09.2026
 
-Aktueller Stand: `versionCode 28`, `versionName 2.3.5`, Android-Paket `cloud.kosch.pizzascan`.
+Aktueller Stand: `versionCode 38`, `versionName 2.3.5`, Android-Paket `cloud.kosch.pizzascan`.
+
+### Build 38 — vollständige Discovery + dauerhafte Orts- und Besuchshistorie
+
+- Behebt die Build-37-Regression mit zu wenigen Treffern: Die vier freigegebenen Overpass-Kartenquellen werden parallel abgefragt und **alle erfolgreichen Antworten vollständig zusammengeführt**, statt nach dem ersten Treffer bzw. einem kurzen 3,5-Sekunden-Fenster zurückzukehren.
+- Die Zusammenführung ist nach OSM-Identität dedupliziert und besitzt **keine künstliche Trefferzahl-Obergrenze**. Bereits lokal bekannte passende Orte im aktuellen Suchgebiet werden zusätzlich in die Ergebnismenge aufgenommen, sodass eine dünne Einzelantwort die Karte nicht mehr verkleinert.
+- Der reguläre Startbereich bleibt bei **5 km**. Ein Start-Race, das eine absichtlich abgebrochene Erstanfrage fälschlich als Nulltreffer behandelte und den Radius auf 10 km hochsetzte, wurde entfernt. Auch die einmalige 5-km-Migration wartet jetzt korrekt, bis die App-Einstellungen verfügbar sind.
+- Die ursprünglichen WebSim-Pizza-/Italienisch-Familien bleiben Basis der Umgebungssuche und werden um belastbare Varianten ergänzt: mehrteilige Cuisine-Tags, Ristorante/Trattoria/Osteria-Namen, Pizza-Spezialität/Produkte sowie Pizza-Hinweise in Menü-, Beschreibungs- und Notiz-Metadaten. Offensichtlich fachfremde Gastro-POIs bleiben ausgeschlossen.
+- Gefundene Orte werden vollständig in **IndexedDB** gespeichert. Beim nächsten Start wird nach Initialisierung der Karte der komplette lokale Ortsbestand wieder eingespielt, bevor neue Ergebnisse ihn verdrängen können. Der kleine LocalStorage-Cache bleibt nur schneller Boot-Fallback.
+- Besuchte und selbst bewertete Orte werden separat dauerhaft gespeichert. Spätere Kartensuchen können diese Historie nicht löschen.
+- Neuer Filter: **nur bereits besuchte und selbst bewertete Orte** anzeigen. Er ist mit dem vorhandenen „Besuchte ausblenden“-Filter gegenseitig konsistent.
+- Besuchs- und Bewertungshistorie kann als menschenlesbares **Markdown-Archiv** gesichert und wieder geladen werden.
+- Eigene Bewertungen können optional zu **Open Reviews / Mangrove** beigetragen werden. Veröffentlichung erfolgt ausschließlich nach ausdrücklichem manuellen Antippen; es gibt keinen automatischen Upload und keine Community-Funktion.
+- Die bisherige 100-Karten-Anzeigegrenze wird für die lokale Ergebnisliste aufgehoben; große Ergebnismengen werden intern in 100er-Blöcken gerendert, ohne Treffer abzuschneiden.
+- CI deckt jetzt u. a. vollständige Provider-Union, 5-km-Startbaseline, Cache-/Visit-Restoration, keine Result-Caps, Markdown-Roundtrip, optionale Open-Reviews-Publikation, Android-Lint/Build, gepackte UI und Android-16-Smoke ab.
+
+### Build 37 — Persistenz- und Open-Reviews-Zwischenstand
+
+Build 37 führte die dauerhafte Orts-/Besuchshistorie, Markdown-Sicherung und die optionale Open-Reviews-Publikation ein. Die Discovery konnte jedoch durch einen zu frühen Multi-Provider-Return und einen Startup-Race weniger Treffer als frühere Builds zeigen. Build 38 ersetzt diesen Stand.
+
+### Build 36 — Dense-City-Discovery
+
+- Erweiterte die WebSim-Familien um mehrteilige Cuisine-Tags und italienische Namenssignale für dichter besiedelte Gebiete.
+- Führte zusätzliche Overpass-Spiegel in die Discovery ein.
+
+### Build 35 — wiederhergestellte WebSim-Suche
+
+- Rückkehr zur bewährten ursprünglichen WebSim-/ZIP-Logik für die automatische Umgebungssuche.
+- Aktueller Kartenausschnitt bzw. 5-km-Basis statt heuristischer generischer Restaurant-Inferenz.
+- Nutzerseitig auf Android als deutlich besser funktionierender Treffermengen-Stand bestätigt.
 
 ### Build 28 — WebSim-Basis + Pizza-Evidence statt generischer Gastro-Treffer
 
@@ -15,7 +44,6 @@ Aktueller Stand: `versionCode 28`, `versionName 2.3.5`, Android-Paket `cloud.kos
 - Optional geladene Google-Maps-Rezensionen werden ausschließlich in der laufenden Sitzung auf ein tatsächliches Pizza-Schlüsselwort geprüft; ein positiver Treffer kann den bereits geöffneten Ort als Pizza-belegt markieren. Rezensionstexte werden nicht dauerhaft gespeichert und Google wird nicht massenhaft automatisch abgefragt.
 - POI-Typisierung und Kartenlegende sind synchronisiert: 🍕 Pizzeria, ☕ Café, 🍔 Imbiss/Takeaway, 🚚 Foodtruck, 🤖 Pizzaautomat und 🍽️ Restaurant/Bar/weiterer Pizza-Ort.
 - Ein italienisches Restaurant aus der WebSim-Basis wird ohne zusätzliches Pizza-Signal nicht mehr fälschlich als 🍕 Pizzeria umetikettiert.
-- Neue Regressionstests prüfen WebSim-Basis, Ausschluss generischer Restaurants, Menü-/Kommentar-Evidence, Marker-Typisierung und Google-Review-Evidence.
 
 ## 2.3.4 — archivierte Direktversion · 14.09.2026
 
@@ -33,9 +61,8 @@ Aktueller Stand: `versionCode 28`, `versionName 2.3.5`, Android-Paket `cloud.kos
 ### APK und Packaging
 
 - `direct`-Build: nicht debuggable, gleicher Paketname wie die App (`cloud.kosch.pizzascan`), installierbar signiert und ohne `.lang1`-/`-lang1`-Namenszusatz.
-- Veröffentlichter Dateiname: `downloads/PizzaScan-2.3.4.apk`.
-- CI prüfte Signatur, Package-ID und App-Label der tatsächlich veröffentlichten APK.
-- Parallel wurde ein validiertes Release-AAB für die Google-Play-Vorbereitung erzeugt.
+- CI prüft Signatur, Package-ID und App-Label der tatsächlich veröffentlichten APK.
+- Parallel wird ein validiertes Release-AAB für die Google-Play-Vorbereitung erzeugt.
 
 ### Filter und Bewertungen
 
