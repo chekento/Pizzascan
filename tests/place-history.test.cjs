@@ -47,12 +47,15 @@ test('Archive parser rejects arbitrary Markdown',()=>{
   assert.throws(()=>H.archiveFromMarkdown('# unrelated'),/kein PizzaScan/);
 });
 
-test('Build 38 finalizer restores IndexedDB history before forcing one complete refresh',()=>{
+test('Build 38 finalizer restores IndexedDB history after map initialization without aborting first discovery',()=>{
   const source=fs.readFileSync(path.join(__dirname,'../web/runtime-finalize.js'),'utf8');
-  assert.match(source,/loadAllHistory\(\)/);
+  assert.match(source,/installCompleteProviderUnion\(\)/);
+  assert.match(source,/await waitForMap\(\)/);
+  assert.match(source,/const restored=await loadAllHistory\(\)/);
   assert.match(source,/objectStore\(store\)\.getAll\(\)/);
   assert.match(source,/mapPool=PlaceData\.merge\(mapPool/);
-  assert.match(source,/mapRequest\?\.abort/);
+  assert.doesNotMatch(source,/mapRequest\?\.abort/);
+  assert.match(source,/await waitForIdle\(\)/);
   assert.match(source,/loadPlaces\(\{force:true\}\)/);
 });
 
