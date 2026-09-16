@@ -1,6 +1,6 @@
 # Datenschutzerklärung für PizzaScan
 
-Stand: 14. September 2026 · Version 2.3.3 · Android-Paket `cloud.kosch.pizzascan`
+Stand: 16. September 2026 · Version 2.3.5 · Android-Paket `cloud.kosch.pizzascan`
 
 ## Verantwortlicher und Kontakt
 
@@ -8,7 +8,7 @@ Verantwortlich für PizzaScan: Kolja Werner Schumann (KoSch), Deutschland. Bei F
 
 ## Überblick
 
-PizzaScan bietet eine Pizzakarte, Restaurant- und Pizzeriasuche, lokale Fotoanalyse und einen privaten Baukasten für Restaurantrezensionen. Es gibt kein Konto, keine Community, kein Werbe-, Analyse- oder Tracking-SDK und keinen PizzaScan-Server für Fotos oder Bewertungen. Die App veröffentlicht keine Inhalte automatisch. Für Karten, Ortssuchen, offene Ortsbewertungen und Modelldownloads verbindet sie sich direkt mit externen Diensten.
+PizzaScan bietet eine Pizzakarte, Restaurant- und Pizzeriasuche, lokale Fotoanalyse und einen privaten Baukasten für Restaurantrezensionen. Es gibt kein Konto, keine Community, kein Werbe-, Analyse- oder Tracking-SDK und keinen PizzaScan-Server für Fotos oder Bewertungen. Die App veröffentlicht keine Inhalte automatisch. Für Karten, Ortssuchen, offene Ortsbewertungen und Modelldownloads verbindet sie sich direkt mit externen Diensten. Eine eigene Bewertung kann nur dann an Open Reviews / Mangrove übertragen werden, wenn du diese optionale Funktion zuvor aktivierst und anschließend für die konkrete Bewertung ausdrücklich den Veröffentlichungsbutton betätigst.
 
 ## Fotos und lokale KI
 
@@ -20,9 +20,9 @@ Nach erfolgreichem Download speichert PizzaScan die Modelldateien im privaten pe
 
 ## Karte, Restaurant-, Orts- und Standortsuche
 
-Kartenausschnitte werden von `tile.openstreetmap.org` geladen. Restaurantdaten kommen von `overpass-api.de` und bei Bedarf `overpass.private.coffee`. Für die normale Orts-/Adresssuche, Restaurantadressabgleiche und die verzögerten Online-Suchvorschläge verwendet PizzaScan primär `photon.komoot.io` (Photon). Photon kann dabei Suchtext und Suchmittelpunkt erhalten.
+Kartenausschnitte werden von `tile.openstreetmap.org` geladen. Restaurant- und Pizza-Ortsdaten werden über die öffentlichen Overpass-Endpunkte `overpass-api.de`, `overpass.private.coffee`, `overpass.osm.jp` und `maps.mail.ru` abgefragt. Erfolgreiche Antworten können zusammengeführt werden, damit ein nur teilweise antwortender Mirror bereits bekannte oder von einem anderen Mirror gelieferte Orte nicht verdrängt. Für die normale Orts-/Adresssuche, Restaurantadressabgleiche und die verzögerten Online-Suchvorschläge verwendet PizzaScan primär `photon.komoot.io` (Photon). Photon kann dabei Suchtext und Suchmittelpunkt erhalten.
 
-### Nominatim-Fallback in Version 2.3.3
+### Nominatim-Fallback
 
 Wenn du eine Suche **ausdrücklich absendest** und Photon technisch fehlschlägt oder keinen brauchbaren Treffer liefert, kann PizzaScan als Fallback `nominatim.openstreetmap.org` verwenden. Dieser Fallback wird **nicht für Autocomplete oder bloße Texteingabe** verwendet.
 
@@ -32,15 +32,23 @@ Photon erhält bei seinen Suchanfragen je nach Funktion Suchtexte und einen Such
 
 GPS wird nur nach deiner Aktion oder bei zuvor aktiviertem Standortstart und vorhandener Android-Berechtigung abgefragt. Ein ungefährer Standort reicht ebenfalls. Es gibt keine Standortabfrage im Hintergrund und kein Bewegungsprofil der App. Du kannst die Berechtigung jederzeit in Android widerrufen und stattdessen einen Ort, ein Restaurant oder eine Pizzeria manuell suchen. Der letzte Kartenmittelpunkt und Kartenfilter bleiben lokal gespeichert.
 
+Bereits gefundene passende Orte werden zusätzlich in einer lokalen IndexedDB zwischengespeichert und beim nächsten App-Start wieder geladen. Der Cache enthält insbesondere OSM-Ortskennung, Name, Koordinaten und die bereits geladenen strukturierten Ortsinformationen. Er wird nicht an KoSch oder einen PizzaScan-Server übertragen. Neue Kartensuchen ergänzen bzw. aktualisieren diesen lokalen Bestand; eine vorübergehend unvollständige Kartenquelle soll bereits bekannte Orte nicht einfach löschen.
+
 Informationen zu den Anbietern: [OpenStreetMap Foundation](https://osmfoundation.org/wiki/Privacy_Policy), [Nominatim Usage Policy](https://operations.osmfoundation.org/policies/nominatim/), [overpass-api.de](https://overpass-api.de/), [Private.coffee](https://private.coffee/privacy.html) und [komoot / Photon](https://www.komoot.com/privacy). Die Dienste können Verbindungsprotokolle für Betrieb und Missbrauchsschutz führen. PizzaScan steuert deren Aufbewahrungsdauer nicht und verspricht keine sofortige Löschung dieser Protokolle. Für Rechteanfragen zu solchen Protokollen wende dich auch an den jeweiligen Anbieter.
 
 ## Offene Ortsbewertungen und Bewertungsfilter
 
-Wenn „Offene Bewertungen laden“ eingeschaltet ist, fragt PizzaScan `api.mangrove.reviews` direkt nach öffentlichen Bewertungen im Bereich geladener Orte ab. Die Open Reviews Association erhält den abgefragten Suchbereich sowie IP-Adresse und technische Verbindungsdaten. Bei standortnaher Suche kann der Bereich Rückschlüsse auf deinen Standort ermöglichen. Deine Fotos, eigenen Bewertungen und Entwürfe werden nicht übertragen. Die Funktion ist in den Einstellungen abschaltbar.
+Wenn „Offene Bewertungen laden“ eingeschaltet ist, fragt PizzaScan `api.mangrove.reviews` direkt nach öffentlichen Bewertungen im Bereich geladener Orte ab. Die Open Reviews Association erhält den abgefragten Suchbereich sowie IP-Adresse und technische Verbindungsdaten. Bei standortnaher Suche kann der Bereich Rückschlüsse auf deinen Standort ermöglichen. Beim bloßen **Lesen** offener Bewertungen werden deine Fotos, eigenen Bewertungstexte und privaten Entwürfe nicht übertragen. Die Lesefunktion ist in den Einstellungen abschaltbar.
 
-Der lokale Bewertungs-Cache enthält nur Zahlen, Ortsbezüge, öffentliche Bewertungskennungen und die zur Vermeidung von Doppelzählungen nötigen öffentlichen Identitäten, keine Rezensionstexte oder Fotos. Er wird bei Bedarf nach 15 Minuten aktualisiert; gespeicherte Ergebnisse werden höchstens sieben Tage genutzt und bei einem Neuabruf ersetzt. Alle Daten lassen sich über Androids App-Speicher löschen. Externe Links zu Google Maps, Tripadvisor und Yelp werden erst nach Antippen geöffnet; dabei gehen die Suchangaben an den gewählten Anbieter.
+Der lokale Bewertungs-Cache enthält nur Zahlen, Ortsbezüge, öffentliche Bewertungskennungen und die zur Vermeidung von Doppelzählungen nötigen öffentlichen Identitäten, keine fremden Rezensionstexte oder Fotos. Er wird bei Bedarf nach 15 Minuten aktualisiert; gespeicherte Ergebnisse werden höchstens sieben Tage genutzt und bei einem Neuabruf ersetzt. Alle lokalen Daten lassen sich über Androids App-Speicher löschen. Externe Links zu Google Maps, Tripadvisor und Yelp werden erst nach Antippen geöffnet; dabei gehen die Suchangaben an den gewählten Anbieter.
 
-Hinweise der Anbieter: [Open Reviews / Mangrove](https://mangrove.reviews/terms), [Tripadvisor](https://www.tripadvisor.com/pages/privacy.html) und [Yelp](https://terms.yelp.com/privacy).
+### Freiwilliges Beitragen zu Open Reviews / Mangrove
+
+In den Einstellungen gibt es eine getrennte, standardmäßig deaktivierte Option zum **freiwilligen Veröffentlichen eigener Bewertungen**. Das Einschalten allein überträgt noch keine Bewertung. Erst wenn du bei einer konkreten eigenen, als besucht bestätigten Bewertung zusätzlich „Auf Open Reviews veröffentlichen“ auswählst, erstellt PizzaScan auf deinem Gerät einen signierten Open-Reviews-Beitrag und übermittelt ihn direkt per HTTPS an `api.mangrove.reviews`.
+
+Dabei werden die von dir gewählte Bewertung, optional dein veröffentlichter Rezensionstext, Ortsname und Koordinaten, die OpenStreetMap-Ortskennung sowie ein pseudonymer öffentlicher Signaturschlüssel übermittelt. Der dazugehörige private P-256-Schlüssel wird lokal in der App erzeugt und im privaten IndexedDB-Speicher abgelegt; PizzaScan sendet diesen privaten Schlüssel nicht an Mangrove, KoSch oder einen eigenen Server. Für eine spätere Aktualisierung desselben Beitrags wird derselbe lokale Schlüssel verwendet.
+
+Veröffentlichte Open-Reviews-Beiträge sind Teil eines öffentlichen Bewertungsnetzwerks und können von Dritten abgerufen, weiterverarbeitet und entsprechend der beim Beitrag angegebenen offenen Lizenz genutzt werden. Das Abschalten der Upload-Option verhindert zukünftige Übermittlungen, entfernt aber bereits veröffentlichte Beiträge nicht automatisch aus dem öffentlichen Netzwerk. Die Open Reviews Association verarbeitet außerdem technisch notwendige Verbindungsdaten wie IP-Adresse und Zeitpunkt. Hinweise des Anbieters: [Mangrove / Open Reviews](https://mangrove.reviews/terms) und [Mangrove Server API](https://docs.mangrove.reviews/).
 
 ### Optionale Google Maps Reviews (Places API New)
 
@@ -48,27 +56,31 @@ Wenn du freiwillig einen eigenen Google Places API-Key hinterlegst und für eine
 
 Google kann für die Places API ein Cloud-Projekt mit aktivierter Abrechnung verlangen. Ohne eigenen Key findet keine Places-API-Abfrage statt; PizzaScan bleibt vollständig nutzbar und öffnet Google Maps weiterhin nur extern. Google liefert für diese Funktion höchstens fünf Rezensionen pro passenden Ort. PizzaScan speichert die abgerufenen Google-Bewertungen und Rezensionstexte nicht dauerhaft; sie verbleiben nur im Arbeitsspeicher der laufenden Sitzung. Google-Datenschutz: <https://policies.google.com/privacy?hl=de>.
 
-## Rezensionsbaukasten, Export und externe Links
+## Rezensionsbaukasten, Besuchsarchiv, Export und externe Links
 
-Eigene Restaurantbewertungen, ausgewählte Bausteine und bearbeitete Rezensionstexte werden lokal gespeichert. Der Baukasten verarbeitet ausschließlich deine eigenen Angaben; KI-Fotowerte werden nicht übernommen. „Kopieren“ überträgt nur den angezeigten Text in die Zwischenablage deines Geräts. „Google Maps öffnen“ öffnet außerhalb der App eine Ortssuche mit Name, Adresse und Koordinaten des ausgewählten Restaurants. Den Text musst du dort selbst einfügen und veröffentlichen. Dabei gelten die [Datenschutzbestimmungen von Google](https://policies.google.com/privacy?hl=de).
+Eigene Restaurantbewertungen, ausgewählte Bausteine und bearbeitete Rezensionstexte werden lokal gespeichert. Der Baukasten verarbeitet ausschließlich deine eigenen Angaben; KI-Fotowerte werden nicht automatisch als Restaurantbewertung übernommen. „Kopieren“ überträgt nur den angezeigten Text in die Zwischenablage deines Geräts. „Google Maps öffnen“ öffnet außerhalb der App eine Ortssuche mit Name, Adresse und Koordinaten des ausgewählten Restaurants. Den Text musst du dort selbst einfügen und veröffentlichen. Dabei gelten die [Datenschutzbestimmungen von Google](https://policies.google.com/privacy?hl=de).
+
+Orte, die du als selbst besucht bestätigst und selbst bewertest, werden zusätzlich in einem dauerhaften lokalen Besuchsarchiv gespeichert. Dieses Archiv bleibt unabhängig von späteren Kartensuchen erhalten und kann in den Kartenfiltern zur Anzeige „nur bereits besucht und bewertet“ verwendet werden. Es enthält die Ortsdaten sowie deine eigene Bewertung und gegebenenfalls deine lokalen Notizen.
+
+Das Besuchsarchiv kann als Markdown-Datei exportiert und später wieder importiert werden. Die Datei enthält einen menschenlesbaren Überblick und einen maschinenlesbaren JSON-Block für die verlustarme Wiederherstellung. Sie enthält keine Fotos und keinen privaten Open-Reviews-Signaturschlüssel. Wer Zugriff auf diese Exportdatei erhält, kann jedoch die darin enthaltenen Ortsbesuche, Bewertungen und Notizen lesen. Wähle deshalb einen geeigneten Speicherort und teile die Datei nur bewusst.
 
 Fotoanalysen können mit Foto und Bewertungsdaten als JSON exportiert werden. Einzelne Rezensionsentwürfe lassen sich mit Restaurantzuordnung, eigenen Angaben und Text als JSON sichern und in der Entwurfsübersicht wiederherstellen; dieser Export enthält kein Foto und keine KI-Werte. Beim Export entscheidest du über Androids Speicherdialog, wohin die Datei gelangt. Wenn du einen Cloud-Speicher auswählst oder exportierte Daten anderweitig teilst, verarbeitet der gewählte Anbieter diese Daten. Website-, Telefon- und Routenlinks öffnen erst nach deiner Aktion die jeweilige externe Anwendung. PizzaScan hat keinen Zugriff auf dortige Konten oder veröffentlichte Rezensionen.
 
 ## Speicher, Aufbewahrung und Löschung
 
-Fotoanalysen liegen in der lokalen IndexedDB der App; Entwürfe, Einstellungen, gemerkte Orte, Such-/Fallback-Caches und Kartendaten im lokalen App-/Webspeicher. Heruntergeladene KI-Modelle liegen im privaten persistenten Android-App-Speicher und nicht im normalen Cache. Temporäre Kameradateien können im privaten App-Cache liegen und vom System gelöscht werden. Android-Cloud-Backups der App sind deaktiviert.
+Fotoanalysen liegen in der lokalen IndexedDB der App. Entwürfe und Einstellungen liegen im lokalen App-/Webspeicher. Gefundene Ortsdaten sowie das dauerhafte Besuchsarchiv liegen in einer zusätzlichen lokalen IndexedDB. Gemerkte Orte, Such-/Fallback-Daten und ein kleiner Startcache liegen ergänzend im lokalen Webspeicher. Heruntergeladene KI-Modelle liegen im privaten persistenten Android-App-Speicher und nicht im normalen Cache. Temporäre Kameradateien können im privaten App-Cache liegen und vom System gelöscht werden. Android-Cloud-Backups der App sind deaktiviert.
 
-Eine Fotoanalyse löschst du in ihren Details mit „Lokal löschen“, einen Rezensionsentwurf im Baukasten mit „Entwurf löschen“, Modelle in den Einstellungen mit „Heruntergeladene Modelle entfernen“. Alle App-Daten entfernst du über Android → Apps → PizzaScan → Speicher → Daten löschen oder durch Deinstallation. Außerhalb der App gespeicherte Exporte und bei Google veröffentlichte Rezensionen musst du dort separat löschen. Es existiert kein PizzaScan-Konto, das zusätzlich gelöscht werden müsste.
+Eine Fotoanalyse löschst du in ihren Details mit „Lokal löschen“, einen Rezensionsentwurf im Baukasten mit „Entwurf löschen“, Modelle in den Einstellungen mit „Heruntergeladene Modelle entfernen“. Alle App-Daten einschließlich Ortscache, Besuchsarchiv und lokalem Open-Reviews-Schlüssel entfernst du über Android → Apps → PizzaScan → Speicher → Daten löschen oder durch Deinstallation. Außerhalb der App gespeicherte Exporte und bei externen Netzwerken veröffentlichte Rezensionen musst du dort separat verwalten. Es existiert kein PizzaScan-Konto, das zusätzlich gelöscht werden müsste.
 
 ## Zwecke, Rechtsgrundlagen und Sicherheit
 
-Die Verarbeitung dient der von dir genutzten App-Funktion (Art. 6 Abs. 1 Buchst. b DSGVO); soweit eine Einwilligung erforderlich ist, beruht die optionale Standortnutzung und Modellfreigabe auf deiner Entscheidung (Art. 6 Abs. 1 Buchst. a DSGVO). Eine erteilte Freigabe kannst du für die Zukunft durch Entzug der Standortberechtigung beziehungsweise Entfernen der Modelle zurücksetzen. Die Rechtmäßigkeit vorheriger Verarbeitung bleibt davon unberührt.
+Die Verarbeitung dient der von dir genutzten App-Funktion (Art. 6 Abs. 1 Buchst. b DSGVO); soweit eine Einwilligung erforderlich ist, beruht die optionale Standortnutzung, Modellfreigabe und freiwillige Veröffentlichung zu Open Reviews auf deiner Entscheidung (Art. 6 Abs. 1 Buchst. a DSGVO). Eine erteilte Freigabe kannst du für die Zukunft durch Entzug der Standortberechtigung, Entfernen der Modelle beziehungsweise Abschalten der Open-Reviews-Uploadfunktion zurücksetzen. Das Abschalten kann eine bereits bewusst öffentlich veröffentlichte Bewertung nicht automatisch aus dem externen Netzwerk zurückrufen. Die Rechtmäßigkeit vorheriger Verarbeitung bleibt davon unberührt.
 
-Karten-, Such- und Modellanfragen erfolgen verschlüsselt über HTTPS. Fotos, Entwürfe und persistente Modelldateien liegen im privaten App-Bereich unter dem Schutz des Android-Geräts. Bitte sichere dein Gerät mit einer Bildschirmsperre. Bei externen Anbietern kann eine Verarbeitung außerhalb der EU/des EWR stattfinden. Die jeweiligen Anbieter erläutern in ihren Datenschutzhinweisen Standorte, Rechtsgrundlagen und gegebenenfalls Schutzmaßnahmen für internationale Übermittlungen. Die App enthält keine Werbung und verkauft keine Daten.
+Karten-, Such-, Open-Reviews- und Modellanfragen erfolgen verschlüsselt über HTTPS. Fotos, Entwürfe, Besuchsarchiv, private Open-Reviews-Schlüssel und persistente Modelldateien liegen im privaten App-Bereich unter dem Schutz des Android-Geräts. Bitte sichere dein Gerät mit einer Bildschirmsperre. Bei externen Anbietern kann eine Verarbeitung außerhalb der EU/des EWR stattfinden. Die jeweiligen Anbieter erläutern in ihren Datenschutzhinweisen Standorte, Rechtsgrundlagen und gegebenenfalls Schutzmaßnahmen für internationale Übermittlungen. Die App enthält keine Werbung und verkauft keine Daten.
 
 ## Deine Rechte
 
-Nach den gesetzlichen Voraussetzungen hast du Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie auf Widerruf erteilter Einwilligungen. Außerdem kannst du dich bei einer zuständigen Datenschutzaufsichtsbehörde beschweren. Der Entwickler kann deine ausschließlich lokal gespeicherten Fotos oder Entwürfe nicht aus der Ferne einsehen oder löschen. Dafür stehen die beschriebenen Funktionen auf deinem Gerät bereit.
+Nach den gesetzlichen Voraussetzungen hast du Rechte auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch sowie auf Widerruf erteilter Einwilligungen. Außerdem kannst du dich bei einer zuständigen Datenschutzaufsichtsbehörde beschweren. Der Entwickler kann deine ausschließlich lokal gespeicherten Fotos, Entwürfe, Ortscaches, Besuchsdaten oder privaten Open-Reviews-Schlüssel nicht aus der Ferne einsehen oder löschen. Dafür stehen die beschriebenen Funktionen auf deinem Gerät bereit. Für bereits veröffentlichte Daten gelten zusätzlich die Verfahren und Datenschutzinformationen des jeweiligen externen Netzwerks.
 
 ## Grenzen der Fotoanalyse
 
