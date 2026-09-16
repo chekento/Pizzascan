@@ -76,7 +76,7 @@ test('marker category distinguishes Italian candidates from actual pizza places'
 
 test('WebSim query restores the original families without listing every restaurant',()=>{
  const q=S.websimQuery({lat:53.675,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
- assert.match(q,/pizzascan-websim-search-v7/);
+ assert.match(q,/pizzascan-websim-search-v8/);
  assert.match(q,/cuisine\"~\"pizza\|pizzeria/);
  assert.match(q,/amenity\"=\"restaurant\"\]\[\"cuisine\"~\"italian\|italiano\|italiana/);
  assert.match(q,/ristorante\|trattoria\|osteria/);
@@ -110,6 +110,15 @@ test('focused fallback terms cover requested WebSim venue vocabulary',()=>{
  assert.equal(S.FOCUSED_TARGET,6);
 });
 
+test('precise provider recovery filters ordinary restaurants but keeps Italian cuisine',async()=>{
+ const service={async json(){return {elements:[el(61,{amenity:'restaurant',name:'BLOCK HOUSE',cuisine:'steak'}),el(62,{amenity:'restaurant',name:'Da Franco',cuisine:'italian'}),el(63,{amenity:'restaurant',name:'Pizza Uno',cuisine:'pizza'})]};}};
+ const q=S.websimQuery({lat:53.67,lng:10.24},5,{south:53.6,west:10.1,north:53.7,east:10.3});
+ const out=await S.preciseProviderRecovery(service,q,{},[]);
+ assert.ok(out.elements.some(x=>x.tags.name==='Da Franco'));
+ assert.ok(out.elements.some(x=>x.tags.name==='Pizza Uno'));
+ assert.ok(!out.elements.some(x=>x.tags.name==='BLOCK HOUSE'));
+});
+
 test('install patches Service.prototype so the later-created app service really gets focused recovery',async()=>{
  class Service{
   async overpass(){return {data:{elements:[el(50,{amenity:'restaurant',name:'Restaurant Nord'})]},source:'base'};}
@@ -123,6 +132,13 @@ test('install patches Service.prototype so the later-created app service really 
  const result=await service.overpass(q);
  assert.ok(result.data.elements.some(x=>x.tags?.name==='Trattoria Roma'));
  assert.equal(service.overpass.__websimFocused,true);
+});
+
+test('legacy generic Photon fallback is bypassed before a future Service instance is created',()=>{
+ class Service{async overpass(){return {data:{elements:[]},source:'base'};}async nearbyFallback(){return [el(70,{amenity:'fast_food',name:'Burger Only'})];}}
+ const PD={Service,TYPES:{pizzeria:{emoji:'🍕'},other:{emoji:'🍽️'}},query(){return 'old';},filter(list){return list;}};
+ S.install({PizzaPlaces:PD,PizzaRatingsUI:{summary:()=>({pizzaMentions:0})},localStorage:null});
+ assert.equal(Service.prototype.nearbyFallback.__websimBypass,true);
 });
 
 test('installed map filter hides generic candidate pool and exposes review-confirmed restaurants',()=>{
@@ -147,5 +163,5 @@ test('Google review evidence only counts actual review text',()=>{
 });
 
 test('relevance cache marker advances for installed clients',()=>{
- assert.equal(S.MARKER,'pizzascan-smart-discovery-v7');
+ assert.equal(S.MARKER,'pizzascan-smart-discovery-v8');
 });
