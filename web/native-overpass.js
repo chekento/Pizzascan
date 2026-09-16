@@ -49,12 +49,10 @@ async function nativeRequest(root,url,query,signal){
  if(raw)return raw;
  return root.bridge('overpass',payload);
 }
-function install(root){
- if(!root.placeService||root.placeService.json?.__nativeOverpass)return false;
- const base=root.placeService.json.bind(root.placeService);
+function makeWrapped(root,base){
  const wrapped=async function(url,options={},signal,timeout=18000){
   const query=queryFrom(options),native=isAndroidNative(root),post=String(options.method||'GET').toUpperCase()==='POST';
-  if(!native||!post||!allowed(url)||!query)return base(url,options,signal,timeout);
+  if(!native||!post||!allowed(url)||!query)return base.call(this,url,options,signal,timeout);
   if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
 
   /* Packaged Android must not depend on WebView CORS for primary POI data. Use
@@ -71,11 +69,23 @@ function install(root){
   }
 
   /* Direct WebView fetch is a secondary rescue path only. */
-  return base(url,options,signal,Math.max(DIRECT_FALLBACK_TIMEOUT,Number(timeout)||0));
+  return base.call(this,url,options,signal,Math.max(DIRECT_FALLBACK_TIMEOUT,Number(timeout)||0));
  };
- wrapped.__nativeOverpass=true;wrapped.__nativeOverpassInner=base;root.placeService.json=wrapped;
- root.PizzaScanNativeOverpass={active:true,nativeFirst:true,longTimeout:true,endpoints:ENDPOINTS.slice()};
- return true;
+ wrapped.__nativeOverpass=true;wrapped.__nativeOverpassInner=base;return wrapped;
 }
-return {ENDPOINTS,NATIVE_TIMEOUT,DIRECT_FALLBACK_TIMEOUT,allowed,queryFrom,isAndroidNative,hookReplies,rawNative,nativeRequest,install};
+function install(root){
+ let installed=false;
+ /* native-overpass.js is loaded before script.js. Patch the Service prototype so
+  * the later-created placeService inherits the native transport. The former
+  * instance-only installer silently did nothing on a normal app startup. */
+ const proto=root.PizzaPlaces?.Service?.prototype;
+ if(proto&&typeof proto.json==='function'&&!proto.json.__nativeOverpass){proto.json=makeWrapped(root,proto.json);installed=true;}
+ if(root.placeService&&typeof root.placeService.json==='function'&&!root.placeService.json.__nativeOverpass){root.placeService.json=makeWrapped(root,root.placeService.json);installed=true;}
+ if(installed||proto?.json?.__nativeOverpass||root.placeService?.json?.__nativeOverpass){
+  root.PizzaScanNativeOverpass={active:true,nativeFirst:true,longTimeout:true,prototype:true,endpoints:ENDPOINTS.slice()};
+  return true;
+ }
+ return false;
+}
+return {ENDPOINTS,NATIVE_TIMEOUT,DIRECT_FALLBACK_TIMEOUT,allowed,queryFrom,isAndroidNative,hookReplies,rawNative,nativeRequest,makeWrapped,install};
 });
