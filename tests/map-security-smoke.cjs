@@ -14,6 +14,11 @@ const {server,until}=require('./helpers.cjs');
  try{
   await page.goto(url);
   await until(page,()=>PizzaScan.ready&&!!globalThis.PizzaMapNetwork&&!PizzaScan.diagnostics().mapLoading,30000);
+  /* runtime-finalize.js may intentionally schedule one complete all-provider pass
+     after the first idle frame. Wait until that finalizer has completed before
+     replacing placeService.fetcher, otherwise those legitimate background calls
+     are incorrectly counted as retries of the isolated request below. */
+  await until(page,()=>globalThis.PizzaBuild38Runtime?.installed===true&&!PizzaScan.diagnostics().mapLoading,80000);
   const result=await page.evaluate(async()=>{
    const calls=[];
    placeService.fetcher=async (requestUrl,options)=>{
