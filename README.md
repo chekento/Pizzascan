@@ -2,23 +2,23 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.5</h1>
-<p align="center"><strong>Gute Pizza finden · intelligente Pizza-Evidence · Bewertungen filtern · Fotos lokal analysieren</strong></p>
+<h1 align="center">PizzaScan 2.3.5 · Build 39</h1>
+<p align="center"><strong>Gute Pizza finden · vollständige Karten-Discovery · Besuche archivieren · Bewertungen teilen · Fotos lokal analysieren</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
 <p align="center">
   <img src="store/graphics/PizzaScan-Feature-EN-1024x500.png" alt="PizzaScan Feature Graphic" width="1024">
 </p>
 
-## 📱 PizzaScan direkt installieren
+## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk"><strong>⬇️ PizzaScan 2.3.5 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk"><strong>⬇️ PizzaScan 2.3.5 · Build 39 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.5 · Build 29 · Android 8+ · Paket cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.5 · Build 39 · Android 8+ · Paket cloud.kosch.pizzascan</strong></p>
 
-Die aktuelle Direkt-APK trägt in App, Dateiname und Android-Paket nur den Namen **PizzaScan**. Sie enthält die Karten-/Pizza-Discovery, manuelle Restaurant-/POI-Suche, Ratingfilter, Restaurantdetails, Review Builder, fünf Sprachen und die lokale Fotoanalyse. Die veröffentlichte APK wird in CI signaturgeprüft, aus der tatsächlich gebauten APK heraus UI-getestet und zusätzlich auf Android 16 installiert und gestartet.
+Die Direkt-APK ist der aktuelle verifizierte CI-Build. Sie enthält die Karten-/Pizza-Discovery, Restaurant- und POI-Suche, persistente Place-Historie, Besuchsfilter, Markdown-Sicherung bereits besuchter Orte, den Review Builder, optionale Mangrove/Open-Reviews-Veröffentlichung, fünf Sprachen und lokale Fotoanalyse.
 
 <p align="center">
 <a href="downloads/SHA256SUMS-2.3.5.txt"><strong>SHA-256</strong></a>
@@ -30,81 +30,75 @@ Die aktuelle Direkt-APK trägt in App, Dateiname und Android-Paket nur den Namen
 <a href="https://raw.githack.com/chekento/Pizzascan/main/web/index.html"><strong>🌐 Browser-Version</strong></a>
 </p>
 
-## 🍕 2.3.5: intelligentere Pizza-Discovery
+## 🍕 Suche ohne künstliche Trefferobergrenze
 
-Die automatische Umgebungskarte ist bewusst **pizza-spezifisch**. Sie übernimmt die POI-Gruppen, die bereits die ursprüngliche WebSim-App vorgesehen hatte, statt pauschal jedes Restaurant im Umkreis als Kandidaten zu behandeln. Darüber hinaus wird ein Ort nur ergänzt, wenn ein nachvollziehbares Pizza- oder Italiener-Signal vorhanden ist.
+PizzaScan verwendet die ursprüngliche WebSim-/OSM-Idee als Basis und erweitert sie für dichte Städte und unvollständige Quelldaten. Die Suche arbeitet im aktuellen Kartenausschnitt und führt passende OSM-Treffer mehrerer Overpass-Quellen zusammen, statt die Anzeige auf eine feste Anzahl wie 20, 50 oder 100 Orte zu begrenzen.
 
-**WebSim-Basis bleibt erhalten:**
+Unterstützt werden unter anderem:
 
-- `cuisine=pizza` bzw. Pizza-/Pizzeria-Küchenangaben
+- `cuisine=pizza` und Pizza-/Pizzeria-Küchenangaben
 - italienische Restaurants sowie typische Namen wie Ristorante, Trattoria und Osteria
-- Cafés, Imbisse, Foodtrucks, Takeaways sowie Bars/Pubs mit Pizza-/Italienisch-Küchenangabe
-- Pizza-Spezialität, Pizza im Namen oder in der Beschreibung
+- Cafés, Imbisse, Foodtrucks, Takeaways sowie Bars/Pubs mit Pizza-/Italienisch-Bezug
+- Pizza-Spezialität, Pizza im Namen, in Beschreibung, Notizen, Produkten oder Speisekarten-Metadaten
 - Pizzaautomaten (`vending=pizza` / `vending:pizza=yes`)
+- `node`, `way` und `relation` aus OpenStreetMap
 
-**Zusätzliche Orte benötigen Pizza-Evidence.** PizzaScan berücksichtigt dafür Pizza-Hinweise in strukturierten OSM-Daten, Beschreibungen/Notizen, Produktangaben und Speisekarten-Metadaten. Ein beliebiges deutsches Restaurant, Café, Döner-Imbiss oder eine Bar ohne solchen Bezug wird nicht mehr allein wegen der Kategorie in die automatische Pizza-Karte aufgenommen. Explizite Küchen wie Asia, Sushi, Thai, Chinese usw. werden bei schwachen Hinweisen verworfen; ein direkter Pizza-Nachweis kann sie weiterhin legitimieren.
+Treffer verschiedener Quellen werden nach OSM-Identität dedupliziert. Bereits gefundene Places können lokal persistent gehalten und beim nächsten Start wieder geladen werden, damit ein temporär schwächerer Kartenprovider bekannte Orte nicht einfach verschwinden lässt.
 
-Die optionale Google-Maps-Integration bleibt freiwillig und wird nur mit eigenem Places-API-Key sowie auf ausdrückliches Laden verwendet. Enthält eine geladene Google-Rezension tatsächlich das Wort **Pizza**, kann PizzaScan diesen Ort für die laufende Sitzung als Pizza-belegt markieren. Google-Rezensionstexte werden weiterhin nicht dauerhaft gespeichert. Ein automatisches massenhaftes Abfragen von Google-Orten findet nicht statt.
+Photon bleibt für Orts-/Adresssuche und kontrollierte Fallbacks erhalten; die reguläre Karten-Discovery wird nicht von einer kleinen Photon-Ergebniszahl bestimmt.
 
-## 🗺️ POI-Symbole und Legende
+## 🗺️ POI-Symbole
 
-Marker und Legende verwenden dieselben Kategorien:
+- 🍕 **Pizzeria** – bestätigter Pizza-Bezug
+- ☕ **Café**
+- 🍔 **Imbiss / Takeaway**
+- 🚚 **Foodtruck**
+- 🤖 **Pizzaautomat**
+- 🍽️ **Restaurant / Bar / weiterer passender Ort**
+- ⭐ **Gemerkt**
+- ✓ **Besucht / selbst bewertet**
+- 📍 **Dein Standort**
 
-- 🍕 **Pizzeria** – Restaurant mit bestätigtem Pizza-Signal
-- ☕ **Café** – Café aus der Pizza-/WebSim-Auswahl
-- 🍔 **Imbiss / Takeaway** – Fast Food oder Takeaway
-- 🚚 **Foodtruck** – mobile Gastronomie / Foodtruck
-- 🤖 **Pizzaautomat** – Pizza-Vending
-- 🍽️ **Restaurant / Bar / möglicher Pizza-Ort** – z. B. italienische WebSim-Basis, Bar/Pub oder sonstiger belegter Pizza-Ort, der nicht als Pizzeria umetikettiert werden soll
-- ⭐ **Gemerkt**, ✓ **Besucht**, 📍 **Dein Standort** – lokale Zustände
+## ✓ Besuchte Orte dauerhaft erhalten
 
-Dadurch ist das Symbol auf der Karte direkt aus derselben Typisierung abgeleitet, die auch in Kartenliste und Details verwendet wird. Ein italienisches Restaurant ohne direktes Pizza-Signal bleibt beispielsweise 🍽️ statt fälschlich 🍕 zu werden.
+Eigene Bewertungen und besuchte Orte werden unabhängig von einer späteren Kartenabfrage aufbewahrt. Dadurch bleiben bereits besuchte Restaurants verfügbar, selbst wenn ein externer Kartenprovider sie bei einer späteren Sitzung vorübergehend nicht zurückliefert.
 
-## 🔎 Manuelle Restaurant- und Ortssuche
+In den Filtern kann auf **nur bereits besuchte / selbst bewertete Orte** eingeschränkt werden. Das Besuchsarchiv lässt sich außerdem als Markdown-Datei exportieren und wieder importieren. Damit kann die persönliche Restaurant-Historie gesichert und später erneut geladen werden.
 
-Die strengere automatische Umgebungskarte schränkt die **bewusste manuelle Suche** nicht unnötig ein. Wer nach einem konkreten Restaurant, Café, Imbiss, einer Bar, einem Ort oder einer Adresse sucht, kann weiterhin breite Suchtreffer erhalten. Damit kann ein Restaurant auch dann gefunden und geprüft werden, wenn seine OSM-Daten noch keinen Pizza-Hinweis enthalten.
+## ⭐ Bewertungen und Open Reviews
 
-Bei abgesendeten Suchanfragen gleicht PizzaScan Kategorie, Name, Adresse, OSM-Identität und Entfernung ab, dedupliziert identische POIs und priorisiert exakte Namens-/Ortskombinationen. Photon bleibt für Orts-/Adresssuche und Vorschläge erhalten; Nominatim kann kontrolliert als Such-Fallback einspringen.
+PizzaScan unterstützt eigene Restaurantbewertungen und offene Bewertungsdaten über **Mangrove / Open Reviews**.
 
-## 🧭 Datenquellen und Ausfallsicherheit
+Die Veröffentlichung eigener Ratings ist freiwillig und standardmäßig nicht erforderlich. Wenn Open-Reviews-Publishing in den Einstellungen aktiviert wird, kann eine eigene Bewertung gezielt an Mangrove/Open Reviews übertragen und damit zum offenen Rating-Netzwerk beigetragen werden. Die lokale Bewertung bleibt unabhängig davon in PizzaScan erhalten.
 
-Build 29 behebt den in Build 28 beobachteten Nulltreffer-Fall. Die automatische Pizza-Karte prüft die beiden primären Overpass-Quellen **parallel mit einer pizza-spezifischen Photon-Ausweichsuche**. Photon fragt dabei gezielt `cuisine=pizza`, `cuisine=italian` sowie Pizza-/Pizzeria-/Ristorante-/Trattoria-/Osteria-Namen ab. Erst wenn diese Wege keine plausiblen Treffer liefern, werden die weiteren Overpass-Mirrors geprüft.
+Zusätzlich stehen Links zu Google Maps, Tripadvisor und Yelp bereit. Eine optionale Google-Places-Integration kann mit einem eigenen API-Key verwendet werden; sie ist für die Grundfunktion von PizzaScan nicht erforderlich.
 
-Die Recovery erweitert dabei **nicht** stillschweigend auf beliebige Restaurants, nur um eine Zielanzahl an POIs zu erreichen. Dadurch bleibt die Karte relevant, fällt bei einem Overpass-Ausfall aber nicht mehr sofort auf `0 von 0 Orten` zurück. Manuelle Restaurant- und Detailabfragen verwenden weiterhin die breite bestehende Suchpipeline.
+## 🔎 Manuelle Suche
 
-Der Discovery-Cache-Marker `v3` löscht bei einem Upgrade einmalig alte Karten-/Photon-Recovery-Caches, damit veraltete Null- oder Breitensuchergebnisse nicht weiterverwendet werden. Gemerkte Orte und persönliche Daten werden dadurch nicht gelöscht.
-
-## ⭐ Bewertungen und Restaurantdetails
-
-- Mindestbewertung 0,0–5,0 in 0,1-Schritten
-- offene Bewertungen über Mangrove / Open Reviews
-- externe Links zu Google Maps, Tripadvisor und Yelp
-- optionale Google Places API mit eigenem Key für Google-Ratingdaten und bis zu fünf Rezensionen
-- Adresse, Telefon, Website, Speisekarte, Öffnungszeiten, Ausstattung und OSM-Quelle soweit in den Quelldaten vorhanden
-- eigene Rezensionen bleiben im lokalen Review Builder
+Neben der automatischen Umgebungskarte kann gezielt nach Restaurant, Café, Imbiss, Bar, Ort oder Adresse gesucht werden. PizzaScan gleicht dabei Name, Adresse, Kategorie, OSM-Identität und Entfernung ab und dedupliziert identische POIs.
 
 ## 📷 Lokale Fotoanalyse
 
 Die Bildanalyse läuft lokal auf dem Gerät. Zur Auswahl stehen **CLIP ViT-B/32**, **CLIP ViT-B/16** und **SigLIP Base Patch16-224** via ONNX/WASM. Das ausgewählte Modell wird erst nach Bestätigung heruntergeladen und anschließend im privaten persistenten App-Speicher gehalten.
 
-Die Fotoanalyse verwendet 25 sichtbare Kriterien und 100 simulierte Gewichtungsperspektiven. Diese Perspektiven sind keine 100 realen Experten und keine unabhängigen Gutachten. Fotos werden für die Analyse nicht an einen PizzaScan-Server hochgeladen.
+Die Fotoanalyse verwendet 25 sichtbare Kriterien und 100 simulierte Gewichtungsperspektiven. Diese Perspektiven sind keine 100 realen Experten. Fotos werden für die Analyse nicht an einen PizzaScan-Server hochgeladen.
 
 ## 📦 Versionen
 
 | Version | Status | Download |
 |---|---|---|
-| **2.3.5 · Build 29** | aktuelle Direktversion | [⬇️ PizzaScan-2.3.5.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk) |
-| 2.3.4 | Archiv / breite POI-Regression | [Archiv öffnen](downloads/README.md) |
-| 2.3.3 | Archiv / Regression | [Archiv öffnen](downloads/README.md) |
-| 2.3.2 | Archiv / Regression | [Archiv öffnen](downloads/README.md) |
-| 2.3.1 | Archiv / Regression | [Archiv öffnen](downloads/README.md) |
+| **2.3.5 · Build 39** | **aktuelle Direktversion** | [⬇️ PizzaScan-2.3.5.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk) |
+| 2.3.4 | Archiv | [Archiv öffnen](downloads/README.md) |
+| 2.3.3 | Archiv | [Archiv öffnen](downloads/README.md) |
+| 2.3.2 | Archiv | [Archiv öffnen](downloads/README.md) |
+| 2.3.1 | Archiv | [Archiv öffnen](downloads/README.md) |
 | 2.3.0 | Archiv / Basisstand | [Archiv öffnen](downloads/README.md) |
 
-> **Signaturhinweis:** Die direkt von GitHub installierbare APK wird für die Direktinstallation signiert. Die spätere Google-Play-Ausgabe kann mit einer anderen Release-Signatur ausgeliefert werden. Ein Wechsel kann deshalb eine Neuinstallation erfordern. Persönliche lokale Daten vorher exportieren/sichern.
+> **Signaturhinweis:** Die GitHub-Direkt-APK ist für Direktinstallation signiert. Google Play verwendet Play App Signing. Vor einer Neuinstallation persönliche PizzaScan-Daten am besten über die vorhandenen Exportfunktionen sichern.
 
 ## Google Play
 
-Das Repository erzeugt zusätzlich ein validiertes Release-AAB für die Google-Play-Vorbereitung. Die Google Group **PizzaScan Beta Testers** ist vorbereitet; der geschlossene Play-Track wird erst freigegeben, wenn die aktuelle Direktversion auf realen Geräten insbesondere bei POI-Genauigkeit, Suche, Standort, Ratings und Offline-KI abgenommen ist.
+Das Repository erzeugt zusätzlich ein validiertes Release-AAB für Google Play. Ein vorhandener geschlossener Testtrack und die Testergruppe können für neuere Builds weiterverwendet werden; für ein Update wird lediglich ein neues AAB mit höherem `versionCode` in denselben Track veröffentlicht.
 
 <p align="center">
 <a href="https://groups.google.com/g/pizzascan-beta-testers"><strong>PizzaScan Beta Testers</strong></a>
@@ -118,8 +112,10 @@ Das Repository erzeugt zusätzlich ein validiertes Release-AAB für die Google-P
 
 - Android 8+ (`minSdk 26`), Target SDK 36
 - Paket: `cloud.kosch.pizzascan`
+- Version 2.3.5, `versionCode 39`
 - WebView-App mit gepackten lokalen Web-Assets
 - OpenStreetMap / Overpass, Photon, kontrollierter Nominatim-Fallback, Leaflet
+- persistente lokale Place-/Besuchshistorie
 - Mangrove / Open Reviews; Google Places optional mit eigenem Key
 - CLIP / SigLIP lokal via ONNX/WASM
 - CI: Unit-/Regression-/Playwright-Smokes, APK-Inhaltsprüfung, Signatur-/Package-Prüfung, Android-16-Installations- und Startprüfung
