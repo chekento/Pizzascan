@@ -21,11 +21,8 @@ public class AppSmokeTest {
             return (WebView) field.get(activity);
         } catch (Exception e) { throw new RuntimeException(e); }
     }
+
     private String js(ActivityScenario<MainActivity> scenario, String script) throws Exception {
-        // API-36 hosted emulators occasionally drop/delay the first WebView callback
-        // directly after a cold boot or Activity recreation. Re-submit the exact same
-        // read/evaluation instead of turning a transient scheduler hiccup into a false
-        // product failure. App assertions still fail normally when JavaScript returns.
         for (int attempt = 1; attempt <= 3; attempt++) {
             AtomicReference<String> value = new AtomicReference<>();
             AtomicReference<Throwable> failure = new AtomicReference<>();
@@ -34,19 +31,10 @@ public class AppSmokeTest {
                 WebView view = web(a);
                 boolean posted = view.post(() -> {
                     try {
-                        view.evaluateJavascript(script, result -> {
-                            value.set(result);
-                            latch.countDown();
-                        });
-                    } catch (Throwable t) {
-                        failure.set(t);
-                        latch.countDown();
-                    }
+                        view.evaluateJavascript(script, result -> { value.set(result); latch.countDown(); });
+                    } catch (Throwable t) { failure.set(t); latch.countDown(); }
                 });
-                if (!posted) {
-                    failure.set(new IllegalStateException("WebView rejected UI task"));
-                    latch.countDown();
-                }
+                if (!posted) { failure.set(new IllegalStateException("WebView rejected UI task")); latch.countDown(); }
             });
             if (latch.await(25, TimeUnit.SECONDS)) {
                 if (failure.get() != null) throw new RuntimeException("WebView evaluation failed", failure.get());
@@ -57,6 +45,7 @@ public class AppSmokeTest {
         fail("WebView callback timed out after retries for: " + script);
         return null;
     }
+
     private void ready(ActivityScenario<MainActivity> scenario) throws Exception {
         long deadline = SystemClock.elapsedRealtime() + 90000;
         while (SystemClock.elapsedRealtime() < deadline) {
@@ -65,6 +54,7 @@ public class AppSmokeTest {
         }
         fail("Packaged app did not initialize");
     }
+
     @Test public void packagedAppStartsAndKeepsDataAcrossRecreation() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
@@ -118,11 +108,12 @@ public class AppSmokeTest {
             js(scenario, "PizzaScan.back();");
         }
     }
+
     @Test public void ratingsAndCompactNavigationAreInTheInstalledApk() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click();navigate('map');");
-            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.5' && document.querySelector('.brand small').textContent==='2.3.5'"));
+            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.6' && document.querySelector('.brand small').textContent==='2.3.6'"));
             assertEquals("true", js(scenario, "document.querySelector('.app-bottom-bar').getBoundingClientRect().height<=76 && document.querySelectorAll('.app-footer a').length===2"));
             js(scenario, "document.getElementById('rating-filter-open').click();");
             assertEquals("true", js(scenario, "document.getElementById('filter-min-rating').step==='0.1' && document.getElementById('filter-min-rating').getBoundingClientRect().height>0"));
@@ -132,10 +123,15 @@ public class AppSmokeTest {
             assertEquals("true", js(scenario, "mapConfig().minRating===4.6"));
             js(scenario, "(()=>{const p=PlaceData.fromOverpass([{type:'node',id:990000001,lat:53.55,lon:10,tags:{name:'APK UI Testrestaurant',cuisine:'pizza'}}])[0];openSheet('place','TEST',detailsHtml(p));})();");
             assertEquals("true", js(scenario, "document.querySelectorAll('#venue-ratings .rating-portals [data-action=venue-link]').length===3 && ['google.com','tripadvisor.com','yelp.com'].every(host=>[...document.querySelectorAll('#venue-ratings .rating-portals button')].some(b=>new URL(b.dataset.url).hostname.endsWith(host)))"));
-            js(scenario, "closeSheet();settings.filters={...mapConfig(),minRating:0};saveSettings();navigate('photo');");
+            js(scenario, "closeSheet();settings.filters={...mapConfig(),minRating:0};saveSettings();document.getElementById('settings-open').click();");
+            assertEquals("true", js(scenario, "document.getElementById('build41-settings')!==null && document.getElementById('health-run')!==null && document.getElementById('repair-cache')!==null"));
+            js(scenario, "document.getElementById('sheet-close').click();document.getElementById('filter-open').click();");
+            assertEquals("true", js(scenario, "document.getElementById('filter-radius').type==='range' && document.getElementById('filter-radius').min==='0' && document.getElementById('filter-radius').max==='10' && document.getElementById('filter-radius').step==='0.5'"));
+            js(scenario, "document.getElementById('sheet-close').click();navigate('photo');");
             assertEquals("true", js(scenario, "document.getElementById('nav-photo').getAttribute('aria-pressed')==='true'"));
         }
     }
+
     @Test public void realLocalModelRunsInPackagedAndroidWorker() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
