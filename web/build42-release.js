@@ -64,6 +64,11 @@
   try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.8.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
   try{const badge=root.document?.querySelector?.('.brand small');if(badge)badge.textContent=VERSION;}catch{}
  }
+ function syncVersionAfterBoot(root){
+  let attempts=0;
+  const tick=()=>{syncVersion(root);attempts++;if(!root.PizzaScan?.ready&&attempts<80)root.setTimeout(tick,50);else{root.setTimeout(()=>syncVersion(root),0);root.setTimeout(()=>syncVersion(root),250);root.setTimeout(()=>syncVersion(root),1000);}};
+  tick();
+ }
  function injectCompactStyles(doc){
   if(doc.getElementById('build43-compact-style'))return;
   const style=doc.createElement('style');style.id='build43-compact-style';style.textContent=`
@@ -100,10 +105,11 @@
   try{if(typeof mapPool!=='undefined'&&Array.isArray(mapPool))mapPool=mapPool.filter(relevantPlace);if(typeof places!=='undefined'&&Array.isArray(places))places=places.filter(relevantPlace);}catch{}
   try{if(typeof renderPlaces==='function'&&!renderPlaces.__build43){const old=renderPlaces;renderPlaces=function(){const out=old();try{const list=typeof visiblePlaces==='function'?visiblePlaces():[],confirmed=list.filter(p=>p.pizzaEvidence==='confirmed').length,italian=list.filter(p=>p.pizzaEvidence==='possible').length,cfg=typeof mapConfig==='function'?mapConfig():{};const title=root.document.getElementById('places-title'),count=root.document.getElementById('result-count');if(title)title.textContent=cfg.radius?`Pizza & Italienisch · ${cfg.radius} km`:'Pizza & Italienisch · Kartenausschnitt';if(count)count.textContent=`${list.length} Orte · ${confirmed} Pizza · ${italian} Italienisch`;}catch{}return out;};renderPlaces.__build43=true;renderPlaces.__inner=old;}}catch{}
   try{if(typeof root.mapConfig==='function'&&!root.mapConfig.__build43){const old=root.mapConfig;const wrap=function(){const cfg=old();return {...cfg,includeUnconfirmed:false};};wrap.__build43=true;wrap.__inner=old;root.mapConfig=wrap;}}catch{}
-  installMarkers(root);syncVersion(root);updateCopy(root);compactLegacyTools(root.document);
+  installMarkers(root);syncVersionAfterBoot(root);updateCopy(root);compactLegacyTools(root.document);
   root.PizzaScanDiscovery43={version:VERSION,build:BUILD,mode:'progressive-relevance-osm',pizzaOrItalianRequired:true,noGenericRestaurants:true,firstPaintProgressive:true,fixedRadiusUsesCircle:true};
   const observer=new MutationObserver(()=>compactLegacyTools(root.document));observer.observe(root.document.documentElement,{childList:true,subtree:true});root.setTimeout(()=>observer.disconnect(),12000);
-  root.addEventListener('load',()=>{try{if(typeof refreshArea==='function')refreshArea();}catch{}compactLegacyTools(root.document);},{once:true});
+  root.document.addEventListener('DOMContentLoaded',()=>syncVersion(root),{once:true});
+  root.addEventListener('load',()=>{syncVersion(root);try{if(typeof refreshArea==='function')refreshArea();}catch{}compactLegacyTools(root.document);},{once:true});
   return true;
  }
  return {VERSION,BUILD,PIZZA_RE,ITALIAN_CUISINE_RE,ITALIAN_NAME_RE,areaToken,relevantQuery,tagText,pizzaEvidence,italianEvidence,relevantTags,normalizeElement,normalizeElements,relevantPlace,filterPlaces,install};
