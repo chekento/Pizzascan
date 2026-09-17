@@ -12,4 +12,7 @@
  };
  for(const [lang,copy] of Object.entries(R.COPY||{})){copy.nextText=text[lang]||text.en;copy.historyText=(copy.historyText||'').replace('2.3.5','2.3.6');}
  try{R.syncVersion?.();R.decorate?.();}catch{}
+ if(typeof document!=='undefined'&&!document.querySelector('script[data-build42-marker]')){
+  const marker=document.createElement('script');marker.src='build42-marker.js';marker.defer=true;marker.dataset.build42Marker='1';marker.onload=()=>{try{if(typeof drawMarkers==='function')drawMarkers();}catch{}};document.head.appendChild(marker);
+ }
 })(typeof window!=='undefined'?window:globalThis);
