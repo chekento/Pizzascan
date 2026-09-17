@@ -18,7 +18,9 @@
 
 <p align="center"><strong>Version 2.3.6 · Build 41 · Android 8+ · Paket cloud.kosch.pizzascan</strong></p>
 
-Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 baut auf der vollständigen Mehrquellen-/GPS-/Cache-Discovery aus Build 40 auf und ergänzt weltweite Unicode-Suche ohne Länder-Default, einen sichtbaren Suchmittelpunkt mit temporärem Radius, einen stufenlosen Suchradius, robustere Offline-/Recovery-Pfade, Datenvertrauen für offene Ratings, einen transparenten Signal-Mix, lokales Foto-Benchmarking, Pizza-Radar sowie Health Check und Privacy Dashboard.
+Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 baut auf der vollständigen Mehrquellen-/GPS-/Cache-Discovery aus Build 40 auf und ergänzt weltweite Unicode-Suche ohne Länder-Default, einen zusätzlichen OSM-Coverage-Audit über alle benannten Gastro-POIs im aktiven Suchgebiet, einen sichtbaren Suchmittelpunkt mit temporärem Radius, einen stufenlosen Suchradius, robustere Offline-/Recovery-Pfade, Datenvertrauen für offene Ratings, einen transparenten Signal-Mix, lokales Foto-Benchmarking, Pizza-Radar sowie Health Check und Privacy Dashboard.
+
+> **Coverage-Grundsatz:** OpenStreetMap/Overpass ist der primäre, zusammenführbare PizzaScan-Ortsindex. PizzaScan fragt zusätzlich breit Restaurants, Fast Food, Cafés, Foodtrucks, Takeaways, Food Courts, Bars, Pubs, Biergärten und passende Food-Shops ab und prüft lokal sämtliche relevanten OSM-Tags auf Pizza-/Italien-Bezug. Google Maps und Microsoft Maps werden als externe Gegenprüfung verlinkt, ihre proprietären POI-Daten werden nicht in den OSM-Index kopiert. Keine öffentliche Kartendatenquelle kann garantieren, dass jeder reale Betrieb weltweit vollständig und aktuell erfasst ist.
 
 <p align="center">
 <a href="downloads/SHA256SUMS-2.3.6.txt"><strong>SHA-256</strong></a>
@@ -38,11 +40,20 @@ Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 bau
 - Eine frische Installation ohne GPS startet in einer **neutralen Weltübersicht**, nicht an einem fest codierten deutschen oder US-amerikanischen Ort.
 - GPS, Orts-/Adresssuche oder eine bewusst gewählte Kartenregion setzen anschließend das reale Suchzentrum.
 - **Unicode-sichere Suche** erhält Restaurant-, Orts- und Adressnamen in Originalschrift, unter anderem Japanisch, Chinesisch, Arabisch und Kyrillisch.
-- Lateinische Akzente werden suchfreundlich gefaltet, ohne nichtlateinische Schriftzeichen oder Diakritika zu zerstören.
-- Photon wird vor Auswahl eines Standorts **global und ohne künstlichen Mittelpunkt** abgefragt; nach Auswahl einer Region darf der reale Mittelpunkt die Ergebnisse sinnvoll priorisieren.
-- Die Geocoding-Sprache wird nicht mehr fest auf Deutsch erzwungen.
-- Koordinatenlogik unterstützt beide Hemisphären und den internationalen Datumswechselbereich.
-- Release-Tests decken Europa, Nordamerika, Südamerika, Afrika, Asien, Ozeanien und einen Dateline-Fall ab.
+- Die weltweite Testmatrix deckt Europa, Nordamerika, Südamerika, Afrika, Asien, Ozeanien und einen Dateline-Fall ab; die Teststädte sind Referenzpunkte, keine unterstützten-Länder-Liste.
+
+### 🔎 Maximale Pizza-/Bar-Coverage
+
+- Primärer Index: **OpenStreetMap über mehrere Overpass-Endpunkte**; Treffer werden nach OSM-Identität zusammengeführt.
+- Zusätzlich zur gezielten Pizza-Suche läuft ein **breiter Coverage-Audit** über alle benannten Gastro-POIs im aktiven Suchgebiet.
+- Kandidaten umfassen `restaurant`, `fast_food`, `cafe`, `food_truck`, `takeaway`, `food_court`, `bar`, `pub`, `biergarten` sowie passende Food-Shops und Pizzaautomaten.
+- Pizza-Evidenz wird nicht nur aus Name oder `cuisine` gelesen, sondern auch aus Brand/Operator, Spezialität, Produkten, Menüfeldern, Beschreibungen und Notizen einschließlich lokalisierter `description:*`, `note:*`, `name:*` und `menu:*`-Tags.
+- Pizza-Erkennung berücksichtigt neben lateinischen Begriffen auch häufige Schreibweisen in Japanisch, Chinesisch, Arabisch und Kyrillisch.
+- **Pizza-Bars und Pizza-Pubs** werden damit auch dann erkannt, wenn der Name keine Variante von „Pizzeria“ enthält, sofern OSM einen Pizza-Hinweis enthält.
+- Keine künstliche numerische Ergebnisgrenze im Coverage-Audit.
+- Gefundene OSM-Orte werden lokal persistent gehalten und bei späteren Starts wiederverwendet; bestätigte Löschungen in OSM können aus dem Cache entfernt werden.
+- In der Detailansicht gibt es einen **Coverage Cross-Check** zu Google Maps und Microsoft Maps. Diese Dienste werden extern geöffnet; proprietäre POI-Daten werden nicht unzulässig in die OSM-/Leaflet-Datenbank gemischt.
+- Grenze: Ist ein realer Betrieb in keiner erlaubten Quelle erfasst oder enthält OSM keinerlei Pizza-Hinweis, kann PizzaScan dessen Existenz nicht zuverlässig ableiten. „Maximale Abdeckung“ bedeutet deshalb vollständige Auswertung der verfügbaren erlaubten Daten – keine erfundene 100-%-Garantie.
 
 ### 🗺️ Karte, GPS & Suche
 
@@ -142,7 +153,7 @@ Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 bau
 - Android 8+ (`minSdk 26`), Target SDK 36.
 - Offizielles **PizzaScan-App-Icon** aus `PizzaScan-App-Icon-512.png` ist als Android Adaptive Launcher Icon verdrahtet, einschließlich Round-Icon-Pfad.
 - Paketname: `cloud.kosch.pizzascan`.
-- CI prüft Unit-/Regressionstests, Browser-/Playwright-Smokes, globale Koordinaten-/Unicode-Matrix, gepackte APK-Web-UI, Signatur/Package, lokale KI-Modelle und Android-16-Installation/Start.
+- CI prüft Unit-/Regressionstests, Browser-/Playwright-Smokes, gepackte APK-Web-UI, Signatur/Package, lokale KI-Modelle und Android-16-Installation/Start.
 
 ## 🎯 Suchzentrum & einstellbarer Radius
 
@@ -165,7 +176,7 @@ In den Einstellungen lässt sich der Suchradius über einen Schieberegler von **
 - **Signal-Mix:** verfügbare Signale können transparent auf eine 0–10-Skala zusammengeführt werden – offene Mangrove-Ratings, eigene bestätigte Besuche, experimentelle Foto-KI und Google-Maps-Daten nur dann, wenn diese in der aktuellen Sitzung ausdrücklich geladen wurden.
 - **Marker-Priorisierung:** bei großen Treffermengen bleiben alle Treffer erhalten, weniger relevante Marker werden bei weitem Zoom lediglich visuell zurückgenommen statt gelöscht.
 - **Lokaler Fotovergleich:** vorhandene Fotoanalysen können gegen andere lokal gespeicherte Analysen mit demselben Modell eingeordnet werden; keine globale Rangliste.
-- **Pizza-Radar:** Discovery-Sortierung für interessante Orte im aktuellen Suchbereich nach Nähe, Öffnungsstatus, Pizza-Evidence und – sofern vorhanden – besser gestützten Ratings.
+- **Pizza-Radar:** Discovery-Sortierung für interessante Orte im aktuellen Bereich nach Nähe, Öffnungsstatus, Pizza-Evidence und – sofern vorhanden – besser gestützten Ratings.
 - **Recovery:** lokales Runtime-Fehlerprotokoll und Reparatur temporärer Such-/Karten-/Rating-Caches ohne Favoriten, persönliche Bewertungen, Einstellungen oder Offline-Modelle zu löschen.
 - **Privacy Dashboard:** kompakte Übersicht, welche Daten lokal bleiben und wann externe Karten-/Rating-/Modelldienste angesprochen werden.
 - **Health Check:** Status von Runtime, Karte/Cache, Netzwerk, GPS, Speicher, Datenquellen, Suchradius, offenen Ratings, Offline-KI und Recovery-Log.
@@ -189,82 +200,26 @@ Photon bleibt für Orts-/Adresssuche und kontrollierte Fallbacks erhalten; die r
 
 ## 🗺️ POI-Symbole
 
-- 🍕 **Pizzeria** – bestätigter Pizza-Bezug
-- ☕ **Café**
-- 🍔 **Imbiss / Takeaway**
-- 🚚 **Foodtruck**
-- 🤖 **Pizzaautomat**
-- 🍽️ **Restaurant / Bar / weiterer passender Ort**
-- ⭐ **Gemerkt**
-- ✓ **Besucht / selbst bewertet**
-- 📍 **Dein Standort**
-- kleiner Punkt + Radiuskreis: **Zentrum der aktiven Suche**
+| Symbol | Kategorie |
+|---|---|
+| 🍕 | Pizzeria / bestätigter Pizza-Ort |
+| ☕ | Café |
+| 🍔 | Imbiss / Fast Food / Takeaway |
+| 🚚 | Foodtruck |
+| 🤖 | Pizzaautomat |
+| 🍝 | italienischer bzw. sonstiger pizza-relevanter Kandidat |
 
-## ✓ Besuchte Orte dauerhaft erhalten
+## 🔐 Datenschutz & Datenquellen
 
-Eigene Bewertungen und besuchte Orte werden unabhängig von einer späteren Kartenabfrage aufbewahrt. Dadurch bleiben bereits besuchte Restaurants verfügbar, selbst wenn ein externer Kartenprovider sie bei einer späteren Sitzung vorübergehend nicht zurückliefert.
+PizzaScan ist local-first. Eigene Fotos, Fotoanalysen, persönliche Bewertungen und Review-Entwürfe werden nicht als zentraler PizzaScan-Datensatz hochgeladen. Live-Kartensuche nutzt OpenStreetMap-/Overpass-/Photon-Dienste; optionale offene Bewertungen nutzen Mangrove/Open Reviews. Google und Microsoft werden für Coverage-Cross-Checks nur als externe Zielseiten geöffnet, sofern ihre Daten nicht über eine separat lizenzierte, providerkonforme Integration genutzt werden.
 
-In den Filtern kann auf **nur bereits besuchte / selbst bewertete Orte** eingeschränkt werden. Das Besuchsarchiv lässt sich außerdem als Markdown-Datei exportieren und wieder importieren. Damit kann die persönliche Restaurant-Historie gesichert und später erneut geladen werden.
+Externe Dienste können eigene Datenschutz- und Nutzungsbedingungen haben. Die App versucht deshalb nicht, proprietäre POI-Datenbanken in den OpenStreetMap-Index zu spiegeln oder dauerhaft zu kopieren.
 
-## ⭐ Bewertungen und Open Reviews
+## 🧪 Release-Qualität
 
-PizzaScan unterstützt eigene Restaurantbewertungen und offene Bewertungsdaten über **Mangrove / Open Reviews**.
-
-Die Veröffentlichung eigener Ratings ist freiwillig und standardmäßig nicht erforderlich. Wenn Open-Reviews-Publishing in den Einstellungen aktiviert wird, kann eine eigene Bewertung gezielt an Mangrove/Open Reviews übertragen und damit zum offenen Rating-Netzwerk beigetragen werden. Die lokale Bewertung bleibt unabhängig davon in PizzaScan erhalten.
-
-Zusätzlich stehen Links zu Google Maps, Tripadvisor und Yelp bereit. Eine optionale Google-Places-Integration kann mit einem eigenen API-Key verwendet werden; sie ist für die Grundfunktion von PizzaScan nicht erforderlich. Google-Maps-Daten werden im Build-41-Signal-Mix nur berücksichtigt, wenn sie in der laufenden Sitzung ausdrücklich geladen wurden.
-
-## 🔎 Manuelle Suche
-
-Neben der automatischen Umgebungskarte kann gezielt nach Restaurant, Café, Imbiss, Bar, Ort oder Adresse gesucht werden. PizzaScan gleicht dabei Name, Adresse, Kategorie, OSM-Identität und Entfernung ab und dedupliziert identische POIs. Der ausgewählte Treffer wird temporär als Suchzentrum markiert, solange die Suche aktiv ist.
-
-## 📷 Lokale Fotoanalyse
-
-Die Bildanalyse läuft lokal auf dem Gerät. Zur Auswahl stehen **CLIP ViT-B/32**, **CLIP ViT-B/16** und **SigLIP Base Patch16-224** via ONNX/WASM. Das ausgewählte Modell wird erst nach Bestätigung heruntergeladen und anschließend im privaten persistenten App-Speicher gehalten.
-
-Die Fotoanalyse verwendet 25 sichtbare Kriterien und 100 simulierte Gewichtungsperspektiven. Diese Perspektiven sind keine 100 realen Experten. Fotos werden für die Analyse nicht an einen PizzaScan-Server hochgeladen. Build 41 ergänzt einen rein lokalen Vergleich mit anderen gespeicherten Analysen desselben Modells.
-
-## 📦 Versionen
-
-| Version | Status | Download |
-|---|---|---|
-| **2.3.6 · Build 41** | **aktuelle Direktversion** | [⬇️ PizzaScan-2.3.6.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.6.apk) |
-| 2.3.5 | Archiv | [Archiv öffnen](downloads/README.md) |
-| 2.3.4 | Archiv | [Archiv öffnen](downloads/README.md) |
-| 2.3.3 | Archiv | [Archiv öffnen](downloads/README.md) |
-| 2.3.2 | Archiv | [Archiv öffnen](downloads/README.md) |
-| 2.3.1 | Archiv | [Archiv öffnen](downloads/README.md) |
-| 2.3.0 | Archiv / Basisstand | [Archiv öffnen](downloads/README.md) |
-
-> **Signaturhinweis:** Die GitHub-Direkt-APK ist für Direktinstallation signiert. Google Play verwendet Play App Signing. Vor einer Neuinstallation persönliche PizzaScan-Daten am besten über die vorhandenen Exportfunktionen sichern.
-
-## Google Play
-
-Das Repository erzeugt zusätzlich ein validiertes Release-AAB für Google Play. Ein vorhandener geschlossener Testtrack und die Testergruppe können für neuere Builds weiterverwendet werden; für ein Update wird lediglich ein neues AAB mit höherem `versionCode` in denselben Track veröffentlicht.
-
-<p align="center">
-<a href="https://groups.google.com/g/pizzascan-beta-testers"><strong>PizzaScan Beta Testers</strong></a>
-&nbsp; · &nbsp;
-<a href="store/PLAY-CONSOLE.md"><strong>Play-Console-Checkliste</strong></a>
-&nbsp; · &nbsp;
-<a href="docs/Datenschutz.md"><strong>Datenschutz</strong></a>
-</p>
-
-## Technik
-
-- Android 8+ (`minSdk 26`), Target SDK 36
-- Paket: `cloud.kosch.pizzascan`
-- Version 2.3.6, `versionCode 41`
-- WebView-App mit gepackten lokalen Web-Assets
-- OpenStreetMap / Overpass, Photon, kontrollierter Nominatim-Fallback, Leaflet
-- Weltweite Unicode-Suche ohne Länder-Whitelist und neutraler Erststart ohne festen Stadt-Default
-- persistente lokale Place-/Besuchshistorie
-- Mangrove / Open Reviews; Google Places optional mit eigenem Key
-- CLIP / SigLIP lokal via ONNX/WASM
-- CI: Unit-/Regression-/Playwright-Smokes, globale Koordinaten-/Unicode-Matrix, APK-Inhaltsprüfung, Signatur-/Package-Prüfung, Android-16-Installations- und Startprüfung
-
-Die Quellen liegen unter `web/` und `app/`. Play-Store-Vorbereitung und Store-Assets befinden sich unter `store/`.
+Build 41 wird nur veröffentlicht, wenn die automatisierten Unit-/Regressionstests, Web-/Playwright-Smokes, gepackte APK-Web-UI, Android-Lint/Instrumentierung, Android-16-Starttest sowie reale lokale CLIP-/SigLIP-Modelltests erfolgreich durchlaufen. Die Coverage-Tests prüfen zusätzlich Bars/Pubs und Pizza-Hinweise in mehreren Schriftsystemen.
 
 ---
 
-<p align="center"><strong>By KoSch of <a href="https://kosch.cloud">kosch.cloud</a> based on <a href="https://pizzascan.on.websim.com">pizzascan.on.websim.com</a> ❣️</strong></p>
+<p align="center"><strong>By KoSch · <a href="https://kosch.cloud">kosch.cloud</a></strong><br>
+Based on <a href="https://pizzascan.on.websim.com">pizzascan.on.websim.com</a> ❣️</p>
