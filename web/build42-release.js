@@ -18,6 +18,16 @@
   try{R?.syncVersion?.();R?.decorate?.();}catch{}
   try{const badge=root.document?.querySelector?.('.brand small');if(badge)badge.textContent=VERSION;}catch{}
  }
+ function disableLegacyCoverageAudit(){
+  try{
+   // Build 41 wrapped loadPlaces with a second complete OSM scan after the main lookup.
+   // Build 42 already queries every named gastro POI in its primary progressive discovery,
+   // so keeping that wrapper only duplicates network traffic and delays perceived completion.
+   if(root.loadPlaces?.__coverageAudit&&typeof root.loadPlaces.__inner==='function')root.loadPlaces=root.loadPlaces.__inner;
+   if(root.PizzaCoverageAudit){root.PizzaCoverageAudit.legacyDisabledByBuild42=true;root.PizzaCoverageAudit.audit=async()=>({skipped:true,reason:'build42-primary-discovery'});}
+   if(root.PizzaSmartDiscovery){root.PizzaSmartDiscovery.coverageMode='build42-primary-progressive';root.PizzaSmartDiscovery.coverageNote='Broad named-gastro coverage is part of the primary OSM request; no duplicate audit request.';}
+  }catch(error){console.warn('PizzaScan Build 42 legacy coverage audit cleanup unavailable',error);}
+ }
  function installMarkers(){
   try{
    if(typeof drawMarkers!=='function'||typeof L==='undefined'||typeof PlaceData==='undefined'||drawMarkers.__build42)return;
@@ -37,7 +47,7 @@
    drawMarkers.__build42=true;drawMarkers.__inner=original;
   }catch(error){console.warn('PizzaScan Build 42 marker overlay unavailable',error);}
  }
- function sync(){syncVersion();installMarkers();try{if(typeof drawMarkers==='function'&&root.PizzaScan?.ready)drawMarkers();}catch{}}
+ function sync(){disableLegacyCoverageAudit();syncVersion();installMarkers();try{if(typeof drawMarkers==='function'&&root.PizzaScan?.ready)drawMarkers();}catch{}}
  sync();
  if(typeof document!=='undefined'){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});
