@@ -7,9 +7,9 @@ android {
         applicationId 'cloud.kosch.pizzascan'
         minSdk 26
         targetSdk 36
-        // Build 42: progressive broad OSM discovery, fast first paint and full gastro candidate coverage.
-        versionCode 42
-        versionName '2.3.7'
+        // Build 43: fast relevance-first Pizza/Italian discovery and compact map controls.
+        versionCode 43
+        versionName '2.3.8'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     sourceSets { main { assets.srcDirs = ['../web'] } }
