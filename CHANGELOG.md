@@ -4,8 +4,12 @@
 
 Aktueller Stand: `versionCode 41`, `versionName 2.3.6`, Android-Paket `cloud.kosch.pizzascan`.
 
-### Build 41 — Suchzentrum, Radiussteuerung und Production-Hardening
+### Build 41 — Suchzentrum, Radiussteuerung, weltweite Suche und Production-Hardening
 
+- **Weltweite Suche ohne Länder-Default:** eine frische Installation ohne GPS startet neutral in der Weltübersicht statt an einem fest codierten deutschen oder US-amerikanischen Ort. Erst GPS, Orts-/Adresssuche oder eine bewusst gewählte Kartenregion setzt das aktive Suchgebiet.
+- **Unicode-sichere Suche:** Restaurant-, Orts- und Adressnamen in nichtlateinischen Schriftsystemen bleiben erhalten und durchsuchbar, z. B. Japanisch, Chinesisch, Arabisch und Kyrillisch. Lateinische Akzente werden suchfreundlich gefaltet, ohne andere Schriftsysteme zu beschädigen.
+- **Globale Geocoding-Logik:** Photon wird vor Auswahl eines Standorts ohne künstlichen Mittelpunkt abgefragt. Nach Auswahl eines Gebiets darf dessen Mittelpunkt die Suche sinnvoll priorisieren. Die Sprache wird nicht mehr fest auf Deutsch erzwungen.
+- **Globale Release-Matrix:** deterministische Tests decken Europa, Nordamerika, Südamerika, Afrika, Asien, Ozeanien und einen Dateline-Fall ab. Live-Probes verwenden mehrere Weltregionen, ohne einen einzelnen öffentlichen Provider-Ausfall als App-Defekt zu behandeln.
 - Aktive Suchen erhalten einen kleinen **Suchzentrum-Marker**. Ein ausgewählter Ort wird als Zentrum übernommen; „Hier suchen“ verwendet die Kartenmitte. Bei einem festen Radius erscheint zusätzlich ein dezenter temporärer Radiuskreis.
 - Der Suchbereich ist in den Einstellungen jetzt als **Schieberegler von 0 bis 10 km in 0,5-km-Schritten** konfigurierbar. `0 km` bedeutet weiterhin aktueller Kartenausschnitt.
 - Offline-/Fehlerfälle sind robuster: bekannte Places bleiben aus dem Cache sichtbar; ein fehlgeschlagener Live-Abruf löscht vorhandene Ergebnisse nicht. Temporäre Karten-/Such-/Rating-Caches können gezielt repariert werden, ohne Favoriten, eigene Bewertungen, Einstellungen oder Offline-Modelle zu entfernen.
@@ -18,7 +22,7 @@ Aktueller Stand: `versionCode 41`, `versionName 2.3.6`, Android-Paket `cloud.kos
 - Neues **Privacy Dashboard** erläutert kompakt, was lokal bleibt und wann Karten-, Bewertungs- oder Modelldienste angesprochen werden.
 - Runtime-Fehler werden lokal in einem begrenzten Recovery-Log erfasst; URLs werden dabei redigiert.
 - Build 41 sitzt auf der vollständigen Mehrquellen-/GPS-/Cache-Logik aus Build 40. Die Provider-Union, persistente Place-Historie und Existenz-Revalidation bleiben erhalten.
-- CI enthält zusätzliche Tests für Radiusnormalisierung, Datenvertrauen, Signal-Fusion, Radar-Ranking und lokalen Fotovergleich.
+- CI enthält zusätzliche Tests für Radiusnormalisierung, Datenvertrauen, Signal-Fusion, Radar-Ranking, lokalen Fotovergleich und weltweite Suche.
 
 [⬇️ PizzaScan 2.3.6 APK](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.6.apk)
 
