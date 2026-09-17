@@ -30,6 +30,108 @@ Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 bau
 <a href="https://raw.githack.com/chekento/Pizzascan/main/web/index.html"><strong>🌐 Browser-Version</strong></a>
 </p>
 
+## ✨ Alle Funktionen auf einen Blick
+
+### 🗺️ Karte, GPS & Suche
+
+- Vollbildfähige **OpenStreetMap-/Leaflet-Karte** mit GPS-Standort und eigenem Standortmarker.
+- Automatische Umgebungssuche sowie manuelle Suche nach **Restaurant, Pizzeria, Café, Imbiss, Bar, Ort oder Adresse**.
+- Suchvorschläge, präziser POI-Abgleich nach Name, Adresse, Kategorie, Entfernung und OSM-Identität sowie Deduplizierung identischer Orte.
+- Mehrquellen-Discovery über mehrere Overpass-Endpunkte, Photon für Orts-/Adresssuche und kontrollierter Nominatim-Fallback.
+- Keine künstliche 20-/50-/100-Treffergrenze: eindeutige OSM-Treffer werden quellenübergreifend zusammengeführt.
+- Unterstützte POIs: 🍕 Pizzeria, ☕ Café, 🍔 Imbiss/Takeaway, 🚚 Foodtruck, 🤖 Pizzaautomat, 🍽️ weitere Restaurants/Bars/passende Orte.
+- Italienische Restaurants können als Kandidaten erscheinen, ohne automatisch als bestätigte Pizzeria ausgegeben zu werden.
+- **Temporärer Mini-Marker für das aktive Suchzentrum** und bei festem Radius zusätzlicher Radiuskreis.
+- „Hier suchen“, ein ausgewählter Suchtreffer und eine automatisch ausgelöste Kartensuche aktualisieren das aktive Suchzentrum.
+- Beim Schließen der Suche bzw. beim Wechsel zurück zu GPS wird die temporäre Suchzentrum-Markierung entfernt.
+- **Suchradius-Slider 0–10 km in 0,5-km-Schritten**; `0 km` nutzt den aktuellen Kartenausschnitt.
+- Radius und Kartenausschnitt werden auch von Recovery-/Fallback-Suchen respektiert.
+- Zoomabhängige Marker-Priorisierung reduziert optische Überlagerung, ohne Treffer zu löschen.
+- **Pizza-Radar** sortiert interessante Orte im aktuellen Bereich nach Nähe, Öffnungsstatus, Pizza-Evidence und belastbareren verfügbaren Ratings.
+
+### 🕒 Öffnungszeiten, Filter & Sortierung
+
+- Öffnungsstatus aus vorhandenen OSM-Wochen-/Feiertagsregeln und lokaler Zeit.
+- Filter **„Nur jetzt geöffnet“** sowie Option für Orte mit unbekannten Öffnungszeiten.
+- Filter nach Ortstypen, bereits besuchten/selbst bewerteten Orten und Mindestbewertung.
+- Mindestbewertung als Dezimal-Slider, z. B. **≥ 4,6**.
+- Sortierung nach Entfernung oder Öffnungsstatus plus Entfernung.
+- Automatische Suche nach Kartenbewegung kann in den Einstellungen aktiviert/deaktiviert werden.
+
+### ⭐ Favoriten, Besuche & persönliche Historie
+
+- Orte lokal als **„Gemerkt“** speichern.
+- Eigene Restaurantbewertungen und besuchte Orte dauerhaft unabhängig von späteren Provider-Antworten erhalten.
+- Persönliche Besuchshistorie bleibt auch bei temporären Karten-/Netzwerkausfällen verfügbar.
+- Filter für besuchte bzw. selbst bewertete Orte.
+- Besuchsarchiv als **Markdown exportieren und wieder importieren**; Import wird validiert und nach OSM-Identität dedupliziert.
+
+### ★ Bewertungen & offene Daten
+
+- Eigene PizzaScan-Restaurantbewertung auf **0,1–10,0**.
+- Lesen offener Bewertungsdaten über **Mangrove / Open Reviews**.
+- Optionales, ausdrücklich ausgelöstes Veröffentlichen eigener Bewertungen in Mangrove/Open Reviews; lokale Bewertung bleibt davon unabhängig.
+- Open-Review-Edits und wiederholte Bewertungen werden nachvollziehbar behandelt; pro öffentlichem Reviewer zählt die neueste passende Opinion.
+- Veraltete oder fehlerbehaftete Rating-Caches werden nicht als frische Null-Ergebnisse ausgegeben.
+- **Datenvertrauen/Confidence** aus Bewertungsmenge und Aktualität; ausdrücklich keine Wahrheitswahrscheinlichkeit.
+- Links zu **Google Maps, Tripadvisor, Yelp und Mangrove**.
+- Optionale Google-Places-/Google-Maps-Datenintegration; Google-Daten gehen nur dann in Build-41-Auswertungen ein, wenn sie in der aktuellen Sitzung ausdrücklich geladen wurden.
+- **Transparenter Signal-Mix auf 0–10** aus verfügbaren Mangrove-Ratings, eigenen bestätigten Besuchen, experimenteller Foto-KI und ausdrücklich geladenen Google-Daten; Quellen und Abdeckung bleiben sichtbar.
+
+### ✍️ Review Builder
+
+- Unabhängiger Restaurant-Review-Builder für **Dine-in, Takeaway und Delivery**.
+- Adaptive positive und negative Textbausteine für Geschmack, Teig, Belag, Temperatur, Service, Wartezeit, Preis-Leistung, Ambiente, Lautstärke, Sauberkeit, Auswahl, Barrierefreiheit, Lieferung und Verpackung.
+- Eigener Freitext bleibt erhalten und kann mit ausgewählten Beobachtungen kombiniert werden.
+- Nutzerbewertungen bleiben Nutzerangaben; Foto-KI wird nicht als persönliche Restaurant-Erfahrung ausgegeben.
+- Rezensionsentwürfe lokal speichern, wieder öffnen, löschen und als JSON sichern/wiederherstellen.
+- Google-kompatible Sterne können aus der eigenen Bewertung abgeleitet werden; veröffentlicht wird ausschließlich durch den Nutzer.
+
+### 📍 Restaurantdetails & Navigation
+
+- Detailansicht mit Adresse, Öffnungszeiten, Kontakt, Website, Speisekarte und vorhandenen Ausstattungs-/Ernährungs-/Barrierefreiheitsdaten.
+- Fehlende Angaben werden nicht erfunden; externe Quellen bleiben als solche erkennbar.
+- Routenstart mit Reisearten **zu Fuß, Fahrrad, Auto und ÖPNV** sowie Unterstützung für mehrere Wegpunkte.
+
+### 📷 Lokale Foto-KI
+
+- Pizza fotografieren oder vorhandenes Foto auswählen.
+- Lokale Analyse auf dem Gerät mit **CLIP ViT-B/32**, **CLIP ViT-B/16** oder **SigLIP Base Patch16-224** via ONNX/WASM.
+- Modell wird erst nach ausdrücklicher Bestätigung heruntergeladen und anschließend im privaten persistenten App-Speicher gehalten.
+- Bereits heruntergeladene Modelle müssen nicht bei jedem App-Start erneut geladen werden und können in den Einstellungen wieder entfernt werden.
+- **25 sichtbare Fotokriterien** und **100 simulierte Gewichtungsperspektiven**; diese sind keine 100 realen Experten.
+- Fotoanalyse bleibt getrennt von der eigenen Restaurantbewertung.
+- **Lokaler Perzentil-Vergleich** mit anderen auf demselben Gerät gespeicherten Analysen desselben Modells; keine globale Rangliste.
+- Fotos werden für die KI-Analyse nicht an einen PizzaScan-Server hochgeladen.
+
+### 🛡️ Stabilität, Offline & Recovery
+
+- **Cache-first/Offline-first:** bekannte Orte bleiben sichtbar, wenn ein Live-Abruf oder das Netzwerk ausfällt.
+- Mehrstufige Provider-/Such-Fallbacks verhindern falsche Nullzustände bei vorübergehenden Providerproblemen.
+- Abgebrochene oder überholte Suchanfragen dürfen neuere Ergebnisse nicht überschreiben.
+- Persistente Place-/Besuchshistorie ist vom Erfolg einer einzelnen Netzabfrage getrennt.
+- Lokales **Runtime-Recovery-Log** für begrenzte Diagnoseinformationen.
+- **Cache-Reparatur** baut nur temporäre Such-, Karten- und Rating-Caches neu auf; Favoriten, Fotos, eigene Bewertungen, Einstellungen und Offline-Modelle bleiben erhalten.
+- **Health Check** prüft Runtime, Karte/Cache, Netzwerk, GPS, Speicher, Datenquellen, Suchradius, offene Ratings, Offline-KI und Recovery-Status.
+
+### 🔐 Datenschutz & Transparenz
+
+- **Privacy Dashboard** zeigt kompakt, welche Daten lokal bleiben und wann Karten-, Rating- oder Modelldienste angesprochen werden.
+- Fotoanalysen und Review-Entwürfe bleiben lokal.
+- Kartenanbieter erhalten nur den für die Live-Suche benötigten Suchbereich.
+- Mangrove wird nur bei aktivierter Funktion genutzt; Google-Review-Daten nur nach ausdrücklicher Nutzeraktion.
+- Offline-Modelle werden extern bezogen, die eigentliche Bildanalyse bleibt auf dem Gerät.
+- In-App-Datenschutzerklärung und Modell-Download-Disclaimer.
+
+### 🌍 UX, Sprache & Android
+
+- Oberfläche in **Deutsch, English, Italiano, Español und Français** mit automatischer Gerätespracherkennung und manueller Sprachwahl.
+- Dark Mode, kompakte Bottom-Navigation, Portrait-/Landscape-Unterstützung und Vollbildkarte.
+- Android 8+ (`minSdk 26`), Target SDK 36.
+- Offizielles **PizzaScan-App-Icon** aus `PizzaScan-App-Icon-512.png` ist als Android Adaptive Launcher Icon verdrahtet, einschließlich Round-Icon-Pfad.
+- Paketname: `cloud.kosch.pizzascan`.
+- CI prüft Unit-/Regressionstests, Browser-/Playwright-Smokes, gepackte APK-Web-UI, Signatur/Package, lokale KI-Modelle und Android-16-Installation/Start.
+
 ## 🎯 Suchzentrum & einstellbarer Radius
 
 Bei einer aktiven Suche markiert PizzaScan das Zentrum der letzten Suche als kleinen Kartenmarker. Bei einem festen Radius wird zusätzlich ein dezenter Kreis eingeblendet. So bleibt sichtbar, worauf sich die aktuellen Treffer beziehen – auch wenn die Karte danach bewegt oder gezoomt wird.
@@ -141,6 +243,7 @@ Das Repository erzeugt zusätzlich ein validiertes Release-AAB für Google Play.
 - Android 8+ (`minSdk 26`), Target SDK 36
 - Paket: `cloud.kosch.pizzascan`
 - Version 2.3.6, `versionCode 41`
+- offizielles Store-/Launcher-Icon: `store/graphics/PizzaScan-App-Icon-512.png`, im Android-Projekt als Adaptive Launcher Icon verwendet
 - WebView-App mit gepackten lokalen Web-Assets
 - OpenStreetMap / Overpass, Photon, kontrollierter Nominatim-Fallback, Leaflet
 - persistente lokale Place-/Besuchshistorie
