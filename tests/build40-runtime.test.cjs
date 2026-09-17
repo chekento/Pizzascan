@@ -1,5 +1,6 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
 const B=require('../web/build40-runtime.js');
 
 test('complete discovery query has no numerical result limit and covers WebSim pizza/Italian families',()=>{
@@ -27,4 +28,15 @@ test('existence checks preserve node way relation identities and batch without d
 test('deprecated provider is excluded while free HTTPS mirrors remain',()=>{
  const out=B.usableEndpoints(['https://overpass-api.de/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter','http://example.com','https://overpass.osm.jp/api/interpreter']);
  assert.deepEqual(out,['https://overpass-api.de/api/interpreter','https://overpass.osm.jp/api/interpreter']);
+});
+
+test('manual refresh is deterministic and boot cache checks only revalidate saved OSM identities',()=>{
+ const src=fs.readFileSync(require.resolve('../web/build40-runtime.js'),'utf8');
+ assert.match(src,/startBootCacheVerification\(\)/);
+ assert.match(src,/await cacheVerificationPromise\.catch/);
+ assert.match(src,/const cachedBefore=await allCached/);
+ assert.match(src,/await verifyCachedArea\(cachedBefore\)/);
+ assert.match(src,/await loadPlaces\(\{force:true,complete:true\}\)/);
+ assert.match(src,/stopImmediatePropagation\(\)/);
+ assert.doesNotMatch(src,/verifyCachedArea\(\)\.catch\(error=>console\.warn/);
 });
