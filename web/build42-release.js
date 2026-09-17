@@ -18,6 +18,19 @@
   try{R?.syncVersion?.();R?.decorate?.();}catch{}
   try{const badge=root.document?.querySelector?.('.brand small');if(badge)badge.textContent=VERSION;}catch{}
  }
+ function enforceExactRadius(){
+  try{
+   const P=root.PizzaPlaces;
+   if(!P||typeof P.query!=='function'||P.query.__build42ExactRadius)return;
+   const original=P.query;
+   const wrapped=function(center,radius,bounds){
+    let exact=radius;
+    try{if(typeof mapConfig==='function'){const cfg=mapConfig();if(Number(cfg?.radius)>0)exact=Number(cfg.radius);}}catch{}
+    return original(center,exact,bounds);
+   };
+   wrapped.__build42ExactRadius=true;wrapped.__inner=original;P.query=wrapped;
+  }catch(error){console.warn('PizzaScan Build 42 exact radius setup unavailable',error);}
+ }
  function disableLegacyCoverageAudit(){
   try{
    // Build 41 wrapped loadPlaces with a second complete OSM scan after the main lookup.
@@ -47,7 +60,7 @@
    drawMarkers.__build42=true;drawMarkers.__inner=original;
   }catch(error){console.warn('PizzaScan Build 42 marker overlay unavailable',error);}
  }
- function sync(){disableLegacyCoverageAudit();syncVersion();installMarkers();try{if(typeof drawMarkers==='function'&&root.PizzaScan?.ready)drawMarkers();}catch{}}
+ function sync(){enforceExactRadius();disableLegacyCoverageAudit();syncVersion();installMarkers();try{if(typeof drawMarkers==='function'&&root.PizzaScan?.ready)drawMarkers();}catch{}}
  sync();
  if(typeof document!=='undefined'){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sync,{once:true});
