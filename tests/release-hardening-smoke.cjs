@@ -7,6 +7,9 @@ async function untilNode(fn,timeout=5000){const end=Date.now()+timeout;while(Dat
  const {server:s,url}=await server();
  const browser=await chromium.launch();
  const page=await browser.newPage({viewport:{width:393,height:851}});
+ // This is a regional fixture, not a production default. Worldwide builds start
+ // neutrally until GPS/search/map selection provides a real search center.
+ await page.addInitScript(()=>localStorage.setItem('pizzascan-map-view-v1',JSON.stringify({lat:53.5511,lng:9.9937,zoom:14})));
  const tile=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z1SIAAAAASUVORK5CYII=','base64');
  let overpassCalls=0,emptyMode=false;
  const place={type:'node',id:501,lat:53.5511,lon:9.9937,tags:{name:'Recovery Pizza',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}};
