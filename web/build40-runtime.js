@@ -110,7 +110,6 @@ function install(root){
     if(before.length&&typeof PlaceData!=='undefined'&&Array.isArray(mapPool))mapPool=PlaceData.merge(mapPool,before);
     if(typeof refreshArea==='function')refreshArea();
    }catch{}
-   if(mergedOptions.force===true&&options.complete!==true)verifyCachedArea().catch(error=>console.warn('PizzaScan cache verification skipped',error));
    return result;
   };
  }
@@ -158,9 +157,10 @@ function install(root){
   const required=Math.min(2,endpoints.length);if(groups.length<required)return {verified:false,existing:new Set()};
   return {verified:true,existing:new Set(mergeElements(...groups).map(e=>`${e.type}-${e.id}`))};
  }
- async function verifyCachedArea(){
+ async function verifyCachedArea(sourcePlaces){
   await historyReady();const endpoints=usableEndpoints(smart?.PROVIDERS||smart?.providers||[]);if(!endpoints.length)return {checked:0,removed:0};
-  const cached=(await allCached()).filter(inCurrentArea),visited=root.PizzaPlaceHistoryRuntime?.visitedIds||new Set(),candidates=cached.filter(p=>!visited.has(p.placeId));
+  const source=Array.isArray(sourcePlaces)?sourcePlaces:await allCached();
+  const cached=source.filter(inCurrentArea),visited=root.PizzaPlaceHistoryRuntime?.visitedIds||new Set(),candidates=cached.filter(p=>!visited.has(p.placeId));
   const missing=[];let checked=0;
   for(const batchPlaces of chunk(candidates,VERIFY_BATCH)){
    const result=await verifyBatch(batchPlaces,endpoints);if(!result.verified)continue;checked+=batchPlaces.length;for(const p of batchPlaces)if(!result.existing.has(placeKey(p)))missing.push(p.placeId);
@@ -170,22 +170,49 @@ function install(root){
   return {checked,removed:missing.length};
  }
 
+ let cacheVerificationPromise=Promise.resolve({checked:0,removed:0});
+ function startBootCacheVerification(){
+  cacheVerificationPromise=(async()=>{
+   try{await historyReady();const cached=await allCached();if(!cached.length)return {checked:0,removed:0};return await verifyCachedArea(cached);}
+   catch(error){console.warn('PizzaScan cache verification skipped',error);return {checked:0,removed:0};}
+  })();
+  return cacheVerificationPromise;
+ }
+
  async function fullRefresh(){
-  const b=root.document.getElementById('full-map-refresh'),status=root.document.getElementById('map-status');if(b)b.disabled=true;if(status)status.textContent='Vollständiger Neuabruf aller Kartenquellen …';
-  try{await loadPlaces({force:true,complete:true});const result=await verifyCachedArea();try{toast(`Vollständig aktualisiert · Cache geprüft: ${result.checked}, entfernt: ${result.removed}.`);}catch{}return result;}
-  finally{if(b)b.disabled=false;}
+  const b=root.document.getElementById('full-map-refresh'),regular=root.document.getElementById('map-refresh'),status=root.document.getElementById('map-status');
+  if(b)b.disabled=true;if(regular)regular.disabled=true;
+  try{if(typeof mapLoading!=='undefined')mapLoading=true;}catch{}
+  if(status)status.textContent='Vollständiger Neuabruf · gespeicherte Orte werden geprüft …';
+  try{
+   await cacheVerificationPromise.catch(()=>{});
+   const cachedBefore=await allCached().catch(()=>[]);
+   const verified=await verifyCachedArea(cachedBefore);
+   if(status)status.textContent='Vollständiger Neuabruf aller Kartenquellen …';
+   await loadPlaces({force:true,complete:true});
+   try{toast(`Vollständig aktualisiert · Cache geprüft: ${verified.checked}, entfernt: ${verified.removed}.`);}catch{}
+   return verified;
+  } finally {
+   try{if(typeof mapLoading!=='undefined')mapLoading=false;}catch{}
+   if(b)b.disabled=false;if(regular)regular.disabled=false;
+  }
  }
  function openSearch(){const toggle=root.document.getElementById('search-toggle');if(toggle)toggle.click();else root.document.getElementById('search')?.focus();}
  function injectTools(){
   if(root.document.getElementById('build40-tools'))return;
   const anchor=root.document.querySelector('.map-filters');if(!anchor)return;
-  const row=root.document.createElement('div');row.id='build40-tools';row.className='build40-tools';row.innerHTML='<button id="quick-place-search" class="secondary" type="button">🔎 Ort suchen</button><button id="full-map-refresh" class="secondary" type="button">⟳ Vollständig aktualisieren</button><small id="cache-mode-note">Gespeicherte Orte werden sofort geladen und im Hintergrund auf Existenz geprüft.</small>';anchor.after(row);
-  root.document.getElementById('quick-place-search').onclick=openSearch;root.document.getElementById('full-map-refresh').onclick=()=>fullRefresh().catch(e=>{console.error(e);try{toast(e.message||'Aktualisierung fehlgeschlagen.');}catch{}});
-  const regular=root.document.getElementById('map-refresh');if(regular){regular.textContent='⟳ Vollständig aktualisieren';regular.title='Alle Kartenquellen neu abfragen und gespeicherte Orte prüfen';}
+  const row=root.document.createElement('div');row.id='build40-tools';row.className='build40-tools';row.innerHTML='<button id="quick-place-search" class="secondary" type="button">🔎 Ort suchen</button><button id="full-map-refresh" class="secondary" type="button">⟳ Vollständig aktualisieren</button><small id="cache-mode-note">Gespeicherte Orte werden sofort geladen. Beim nächsten Start wird nur geprüft, ob sie in OpenStreetMap noch existieren.</small>';anchor.after(row);
+  root.document.getElementById('quick-place-search').onclick=openSearch;
+  root.document.getElementById('full-map-refresh').onclick=()=>fullRefresh().catch(e=>{console.error(e);try{toast(e.message||'Aktualisierung fehlgeschlagen.');}catch{}});
+  const regular=root.document.getElementById('map-refresh');if(regular){
+   regular.textContent='⟳ Vollständig aktualisieren';regular.title='Alle Kartenquellen neu abfragen und gespeicherte Orte prüfen';
+   regular.addEventListener('click',event=>{event.preventDefault();event.stopImmediatePropagation();fullRefresh().catch(e=>{console.error(e);try{toast(e.message||'Aktualisierung fehlgeschlagen.');}catch{}});},true);
+  }
   const searchInput=root.document.getElementById('search');if(searchInput)searchInput.placeholder='Pizza, Restaurant, Stadt oder Adresse …';
   if(!root.document.getElementById('build40-style')){const s=root.document.createElement('style');s.id='build40-style';s.textContent='.build40-tools{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin:.7rem 0 1rem}.build40-tools button{min-height:46px}.build40-tools small{grid-column:1/-1;opacity:.68;line-height:1.35}.map-caption #map-refresh{font-weight:800}@media(max-width:520px){.build40-tools{grid-template-columns:1fr}.build40-tools small{grid-column:1}}';root.document.head.append(s);}
  }
  injectTools();
+ startBootCacheVerification();
 
  /* If startup already raced ahead before this finalizer loaded, cancel the stale
   * default-center request and restart through the GPS gate. */
@@ -197,7 +224,7 @@ function install(root){
   }catch{}
  },0);
 
- root.PizzaScanBuild40={completeDiscovery:true,noResultCap:true,gpsBeforeStartupSearch:true,persistentPlaceCache:true,existenceOnlyRevalidation:true,fullRefresh,verifyCachedArea,providerCount:usableEndpoints(smart?.PROVIDERS||[]).length};
+ root.PizzaScanBuild40={completeDiscovery:true,noResultCap:true,gpsBeforeStartupSearch:true,persistentPlaceCache:true,existenceOnlyRevalidation:true,fullRefresh,verifyCachedArea,cacheIdle:()=>cacheVerificationPromise,providerCount:usableEndpoints(smart?.PROVIDERS||[]).length};
  return true;
 }
 
