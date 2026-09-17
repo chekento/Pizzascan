@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">PizzaScan 2.3.6 · Build 41</h1>
-<p align="center"><strong>Gute Pizza finden · Suchradius sichtbar steuern · Besuche archivieren · Bewertungen einordnen · Fotos lokal analysieren</strong></p>
+<p align="center"><strong>Weltweit gute Pizza finden · Suchradius sichtbar steuern · Besuche archivieren · Bewertungen einordnen · Fotos lokal analysieren</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
 <p align="center">
@@ -18,7 +18,7 @@
 
 <p align="center"><strong>Version 2.3.6 · Build 41 · Android 8+ · Paket cloud.kosch.pizzascan</strong></p>
 
-Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 baut auf der vollständigen Mehrquellen-/GPS-/Cache-Discovery aus Build 40 auf und ergänzt einen sichtbaren Suchmittelpunkt mit temporärem Radius, einen stufenlosen Suchradius, robustere Offline-/Recovery-Pfade, Datenvertrauen für offene Ratings, einen transparenten Signal-Mix, lokales Foto-Benchmarking, Pizza-Radar sowie Health Check und Privacy Dashboard.
+Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 baut auf der vollständigen Mehrquellen-/GPS-/Cache-Discovery aus Build 40 auf und ergänzt weltweite Unicode-Suche ohne Länder-Default, einen sichtbaren Suchmittelpunkt mit temporärem Radius, einen stufenlosen Suchradius, robustere Offline-/Recovery-Pfade, Datenvertrauen für offene Ratings, einen transparenten Signal-Mix, lokales Foto-Benchmarking, Pizza-Radar sowie Health Check und Privacy Dashboard.
 
 <p align="center">
 <a href="downloads/SHA256SUMS-2.3.6.txt"><strong>SHA-256</strong></a>
@@ -31,6 +31,18 @@ Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 bau
 </p>
 
 ## ✨ Alle Funktionen auf einen Blick
+
+### 🌍 Weltweite Nutzung
+
+- **Keine Länder- oder Stadtbindung:** PizzaScan ist für die weltweite Nutzung ausgelegt und verwendet OpenStreetMap-basierte Daten ohne Länder-Whitelist.
+- Eine frische Installation ohne GPS startet in einer **neutralen Weltübersicht**, nicht an einem fest codierten deutschen oder US-amerikanischen Ort.
+- GPS, Orts-/Adresssuche oder eine bewusst gewählte Kartenregion setzen anschließend das reale Suchzentrum.
+- **Unicode-sichere Suche** erhält Restaurant-, Orts- und Adressnamen in Originalschrift, unter anderem Japanisch, Chinesisch, Arabisch und Kyrillisch.
+- Lateinische Akzente werden suchfreundlich gefaltet, ohne nichtlateinische Schriftzeichen oder Diakritika zu zerstören.
+- Photon wird vor Auswahl eines Standorts **global und ohne künstlichen Mittelpunkt** abgefragt; nach Auswahl einer Region darf der reale Mittelpunkt die Ergebnisse sinnvoll priorisieren.
+- Die Geocoding-Sprache wird nicht mehr fest auf Deutsch erzwungen.
+- Koordinatenlogik unterstützt beide Hemisphären und den internationalen Datumswechselbereich.
+- Release-Tests decken Europa, Nordamerika, Südamerika, Afrika, Asien, Ozeanien und einen Dateline-Fall ab.
 
 ### 🗺️ Karte, GPS & Suche
 
@@ -130,7 +142,7 @@ Die Direkt-APK wird aus dem verifizierten CI-Build veröffentlicht. Build 41 bau
 - Android 8+ (`minSdk 26`), Target SDK 36.
 - Offizielles **PizzaScan-App-Icon** aus `PizzaScan-App-Icon-512.png` ist als Android Adaptive Launcher Icon verdrahtet, einschließlich Round-Icon-Pfad.
 - Paketname: `cloud.kosch.pizzascan`.
-- CI prüft Unit-/Regressionstests, Browser-/Playwright-Smokes, gepackte APK-Web-UI, Signatur/Package, lokale KI-Modelle und Android-16-Installation/Start.
+- CI prüft Unit-/Regressionstests, Browser-/Playwright-Smokes, globale Koordinaten-/Unicode-Matrix, gepackte APK-Web-UI, Signatur/Package, lokale KI-Modelle und Android-16-Installation/Start.
 
 ## 🎯 Suchzentrum & einstellbarer Radius
 
@@ -153,7 +165,7 @@ In den Einstellungen lässt sich der Suchradius über einen Schieberegler von **
 - **Signal-Mix:** verfügbare Signale können transparent auf eine 0–10-Skala zusammengeführt werden – offene Mangrove-Ratings, eigene bestätigte Besuche, experimentelle Foto-KI und Google-Maps-Daten nur dann, wenn diese in der aktuellen Sitzung ausdrücklich geladen wurden.
 - **Marker-Priorisierung:** bei großen Treffermengen bleiben alle Treffer erhalten, weniger relevante Marker werden bei weitem Zoom lediglich visuell zurückgenommen statt gelöscht.
 - **Lokaler Fotovergleich:** vorhandene Fotoanalysen können gegen andere lokal gespeicherte Analysen mit demselben Modell eingeordnet werden; keine globale Rangliste.
-- **Pizza-Radar:** Discovery-Sortierung für interessante Orte im aktuellen Bereich nach Nähe, Öffnungsstatus, Pizza-Evidence und – sofern vorhanden – besser gestützten Ratings.
+- **Pizza-Radar:** Discovery-Sortierung für interessante Orte im aktuellen Suchbereich nach Nähe, Öffnungsstatus, Pizza-Evidence und – sofern vorhanden – besser gestützten Ratings.
 - **Recovery:** lokales Runtime-Fehlerprotokoll und Reparatur temporärer Such-/Karten-/Rating-Caches ohne Favoriten, persönliche Bewertungen, Einstellungen oder Offline-Modelle zu löschen.
 - **Privacy Dashboard:** kompakte Übersicht, welche Daten lokal bleiben und wann externe Karten-/Rating-/Modelldienste angesprochen werden.
 - **Health Check:** Status von Runtime, Karte/Cache, Netzwerk, GPS, Speicher, Datenquellen, Suchradius, offenen Ratings, Offline-KI und Recovery-Log.
@@ -243,13 +255,13 @@ Das Repository erzeugt zusätzlich ein validiertes Release-AAB für Google Play.
 - Android 8+ (`minSdk 26`), Target SDK 36
 - Paket: `cloud.kosch.pizzascan`
 - Version 2.3.6, `versionCode 41`
-- offizielles Store-/Launcher-Icon: `store/graphics/PizzaScan-App-Icon-512.png`, im Android-Projekt als Adaptive Launcher Icon verwendet
 - WebView-App mit gepackten lokalen Web-Assets
 - OpenStreetMap / Overpass, Photon, kontrollierter Nominatim-Fallback, Leaflet
+- Weltweite Unicode-Suche ohne Länder-Whitelist und neutraler Erststart ohne festen Stadt-Default
 - persistente lokale Place-/Besuchshistorie
 - Mangrove / Open Reviews; Google Places optional mit eigenem Key
 - CLIP / SigLIP lokal via ONNX/WASM
-- CI: Unit-/Regression-/Playwright-Smokes, APK-Inhaltsprüfung, Signatur-/Package-Prüfung, Android-16-Installations- und Startprüfung
+- CI: Unit-/Regression-/Playwright-Smokes, globale Koordinaten-/Unicode-Matrix, APK-Inhaltsprüfung, Signatur-/Package-Prüfung, Android-16-Installations- und Startprüfung
 
 Die Quellen liegen unter `web/` und `app/`. Play-Store-Vorbereitung und Store-Assets befinden sich unter `store/`.
 
