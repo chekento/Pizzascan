@@ -6,13 +6,13 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
  const browser=await chromium.launch();
  const page=await browser.newPage({viewport:{width:393,height:851}});
  const fast=[
-  {type:'node',id:42001,lat:53.5511,lon:9.9937,tags:{name:'Zum Markt',amenity:'restaurant',opening_hours:'24/7'}},
-  {type:'node',id:42002,lat:53.5520,lon:9.9940,tags:{name:'The Lantern',amenity:'bar',cuisine:'pizza;italian',opening_hours:'24/7'}},
-  ...Array.from({length:28},(_,i)=>({type:'node',id:42100+i,tags:{name:'Guard '+i,amenity:i%2?'restaurant':'cafe'}}))
+  {type:'node',id:43001,lat:53.5511,lon:9.9937,tags:{name:'Zum Markt',amenity:'restaurant',opening_hours:'24/7'}},
+  {type:'node',id:43002,lat:53.5520,lon:9.9940,tags:{name:'The Lantern',amenity:'bar',cuisine:'pizza;italian',opening_hours:'24/7'}},
+  ...Array.from({length:28},(_,i)=>({type:'node',id:43100+i,tags:{name:'Guard '+i,amenity:i%2?'restaurant':'cafe'}}))
  ];
  const late=[
-  {type:'node',id:42003,lat:53.5530,lon:9.9950,tags:{name:'Late Bistro',amenity:'restaurant',opening_hours:'24/7'}},
-  ...Array.from({length:29},(_,i)=>({type:'node',id:42200+i,tags:{name:'Late guard '+i,amenity:'restaurant'}}))
+  {type:'node',id:43003,lat:53.5530,lon:9.9950,tags:{name:'Trattoria Verde',amenity:'restaurant',cuisine:'italian',opening_hours:'24/7'}},
+  ...Array.from({length:29},(_,i)=>({type:'node',id:43200+i,tags:{name:'Late generic '+i,amenity:'restaurant'}}))
  ];
  let fastQuery='',lateQuery='',slowReleased=false;
  await mapFixtures(page);
@@ -33,28 +33,26 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
   await page.goto(url);
   await until(page,()=>window.PizzaScan?.ready);
   await page.locator('#welcome-start').click();
-  await until(page,()=>places.some(p=>p.name==='Zum Markt')&&!mapLoading,12000);
-  const first=await page.evaluate(()=>({
-   names:places.map(p=>p.name),
-   generic:places.find(p=>p.name==='Zum Markt'),
-   lantern:places.find(p=>p.name==='The Lantern'),
-   build:PizzaScanDiscovery42
-  }));
-  assert.ok(first.names.includes('Zum Markt'),'A generic named restaurant must be visible without Pizza in its name or tags');
-  assert.equal(first.generic.pizzaEvidence,'search','Generic restaurant remains explicitly unconfirmed rather than being fabricated as pizza');
-  assert.equal(first.lantern.pizzaEvidence,'confirmed','Pizza bar is confirmed from cuisine even though Pizza is absent from its name');
-  assert.equal(first.build.noPizzaNameRequirement,true);
+  await until(page,()=>places.some(p=>p.name==='The Lantern')&&!mapLoading,12000);
+  const first=await page.evaluate(()=>({names:places.map(p=>p.name),lantern:places.find(p=>p.name==='The Lantern'),build:PizzaScanDiscovery43,version:PizzaScan.version}));
+  assert.equal(first.names.includes('Zum Markt'),false,'Generic restaurant without pizza/Italian evidence must not be shown');
+  assert.equal(first.lantern.pizzaEvidence,'confirmed','Pizza bar remains confirmed from cuisine even without Pizza in its name');
+  assert.equal(first.build.pizzaOrItalianRequired,true);
+  assert.equal(first.build.noGenericRestaurants,true);
   assert.equal(first.build.firstPaintProgressive,true);
-  assert.equal(first.build.liveResultCap,null);
-  assert.match(fastQuery,/around:5000/,'Default fixed-radius discovery must use the actual 5 km circle');
-  assert.match(fastQuery,/restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten/);
-  assert.equal(first.names.includes('Late Bistro'),false,'Slow mirror must not block first paint');
-  assert.equal(slowReleased,false,'First results must render before the deliberately slow provider returns');
-  await until(page,()=>places.some(p=>p.name==='Late Bistro'),7000);
+  assert.equal(first.version,'2.3.8');
+  assert.match(fastQuery,/around:5000/,'Fixed-radius discovery must use the actual 5 km circle');
+  assert.match(fastQuery,/pizzascan-build43-relevant-discovery/);
+  assert.match(fastQuery,/cuisine/);
+  assert.doesNotMatch(fastQuery,/amenity.*restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten/,'Build 43 must not request every gastro POI');
+  assert.equal(first.names.includes('Trattoria Verde'),false,'Slow mirror must not block first paint');
+  assert.equal(slowReleased,false,'First relevant results must render before the slow provider returns');
+  await until(page,()=>places.some(p=>p.name==='Trattoria Verde'),7000);
   const after=await page.evaluate(()=>({names:places.map(p=>p.name),count:places.length,source:typeof mapSource==='string'?mapSource:''}));
-  assert.ok(after.names.includes('Zum Markt')&&after.names.includes('Late Bistro'),'Later provider results must merge without replacing first-provider venues');
+  assert.ok(after.names.includes('The Lantern')&&after.names.includes('Trattoria Verde'),'Later relevant provider results must merge without replacing first-provider venues');
+  assert.equal(after.names.includes('Zum Markt'),false);
   assert.match(lateQuery,/around:5000/);
-  assert.ok(after.count>=3);
-  console.log('PASS Build 42 browser discovery: generic restaurant, pizza bar without Pizza in name, immediate first provider and progressive mirror merge');
+  assert.ok(after.count>=2);
+  console.log('PASS Build 43 browser discovery: no generic restaurants, pizza bar without Pizza in name, Italian candidate, immediate first provider and progressive mirror merge');
  }finally{await browser.close();s.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
