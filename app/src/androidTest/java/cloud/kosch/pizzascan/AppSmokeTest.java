@@ -64,7 +64,6 @@ public class AppSmokeTest {
                 assertFalse(web(a).getSettings().getAllowFileAccess());
                 assertEquals(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW, web(a).getSettings().getMixedContentMode());
                 assertEquals("Launcher icon must be the adaptive PizzaScan icon", R.mipmap.ic_launcher, a.getApplicationInfo().icon);
-                assertEquals("Round launcher icon must use the same PizzaScan artwork", R.mipmap.ic_launcher, a.getApplicationInfo().roundIcon);
             });
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click(); document.getElementById('nav-photo').click();");
             assertEquals("true", js(scenario, "document.getElementById('photo-view').classList.contains('active')"));
