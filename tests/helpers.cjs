@@ -5,7 +5,7 @@ async function server(){const s=http.createServer((req,res)=>{const pathname=dec
 async function until(page,fn,timeout=15000){const end=Date.now()+timeout;while(Date.now()<end){if(await page.evaluate(fn))return;await new Promise(r=>setTimeout(r,200));}throw Error('Timed out: '+fn.toString());}
 async function mapFixtures(page){
  await page.route('**/api.mangrove.reviews/**',route=>route.fulfill({json:{reviews:[]}}));
- await page.addInitScript(()=>{if(!localStorage.getItem('pizzascan-language-v1'))localStorage.setItem('pizzascan-language-v1','de');});
+ await page.addInitScript(()=>{if(!localStorage.getItem('pizzascan-language-v1'))localStorage.setItem('pizzascan-language-v1','de');if(!localStorage.getItem('pizzascan-map-view-v1'))localStorage.setItem('pizzascan-map-view-v1',JSON.stringify({lat:53.5511,lng:9.9937,zoom:14}));});
  const tile=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z1SIAAAAASUVORK5CYII=','base64');
  await page.route('**/tile.openstreetmap.org/**',r=>r.fulfill({contentType:'image/png',body:tile}));
  await page.route('**/photon.komoot.io/**',r=>r.fulfill({json:{features:[{geometry:{coordinates:[9.9937,53.5511]},properties:{name:'Hamburg',osm_type:'R',osm_id:100,osm_key:'place',osm_value:'city'}}]}}));

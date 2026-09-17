@@ -5,6 +5,9 @@ const {server,until}=require('./helpers.cjs');
  const {server:s,url}=await server();
  const browser=await chromium.launch();
  const page=await browser.newPage({viewport:{width:393,height:851}});
+ // This is a regional fixture, not a product default. Seed its Hamburg-area center explicitly
+ // so worldwide production startup can remain neutral when no GPS/search location exists.
+ await page.addInitScript(()=>localStorage.setItem('pizzascan-map-view-v1',JSON.stringify({lat:53.5511,lng:9.9937,zoom:14})));
  const tile=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Z1SIAAAAASUVORK5CYII=','base64');
  let photonCalls=0,nominatimCalls=0;
  const place={type:'node',id:1,lat:53.5511,lon:9.9937,tags:{name:'Fixture Pizza',cuisine:'pizza',amenity:'restaurant',opening_hours:'24/7'}};

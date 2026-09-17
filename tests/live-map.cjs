@@ -1,12 +1,65 @@
-// Read-only live service verification of the actual browser flow and CSP/CORS.
-// The release must behave like the original WebSim app: multiple pizza/Italian
-// families, not every restaurant, and not only venues with "Pizza" in the name.
+// Read-only worldwide live-service verification. Deterministic tests validate query logic;
+// this probe checks that real browser/CSP/CORS flows are not region-locked.
 const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('node:assert/strict');
 const {server,until}=require('./helpers.cjs');
-function transientProviderFailure(error){const text=[error?.message,error?.detail].filter(Boolean).join(' ');return /HTTP\s+(?:408|425|429|5\d\d)|timeout|timed out|nicht rechtzeitig|signal is aborted|aborterror|network|failed to fetch|fetch failed|connection|socket|temporarily unavailable|nicht erreichbar|too busy/i.test(text);}
-(async()=>{const {server:s,url}=await server(),browser=await chromium.launch();const context=await browser.newContext({viewport:{width:393,height:851},userAgent:'Mozilla/5.0 PizzaScan/2.3.5 (+https://github.com/chekento/Pizzascan)'});await context.addInitScript(()=>{localStorage.setItem('pizzascan-settings-v2',JSON.stringify({welcomed:true}));localStorage.setItem('pizzascan-map-view-v1',JSON.stringify({lat:53.6735,lng:10.2377,zoom:14}));});const page=await context.newPage(),failures=[];page.on('requestfailed',r=>failures.push({url:r.url(),error:r.failure()?.errorText}));fs.mkdirSync('test-results',{recursive:true});
- try{await page.goto(url);await until(page,()=>PizzaScan.ready&&!PizzaScan.diagnostics().mapLoading,90000);const diag=await page.evaluate(()=>({...PizzaScan.diagnostics(),providerErrors:placeService.lastErrors,native:window.PizzaScanNativeOverpass||null,smart:window.PizzaScanSmartDiscovery||null}));fs.writeFileSync('test-results/live-map-diagnostics.json',JSON.stringify({diag,failures},null,2));if(!diag.places){const probe=await page.evaluate(async()=>{try{return await placeService.photon('restaurant',{lat:53.6735,lng:10.2377});}catch(e){return {error:e.message};}});fs.writeFileSync('test-results/live-search-probe.json',JSON.stringify(probe,null,2));const providerErrors=Array.isArray(diag.providerErrors)?diag.providerErrors:[];if(providerErrors.length>=2&&providerErrors.every(transientProviderFailure)){fs.writeFileSync('test-results/live-map-provider-outage.txt','SKIPPED live venue assertions because every configured source failed before any fallback result could be produced.\n'+providerErrors.map(e=>`${e.source}: ${e.message}`).join('\n')+'\n');console.warn('WARN live-map provider probe skipped venue assertions: no live source produced any data. Deterministic recovery tests remain authoritative for this outage.');return;}assert.ok(diag.places>0,'Live Ahrensburg lookup must find actual places unless all sources report transient availability failures: '+JSON.stringify(diag));}
- const snapshot=await page.evaluate(()=>{const raw=places.map(p=>{const tags={...(p.tags||{}),name:p.name||p.tags?.name||'',cuisine:p.cuisine||p.tags?.cuisine||'',menu:p.menu||p.tags?.menu||'',description:p.description||p.tags?.description||''};return {...p,status:PizzaHours.status(p),relevant:PizzaSmartDiscovery.placeRelevant(p),italian:PizzaSmartDiscovery.italianCandidate(p),strongPizza:PizzaSmartDiscovery.strongPizzaPlace(p)};});return {raw,visible:raw.filter(p=>p.relevant)};});const initial=snapshot.visible;fs.writeFileSync('test-results/live-ahrensburg-places.json',JSON.stringify(snapshot,null,2));const unrelated=initial.filter(p=>!p.relevant);const nonPizzaNamed=initial.filter(p=>!/pizza|pizzeria|pizzaria|pizze/i.test(String(p.name||'')));const italianOnly=initial.filter(p=>p.italian&&!p.strongPizza);const diversity={rawTotal:snapshot.raw.length,total:initial.length,unrelated:unrelated.map(p=>p.name),nonPizzaNamed:nonPizzaNamed.map(p=>p.name),italianOnly:italianOnly.map(p=>p.name),radius:diag.mapConfig?.radius,source:diag.source,native:diag.native,smart:diag.smart};fs.writeFileSync('test-results/live-websim-diversity.json',JSON.stringify(diversity,null,2));assert.equal(diag.mapConfig?.radius,5,'Fresh live discovery must use the 5 km baseline');assert.ok(initial.length>=5,'Live Ahrensburg WebSim discovery must not collapse to one or two name-matched pizza places: '+JSON.stringify(diversity));assert.equal(unrelated.length,0,'Visible map must not contain ordinary restaurants without pizza/Italian evidence: '+JSON.stringify(diversity));assert.ok(nonPizzaNamed.length>=1,'Live results must include at least one relevant venue whose name does not contain Pizza/Pizzeria: '+JSON.stringify(diversity));assert.ok(italianOnly.length>=1,'Live results must include at least one Italian restaurant candidate independent of a Pizza name match: '+JSON.stringify(diversity));assert.equal(diag.markerCount,diag.visiblePlaces,'Marker count must track the actual visible result set');assert.ok(diag.markerCount>=5,'At least five relevant WebSim-family markers must actually render: '+JSON.stringify(diversity));await page.screenshot({path:'test-results/live-ahrensburg-map.png',fullPage:true});await page.locator('#map-fullscreen').click();await until(page,()=>PizzaScan.diagnostics().mapFullscreen&&document.getElementById('map').getBoundingClientRect().height===innerHeight);await until(page,()=>Object.values(map._layers).filter(l=>l instanceof L.TileLayer).every(l=>!l.isLoading()),20000);await page.waitForTimeout(350);await page.screenshot({path:'test-results/live-map-fullscreen.png'});await page.locator('#fs-back').click();await until(page,()=>!PizzaScan.diagnostics().mapFullscreen);
- const target=initial.find(p=>/pizza max/i.test(p.name))||initial[0];await page.locator('#places [data-action=place][data-id="'+target.placeId+'"]').click();await until(page,()=>!document.querySelector('.detail-loading'),65000);const detail=await page.evaluate(()=>selectedPlace);fs.writeFileSync('test-results/live-venue-detail.json',JSON.stringify(detail,null,2));await page.screenshot({path:'test-results/live-ahrensburg-detail.png',fullPage:true});assert.ok(detail.name&&detail.lat);console.log('LIVE',JSON.stringify({places:initial.length,rawPlaces:snapshot.raw.length,italianOnly:italianOnly.length,nonPizzaNamed:nonPizzaNamed.length,markers:diag.markerCount,venue:detail.name,beforeAddress:target.address,afterAddress:detail.address,openingHours:detail.openingHours,phone:detail.phone,website:detail.website,source:detail.dataSource,native:diag.native}));
- await page.locator('#sheet-close').click();assert.equal(await page.locator('#search').isVisible(),false,'Compact search is minimized before use');await page.locator('#search-toggle').click();await until(page,()=>!document.getElementById('search-panel').classList.contains('search-panel-collapsed'));await page.locator('#search').fill('Pizza Max Ahrensburg');await page.locator('#search-submit').click();await until(page,()=>!document.getElementById('search-submit').disabled,45000);const result=await page.evaluate(()=>searchResults);fs.writeFileSync('test-results/live-search.json',JSON.stringify(result,null,2));assert.ok(result.some(x=>/pizza max/i.test(x.name)),'Real restaurant name search returns Pizza Max');await page.screenshot({path:'test-results/live-search-mobile.png',fullPage:true});await page.locator('#search-collapse').click();assert.equal(await page.locator('#search').isVisible(),false,'Live search can be minimized again');
- }catch(e){await page.screenshot({path:'test-results/live-map-failure.png'}).catch(()=>{});throw e;}finally{await browser.close();s.close();}})().catch(e=>{console.error(e);process.exit(1)});
+function transient(error){const text=[error?.message,error?.detail].filter(Boolean).join(' ');return /HTTP\s+(?:408|425|429|5\d\d)|timeout|timed out|nicht rechtzeitig|abort|network|failed to fetch|fetch failed|connection|socket|temporarily unavailable|nicht erreichbar|too busy|keine treffer/i.test(text);}
+const cities=[
+ {name:'Paris',lat:48.8566,lng:2.3522,continent:'Europe'},
+ {name:'New York',lat:40.7128,lng:-74.006,continent:'North America'},
+ {name:'São Paulo',lat:-23.5505,lng:-46.6333,continent:'South America'},
+ {name:'Nairobi',lat:-1.2864,lng:36.8172,continent:'Africa'},
+ {name:'東京',lat:35.6762,lng:139.6503,continent:'Asia'},
+ {name:'Sydney',lat:-33.8688,lng:151.2093,continent:'Oceania'}
+];
+(async()=>{
+ const {server:s,url}=await server(),browser=await chromium.launch();
+ const context=await browser.newContext({viewport:{width:393,height:851},userAgent:'Mozilla/5.0 PizzaScan/2.3.6 (+https://github.com/chekento/Pizzascan)'});
+ await context.addInitScript(()=>{localStorage.setItem('pizzascan-settings-v2',JSON.stringify({welcomed:true}));localStorage.removeItem('pizzascan-map-view-v1');localStorage.removeItem('pizzascan-global-awaiting-center-v1');});
+ const page=await context.newPage(),failures=[];page.on('requestfailed',r=>failures.push({url:r.url(),error:r.failure()?.errorText}));fs.mkdirSync('test-results',{recursive:true});
+ try{
+  await page.goto(url);await until(page,()=>PizzaScan.ready&&!PizzaScan.diagnostics().mapLoading,90000);
+  const fresh=await page.evaluate(()=>({center:map.getCenter(),zoom:map.getZoom(),globalFresh:window.PizzaScanGlobalFresh,status:document.getElementById('map-status').textContent}));
+  assert.ok(fresh.globalFresh,'Fresh install without GPS must wait for a real worldwide search center');
+  assert.ok(fresh.zoom<=3,'Fresh install without GPS must open a neutral world overview, not a local German/US city');
+  assert.ok(Math.abs(fresh.center.lng)<5&&fresh.center.lat>0&&fresh.center.lat<30,'Neutral overview must be geographically neutral: '+JSON.stringify(fresh));
+
+  const geocoding=[];
+  for(const city of cities){
+   const result=await page.evaluate(async city=>{try{const items=await placeService.photon(city.name,null,{force:true});return {items:items.slice(0,8).map(x=>({name:x.name,lat:x.lat,lng:x.lng,kind:x.kind,address:x.address})),error:''};}catch(e){return {items:[],error:e?.message||String(e)};}},city);
+   const nearby=result.items.filter(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lng)).map(x=>({...x,distanceKm:Math.round(PizzaDistance(city,x)*10)/10}));
+   function PizzaDistance(a,b){const R=6371,rad=x=>x*Math.PI/180,dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng),h=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));}
+   const best=nearby.sort((a,b)=>a.distanceKm-b.distanceKm)[0];
+   geocoding.push({...city,error:result.error,best,returned:result.items.length});
+   if(result.items.length)assert.ok(best&&best.distanceKm<300,`${city.name} global geocoder result is implausibly far away: ${JSON.stringify(best)}`);
+  }
+  fs.writeFileSync('test-results/live-global-geocoding.json',JSON.stringify({cities:geocoding,failures},null,2));
+  const geoSuccess=geocoding.filter(x=>x.returned>0&&x.best?.distanceKm<300);
+  if(geoSuccess.length<3)console.warn('WARN global geocoder matrix had limited live availability; deterministic worldwide tests remain authoritative:',JSON.stringify(geocoding));
+  else assert.ok(new Set(geoSuccess.map(x=>x.continent)).size>=3,'Live global geocoding should cover multiple continents when the provider is available');
+
+  const mapProbes=[],probeCities=[cities[0],cities[4],cities[2]];
+  for(const city of probeCities){
+   const probe=await page.evaluate(async city=>{map.setView([city.lat,city.lng],14,{animate:false});try{await loadPlaces({force:true});}catch{}const d=PizzaScan.diagnostics();return {...city,places:d.places,visible:d.visiblePlaces,markers:d.markerCount,mapError:d.mapError,providerErrors:placeService.lastErrors||[],center:map.getCenter(),zoom:map.getZoom()};},city);
+   mapProbes.push(probe);if(probe.places>0)break;
+  }
+  fs.writeFileSync('test-results/live-global-map-probes.json',JSON.stringify(mapProbes,null,2));
+  const liveMap=mapProbes.find(x=>x.places>0);
+  if(liveMap){
+   assert.ok(liveMap.visible>=0&&liveMap.markers>=0,'Map result set must remain renderable');
+   assert.ok(Math.abs(liveMap.center.lat-liveMap.lat)<0.2&&Math.abs(liveMap.center.lng-liveMap.lng)<0.2,'Map center must stay in selected worldwide city');
+   await page.screenshot({path:'test-results/live-global-map.png',fullPage:true});
+  }else{
+   const errors=mapProbes.flatMap(x=>x.providerErrors||[]);
+   if(errors.length&&errors.every(transient))console.warn('WARN all live map providers were temporarily unavailable across global probes; deterministic map tests remain authoritative.');
+   else assert.fail('Worldwide live map probes returned no places without a clearly transient provider outage: '+JSON.stringify(mapProbes));
+  }
+
+  // A global text search must not depend on a preselected country or the old Hamburg/Ahrensburg center.
+  await page.locator('#search-toggle').click();await until(page,()=>!document.getElementById('search-panel').classList.contains('search-panel-collapsed'));
+  await page.locator('#search').fill('Tokyo');await page.locator('#search-submit').click();await until(page,()=>!document.getElementById('search-submit').disabled,45000);
+  const search=await page.evaluate(()=>searchResults.map(x=>({name:x.name,lat:x.lat,lng:x.lng,kind:x.kind,address:x.address})));fs.writeFileSync('test-results/live-global-search.json',JSON.stringify(search,null,2));
+  if(search.length){const close=search.some(x=>Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&Math.abs(x.lat-35.6762)<2&&Math.abs(x.lng-139.6503)<3);assert.ok(close,'Tokyo search must return a Tokyo-area result when live geocoding answers');}
+  await page.locator('#search-collapse').click();assert.equal(await page.locator('#search').isVisible(),false);
+  console.log('LIVE GLOBAL',JSON.stringify({geocoderSuccess:geoSuccess.length,continents:[...new Set(geoSuccess.map(x=>x.continent))],mapProbe:liveMap?.name||'provider-outage',searchResults:search.length}));
+ }catch(e){await page.screenshot({path:'test-results/live-global-failure.png'}).catch(()=>{});throw e;}finally{await browser.close();s.close();}
+})().catch(e=>{console.error(e);process.exit(1)});

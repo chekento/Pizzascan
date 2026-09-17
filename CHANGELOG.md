@@ -1,8 +1,42 @@
 # PizzaScan Changelog
 
-## 2.3.5 — aktuelle Direktversion · 16.09.2026
+## 2.3.6 — aktuelle Direktversion · 17.09.2026
 
-Aktueller Stand: `versionCode 38`, `versionName 2.3.5`, Android-Paket `cloud.kosch.pizzascan`.
+Aktueller Stand: `versionCode 41`, `versionName 2.3.6`, Android-Paket `cloud.kosch.pizzascan`.
+
+### Build 41 — Suchzentrum, Radiussteuerung, weltweite Suche und Production-Hardening
+
+- **Weltweite Suche ohne Länder-Default:** eine frische Installation ohne GPS startet neutral in der Weltübersicht statt an einem fest codierten deutschen oder US-amerikanischen Ort. Erst GPS, Orts-/Adresssuche oder eine bewusst gewählte Kartenregion setzt das aktive Suchgebiet.
+- **Unicode-sichere Suche:** Restaurant-, Orts- und Adressnamen in nichtlateinischen Schriftsystemen bleiben erhalten und durchsuchbar, z. B. Japanisch, Chinesisch, Arabisch und Kyrillisch. Lateinische Akzente werden suchfreundlich gefaltet, ohne andere Schriftsysteme zu beschädigen.
+- **Globale Geocoding-Logik:** Photon wird vor Auswahl eines Standorts ohne künstlichen Mittelpunkt abgefragt. Nach Auswahl eines Gebiets darf dessen Mittelpunkt die Suche sinnvoll priorisieren. Die Sprache wird nicht mehr fest auf Deutsch erzwungen.
+- **Globale Release-Matrix:** deterministische Tests decken Europa, Nordamerika, Südamerika, Afrika, Asien, Ozeanien und einen Dateline-Fall ab. Live-Probes verwenden mehrere Weltregionen, ohne einen einzelnen öffentlichen Provider-Ausfall als App-Defekt zu behandeln.
+- Aktive Suchen erhalten einen kleinen **Suchzentrum-Marker**. Ein ausgewählter Ort wird als Zentrum übernommen; „Hier suchen“ verwendet die Kartenmitte. Bei einem festen Radius erscheint zusätzlich ein dezenter temporärer Radiuskreis.
+- Der Suchbereich ist in den Einstellungen jetzt als **Schieberegler von 0 bis 10 km in 0,5-km-Schritten** konfigurierbar. `0 km` bedeutet weiterhin aktueller Kartenausschnitt.
+- Offline-/Fehlerfälle sind robuster: bekannte Places bleiben aus dem Cache sichtbar; ein fehlgeschlagener Live-Abruf löscht vorhandene Ergebnisse nicht. Temporäre Karten-/Such-/Rating-Caches können gezielt repariert werden, ohne Favoriten, eigene Bewertungen, Einstellungen oder Offline-Modelle zu entfernen.
+- Offene Ratings zeigen optional ein **Datenvertrauen** aus Stichprobengröße und Aktualität. Dieser Wert ist ausdrücklich keine Wahrheitswahrscheinlichkeit.
+- Neuer transparenter **Signal-Mix** auf 0–10: Mangrove/Open Reviews, eigene bestätigte Besuche, experimentelle Foto-KI und Google-Maps-Daten nur dann, wenn sie in der aktuellen Sitzung ausdrücklich geladen wurden. Externe Bewertungsportale werden nicht gescraped.
+- Große Markermengen bleiben vollständig erhalten; bei weitem Zoom werden niedriger priorisierte Marker lediglich visuell zurückgenommen statt aus der Datenmenge entfernt.
+- Fotoanalysen können lokal gegen andere gespeicherte Analysen desselben Modells als Perzentil eingeordnet werden. Das ist ein lokaler Vergleich und keine globale Rangliste.
+- Neuer **Pizza-Radar** für Discovery im aktuellen Suchbereich, gewichtet nach Entfernung, Öffnungsstatus, Pizza-Evidence und – falls vorhanden – besser gestützten Ratings.
+- Neuer **Health Check** für Runtime, Karte/Cache, Netzwerk, GPS, Speicher, Datenquellen, Radius, offene Ratings, Offline-KI und Recovery-Log.
+- Neues **Privacy Dashboard** erläutert kompakt, was lokal bleibt und wann Karten-, Bewertungs- oder Modelldienste angesprochen werden.
+- Runtime-Fehler werden lokal in einem begrenzten Recovery-Log erfasst; URLs werden dabei redigiert.
+- Build 41 sitzt auf der vollständigen Mehrquellen-/GPS-/Cache-Logik aus Build 40. Die Provider-Union, persistente Place-Historie und Existenz-Revalidation bleiben erhalten.
+- CI enthält zusätzliche Tests für Radiusnormalisierung, Datenvertrauen, Signal-Fusion, Radar-Ranking, lokalen Fotovergleich und weltweite Suche.
+
+[⬇️ PizzaScan 2.3.6 APK](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.6.apk)
+
+## 2.3.5 — archivierte Direktversion · 16.09.2026
+
+Der 2.3.5-Zweig stabilisierte die vollständige Discovery, dauerhafte Orts-/Besuchshistorie und den Mehrquellen-/GPS-/Cache-Pfad, der in Build 41 weiterverwendet wird.
+
+### Build 40 — GPS-first, vollständige Mehrquellen-Union und Cache-Revalidation
+
+- Startsuche wartet auf die angeforderte GPS-Position, statt parallel mit einem veralteten Standardzentrum zu starten.
+- Alle freigegebenen Overpass-Quellen werden parallel abgefragt und erfolgreiche Ergebnisse nach OSM-Identität vollständig vereinigt.
+- Bekannte Orte werden persistent gehalten und bei Start wiederhergestellt.
+- Cache-Revalidation prüft gespeicherte OSM-Identitäten auf Existenz, ohne dünne Providerantworten als vollständigen Ersatzbestand zu behandeln.
+- Manueller vollständiger Refresh und schnelle Ortssuche wurden als Werkzeuge ergänzt.
 
 ### Build 38 — vollständige Discovery + dauerhafte Orts- und Besuchshistorie
 
