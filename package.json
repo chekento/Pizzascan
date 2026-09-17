@@ -8,7 +8,7 @@
     "smoke": "node tests/model-consent.cjs && node tests/web-smoke.cjs && node tests/review-smoke.cjs",
     "models": "node tests/model-integration.cjs",
     "ratings-smoke": "node tests/ratings-smoke.cjs",
-    "map-smoke": "node tests/map-smoke.cjs && node tests/search-fallback-smoke.cjs && node tests/release-hardening-smoke.cjs && node tests/map-security-smoke.cjs",
+    "map-smoke": "node tests/build42-discovery-smoke.cjs && node tests/map-smoke.cjs && node tests/search-fallback-smoke.cjs && node tests/release-hardening-smoke.cjs && node tests/map-security-smoke.cjs",
     "marker-i18n": "node tests/marker-i18n-smoke.cjs",
     "i18n-content": "node tests/i18n-content-smoke.cjs",
     "live-map": "node tests/live-map.cjs",
