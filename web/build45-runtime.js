@@ -99,7 +99,22 @@ function migrate(root,PD){
   return true;
  }catch(e){console.warn('Build45 search migration skipped',e);return false;}
 }
-function sync(root){try{if(root.PizzaScan)root.PizzaScan.version=VERSION;}catch{}try{const b=root.document?.querySelector('.brand small');if(b)b.textContent=VERSION;}catch{}try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.10.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}}
+function lockVersion(root){
+ try{
+  const app=root.PizzaScan;if(!app)return false;
+  const d=Object.getOwnPropertyDescriptor(app,'version');
+  if(!d?.get||!d.get.__build45){
+   const get=()=>VERSION;get.__build45=true;
+   Object.defineProperty(app,'version',{configurable:true,enumerable:true,get,set(){}});
+  }
+  return true;
+ }catch{return false;}
+}
+function sync(root){
+ lockVersion(root);
+ try{const b=root.document?.querySelector('.brand small');if(b&&b.textContent!==VERSION)b.textContent=VERSION;}catch{}
+ try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.10.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
+}
 function install(root){
  const PD=root.PizzaPlaces,Core=root.PizzaCore;if(!PD||!Core)return false;
  PD.query=(center,radius,bounds)=>websimQuery(center,exactConfiguredRadius(root,radius),bounds);
@@ -142,9 +157,14 @@ function install(root){
   }catch{}
   if((typeof settings==='undefined'||typeof map==='undefined'||!map)&&attempts<120)root.setTimeout(ready,50);
  };ready();
- root.setTimeout(()=>sync(root),500);root.setTimeout(()=>sync(root),1800);
+ root.setTimeout(()=>sync(root),0);root.setTimeout(()=>sync(root),250);root.setTimeout(()=>sync(root),600);root.setTimeout(()=>sync(root),1200);root.setTimeout(()=>sync(root),1800);root.setTimeout(()=>sync(root),3000);
+ try{
+  const brand=root.document?.querySelector('.brand small');
+  if(brand&&!brand.__build45VersionObserver){brand.__build45VersionObserver=true;new MutationObserver(()=>{if(brand.textContent!==VERSION)brand.textContent=VERSION;lockVersion(root);}).observe(brand,{childList:true,characterData:true,subtree:true});}
+  root.addEventListener('load',()=>sync(root),{once:true});
+ }catch{}
  root.PizzaScanDiscovery45={version:VERSION,build:BUILD,mode:'websim-query-authoritative',defaultViewport:true,queryHitsAuthoritative:true,legacyFilterReset:true,autoSearchDelayMs:250,genericRestaurantsVisible:false};
  return true;
 }
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,HIT,PROVIDERS,PIZZA,ITALIAN,area,websimQuery,text,pizzaEvidence,italianEvidence,isQueryHit,classify,normalizeElement,normalizeElements,relevantPlace,filterPlaces,exactConfiguredRadius,firstSuccess,tagHits,migrationConfig,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,HIT,PROVIDERS,PIZZA,ITALIAN,area,websimQuery,text,pizzaEvidence,italianEvidence,isQueryHit,classify,normalizeElement,normalizeElements,relevantPlace,filterPlaces,exactConfiguredRadius,firstSuccess,tagHits,migrationConfig,lockVersion,install};
 });
