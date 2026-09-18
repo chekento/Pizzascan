@@ -14,7 +14,7 @@ test('query contains the original WebSim search families and additive evidence',
 });
 
 test('targeted provider hits are authoritative',()=>{
- const raw=[{type:'node',id:1,lat:53.8,lon:10.7,tags:{amenity:'restaurant',name:'Synthetic targeted hit'}}];
+ const raw=[{type:'node',id:1,lat:53.8,lon:10.7,tags:{amenity:'restaurant',name:'Synthetic targeted hit',dish:'pizza'}}];
  const tagged=B.tagHits(raw);
  assert.equal(tagged.length,1);
  assert.equal(tagged[0].tags[B.HIT],'yes');
