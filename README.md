@@ -2,7 +2,7 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.10 · Build 45</h1>
+<h1 align="center">PizzaScan 2.3.11 · Build 46</h1>
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
@@ -13,15 +13,15 @@
 ## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.10.apk"><strong>⬇️ PizzaScan 2.3.10 · Build 45 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.11.apk"><strong>⬇️ PizzaScan 2.3.11 · Build 46 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.10 · Build 45 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.11 · Build 46 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
-> **Build 45 stellt die ursprüngliche WebSim-Suche als verbindliche Basis wieder her:** Treffer der gezielten Pizza-/Italien-Overpass-Abfrage werden nicht anschließend durch strengere interne Evidenzfilter verworfen. Alte versteckte Suchfilter werden einmalig zurückgesetzt; Standard ist wieder die Suche im sichtbaren Kartenausschnitt. Ein fester Radius bleibt optional.
+> **Build 46 finalisiert die wiederhergestellte WebSim-Suche:** Die gezielte Pizza-/Italien-Abfrage bleibt maßgeblich, der erste erfolgreiche OSM-Spiegel erscheint sofort, weitere Spiegel ergänzen im Hintergrund. Antworten alle Spiegel leer, endet der Abruf sofort sauber – ohne Rückfall in ältere, langsame Suchketten.
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.10.txt"><strong>SHA-256</strong></a>
+<a href="downloads/SHA256SUMS-2.3.11.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;
 <a href="CHANGELOG.md"><strong>📝 Changelog</strong></a>
 &nbsp; · &nbsp;
@@ -32,7 +32,7 @@
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 45 übernimmt die ursprüngliche WebSim-Suche als maßgeblichen Discovery-Vertrag und erweitert sie nur additiv:
+Build 46 übernimmt die ursprüngliche WebSim-Suche als maßgeblichen Discovery-Vertrag und erweitert sie nur additiv:
 
 - **Kein allgemeiner Gastro-Vollscan mehr.** Normale Burger-, Döner-, asiatische oder sonstige Restaurants ohne Pizza-/Italien-Bezug werden nicht gelistet.
 - **Pizza muss trotzdem nicht im Namen stehen.** Eine Bar, ein Café oder Restaurant wird gefunden, wenn strukturierte OSM-Daten Pizza belegen, z. B. über `cuisine`, `speciality`, Produkte, Beschreibung, Notizen oder Pizzaautomat-Tags.
@@ -46,8 +46,9 @@ Build 45 übernimmt die ursprüngliche WebSim-Suche als maßgeblichen Discovery-
 - Primärer Ortsindex: **OpenStreetMap / Overpass** über mehrere HTTPS-Spiegel.
 - Gezielte Abfrage statt unnötig großer allgemeiner Gastro-Abfrage.
 - Der **erste erfolgreiche OSM-Spiegel wird sofort gerendert**; weitere Spiegel ergänzen/deduplizieren im Hintergrund.
-- **Query-Treffer sind autoritativ:** Wenn ein Objekt durch die gezielte WebSim-Pizza-/Italien-Abfrage gefunden wurde, wird es nicht durch einen zweiten, strengeren JavaScript-Filter wieder verworfen.
+- **Gezielte Query-Treffer bleiben maßgeblich:** Pizza-/Italien-Treffer werden nicht durch eine strengere spätere Filterstufe wieder verworfen.
 - **Standard = sichtbarer Kartenausschnitt**, wie im Original-WebSim. Der Radiusregler bleibt optional für 0–10 km.
+- **Leere Providerantworten sind sofort abgeschlossen:** kein Rückfall mehr in frühere verschachtelte Fallback-Providerketten.
 - Keine künstliche 20-/50-/100-Treffergrenze für relevante OSM-Ergebnisse.
 - Ein eingestellter Radius wird exakt verwendet: **5 km bedeutet auch intern 5 km**.
 - `0 km` nutzt den aktuellen Kartenausschnitt.
