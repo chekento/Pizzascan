@@ -53,6 +53,7 @@ function fastQuery(center,radius,bounds){
     `nwr["speciality"~"${PIZZA}",i](${a});`+
     `nwr["amenity"~"bar|pub"]["cuisine"~"${PIZZA}|${ITALIAN}",i](${a});`+
     `nwr["name"~"${PIZZA}",i](${a});`+
+    `nwr["description"~"${PIZZA}",i](${a});`+
     `nwr["amenity"="takeaway"]["cuisine"~"${PIZZA}|${ITALIAN}",i](${a});`+
     `);out body center qt;`;
 }
@@ -62,7 +63,7 @@ function fastQuery(center,radius,bounds){
 function enrichQuery(center,radius,bounds){
   const a=areaToken(center,radius,bounds);
   return `[out:json][timeout:12];(/* ${ENRICH_MARKER} */`+
-    `nwr["description"~"${PIZZA}|italian restaurant|italian cuisine|cucina italiana",i](${a});`+
+    `nwr["description"~"italian restaurant|italian cuisine|cucina italiana",i](${a});`+
     `nwr["note"~"${PIZZA}",i](${a});`+
     `nwr["product"~"${PIZZA}",i](${a});nwr["products"~"${PIZZA}",i](${a});`+
     `nwr["menu"~"${PIZZA}",i](${a});nwr["website:menu"~"${PIZZA}",i](${a});`+
@@ -129,7 +130,9 @@ function migrateDiscoveryDefaults(root,PD){
     if(typeof settings!=='undefined'&&settings){
       const raw=settings.filters||{};
       const types=[...new Set([...(Array.isArray(raw.types)?raw.types:[]),...Object.keys(PD.TYPES||{})])];
-      settings.filters={...raw,includeItalian:true,types};
+      const oldRadius=Number(raw.radius);
+      const radius=!Number.isFinite(oldRadius)||oldRadius===5?0:oldRadius;
+      settings.filters={...raw,includeItalian:true,types,radius};
       if(typeof saveSettings==='function')saveSettings();
     }
     root.localStorage?.setItem(MIGRATION_KEY,JSON.stringify({build:BUILD,time:Date.now()}));
@@ -245,13 +248,18 @@ function syncVersion(root){
 
 function compactToolbar(root){
   const d=root.document;if(!d)return;
-  const row=d.getElementById('build40-tools');
-  if(row&&!row.dataset.build44){
-    row.dataset.build44='true';
-    row.innerHTML='<button id="quick-place-search" class="build44-mini-tool" type="button" aria-label="Ort oder Adresse suchen">🔎 <span>Suchen</span></button><button id="fast-map-refresh" class="build44-mini-tool" type="button" aria-label="Pizza-Orte neu laden">↻ <span>Neu laden</span></button><span class="build44-cache-chip" title="Bekannte Pizza-Orte werden lokal zwischengespeichert">● Cache</span>';
-    d.getElementById('quick-place-search').onclick=()=>d.getElementById('search-toggle')?.click();
-    d.getElementById('fast-map-refresh').onclick=()=>{try{loadPlaces({force:true});}catch(error){console.error(error);}};
+  const bar=d.getElementById('build44-tools');
+  if(bar&&!bar.dataset.bound){
+    bar.dataset.bound='true';
+    const search=d.getElementById('build44-place-search');
+    const refresh=d.getElementById('build44-refresh');
+    if(search)search.onclick=event=>{event.preventDefault();d.getElementById('search-toggle')?.click();};
+    if(refresh)refresh.onclick=event=>{event.preventDefault();event.stopPropagation();try{loadPlaces({force:true});}catch(error){console.error(error);}};
   }
+  const legacy=d.getElementById('build40-tools');
+  if(legacy){legacy.hidden=true;legacy.setAttribute('aria-hidden','true');}
+  const note=d.getElementById('cache-mode-note');
+  if(note){note.hidden=true;note.setAttribute('aria-hidden','true');}
 
   /* Clone removes Build 40's capture listener that redirected the ordinary
    * "Hier suchen" action into the expensive integrity/full-refresh path. */
