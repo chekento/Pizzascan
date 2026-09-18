@@ -96,7 +96,7 @@ function normalizeElement(e,Core){
 function normalizeElements(list,Core){const m=new Map();for(const e of Array.isArray(list)?list:[]){const p=normalizeElement(e,Core);if(p)m.set(p.placeId,p);}return [...m.values()];}
 function relevantPlace(p){return !!p&&(p.pizzaEvidence==='confirmed'||p.pizzaEvidence==='possible'||p.pizzaEvidence==='search'||p.tags?.[HIT]==='yes');}
 function filterPlaces(list,cfg={},context={},hours=()=>({state:'unknown'})){const types=Array.isArray(cfg.types)?cfg.types:null;return (list||[]).filter(p=>{if(!relevantPlace(p))return false;if(types&&!types.includes(p.type))return false;if(cfg.includeItalian===false&&p.pizzaEvidence==='possible')return false;if(cfg.hideVisited&&context.visited?.has?.(p.placeId))return false;if(cfg.onlyOpen){const s=hours(p)?.state;if(s!=='open'&&!(cfg.unknownHours&&s==='unknown'))return false;}return true;});}
-function tagHits(elements){return (Array.isArray(elements)?elements:[]).map(e=>({...e,tags:{...(e.tags||{}),[HIT]:'yes'}}));}
+function tagHits(elements){return (Array.isArray(elements)?elements:[]).filter(e=>pizzaEvidence(e?.tags||{})||italianEvidence(e?.tags||{})).map(e=>({...e,tags:{...(e.tags||{}),[HIT]:'yes'}}));}
 function firstSuccess(promises){return new Promise((resolve,reject)=>{let left=promises.length,errors=[];if(!left)return reject(Error('Keine Kartenquelle konfiguriert'));promises.forEach((p,i)=>Promise.resolve(p).then(v=>resolve(v),e=>{errors[i]=e;if(--left===0)reject(errors.find(Boolean)||Error('Keine Kartenquelle erreichbar'));}));});}
 function queryAreaInfo(query){
  const q=String(query||'');let m=/around:(\d+),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(q);
