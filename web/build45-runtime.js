@@ -100,6 +100,7 @@ function migrate(root,PD){
  }catch(e){console.warn('Build45 search migration skipped',e);return false;}
 }
 function lockVersion(root){
+ if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return false;
  try{
   const app=root.PizzaScan;if(!app)return false;
   const d=Object.getOwnPropertyDescriptor(app,'version');
@@ -111,6 +112,7 @@ function lockVersion(root){
  }catch{return false;}
 }
 function sync(root){
+ if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;
  lockVersion(root);
  try{const b=root.document?.querySelector('.brand small');if(b&&b.textContent!==VERSION)b.textContent=VERSION;}catch{}
  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.10.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
@@ -152,7 +154,7 @@ function install(root){
  }
  let attempts=0;const ready=()=>{attempts++;const changed=migrate(root,PD);sync(root);
   try{
-   if(typeof map!=='undefined'&&map&&!map.__build45FastMove){map.__build45FastMove=true;map.on('moveend',()=>{try{if(mapConfig().autoSearch){clearTimeout(queryTimer);queryTimer=setTimeout(()=>loadPlaces(),250);}}catch{}});}
+   if(typeof map!=='undefined'&&map&&!map.__build45FastMove){map.__build45FastMove=true;map.on('moveend',()=>{try{if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;if(mapConfig().autoSearch){clearTimeout(queryTimer);queryTimer=setTimeout(()=>loadPlaces(),250);}}catch{}});}
    if(changed&&typeof map!=='undefined'&&map&&typeof loadPlaces==='function')root.setTimeout(()=>loadPlaces({force:true}),50);
   }catch{}
   if((typeof settings==='undefined'||typeof map==='undefined'||!map)&&attempts<120)root.setTimeout(ready,50);
@@ -160,7 +162,7 @@ function install(root){
  root.setTimeout(()=>sync(root),0);root.setTimeout(()=>sync(root),250);root.setTimeout(()=>sync(root),600);root.setTimeout(()=>sync(root),1200);root.setTimeout(()=>sync(root),1800);root.setTimeout(()=>sync(root),3000);
  try{
   const brand=root.document?.querySelector('.brand small');
-  if(brand&&!brand.__build45VersionObserver){brand.__build45VersionObserver=true;new MutationObserver(()=>{if(brand.textContent!==VERSION)brand.textContent=VERSION;lockVersion(root);}).observe(brand,{childList:true,characterData:true,subtree:true});}
+  if(brand&&!brand.__build45VersionObserver){brand.__build45VersionObserver=true;new MutationObserver(()=>{if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;if(brand.textContent!==VERSION)brand.textContent=VERSION;lockVersion(root);}).observe(brand,{childList:true,characterData:true,subtree:true});}
   root.addEventListener('load',()=>sync(root),{once:true});
  }catch{}
  root.PizzaScanDiscovery45={version:VERSION,build:BUILD,mode:'websim-query-authoritative',defaultViewport:true,queryHitsAuthoritative:true,legacyFilterReset:true,autoSearchDelayMs:250,genericRestaurantsVisible:false};
