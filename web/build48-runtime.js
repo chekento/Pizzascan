@@ -48,7 +48,7 @@ function syncVersion(root){
       if(current?.configurable!==false){
         const get=()=>VERSION;
         get.__build48=true;
-        Object.defineProperty(app,'version',{configurable:false,enumerable:true,get,set(){}});
+        Object.defineProperty(app,'version',{configurable:true,enumerable:true,get,set(){}});
       }
     }
   }catch{}
@@ -132,7 +132,7 @@ function installStyles(root){
       padding:7px 10px!important;
       border-radius:11px!important;
       background:var(--bg)!important;
-      border:1px solid color-mix(in srgb,var(--line) 80%,transparent)!important;
+      border:1px solid var(--line)!important;
     }
     #map-view .map-control-meta #result-count{
       margin:0!important;
@@ -169,7 +169,7 @@ function installStyles(root){
       flex:0 0 8px!important;
       border-radius:999px!important;
       background:var(--green)!important;
-      box-shadow:0 0 0 4px color-mix(in srgb,var(--green) 13%,transparent)!important;
+      box-shadow:0 0 0 4px #39715522!important;
     }
     #map-view .map-caption #map-status{
       flex:1 1 auto!important;
@@ -350,25 +350,28 @@ function installRecovery(root){
 function install(root){
   if(!root.document)return false;
 
-  let tries=0;
+  let tries=0,needsRefresh=false;
   const ready=()=>{
     tries++;
-    const migrated=migrate(root);
+    if(migrate(root))needsRefresh=true;
     syncVersion(root);
     upgradeUi(root);
     installRecovery(root);
 
-    if(migrated){
+    let mapReady=false;
+    try{mapReady=typeof map!=='undefined'&&!!map&&typeof loadPlaces==='function';}catch{}
+    if(needsRefresh&&mapReady){
+      needsRefresh=false;
       try{
         if(typeof mapAreas!=='undefined')mapAreas=[];
         if(typeof mapPool!=='undefined'&&Array.isArray(mapPool))mapPool=[];
       }catch{}
       root.setTimeout(()=>{
-        try{if(typeof loadPlaces==='function')loadPlaces({force:true});}catch{}
+        try{loadPlaces({force:true});}catch{}
       },120);
     }
 
-    if((typeof settings==='undefined'||typeof map==='undefined'||!map)&&tries<120){
+    if((typeof settings==='undefined'||!mapReady)&&tries<120){
       root.setTimeout(ready,50);
     }
   };
