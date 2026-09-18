@@ -41,7 +41,18 @@ Build 44 verwendet die ursprünglichen WebSim-Selektorfamilien als verbindliche 
 - Mehrsprachige Pizza-Signale werden unterstützt, unter anderem lateinische Schreibweisen sowie Japanisch, Chinesisch, Arabisch, Kyrillisch, Griechisch, Hebräisch, Koreanisch und Thai.
 - Alte Build-42-Cacheeinträge ohne Pizza-/Italien-Evidenz werden aus der sichtbaren Ergebnisliste entfernt.
 
-## ⚡ WebSim-first: schneller und vollständiger\n\n- Der **erste Pass entspricht semantisch den ursprünglichen WebSim-Selektorfamilien**: Pizza-Cuisine, italienische Restaurants, Pizza-/Italien-Cuisine bei Café/Fast Food/Foodtruck/Takeaway, Pizzaautomaten, Pizza-Spezialität, Pizza-/Italien-Bar/Pub und Pizza im Namen.\n- Teurere Zusatzsignale wie Beschreibung, Notiz, Produkt-/Menüfelder, Brand/Operator und passende Food-Shops werden **erst nach dem ersten sichtbaren Ergebnis** im Hintergrund abgefragt.\n- Drei freie OpenStreetMap-/Overpass-Spiegel laufen parallel. **Der erste nicht-leere relevante Provider** wird sofort angezeigt; eine schnelle leere Antwort blockiert keine besseren Treffer mehr.\n- Spätere Provider-Ergebnisse werden nach OSM-Identität zusammengeführt, ohne den ersten sichtbaren Satz zu ersetzen.\n- Die normale Aktion **„Hier suchen“ führt nur die schnelle Kartensuche aus**. Der alte Build-40-Pfad, der vorher eine Cache-/Integritätsprüfung vor die Suche setzte, ist von der Hauptaktion getrennt.\n- Keine künstliche 20-/50-/100-Treffergrenze für relevante OSM-Ergebnisse.\n- Ein eingestellter Radius wird exakt verwendet; 0 km nutzt den aktuellen Kartenausschnitt.\n- Cache-first: bereits bekannte relevante Orte erscheinen sofort und werden durch Live-Daten ergänzt.\n## 🌍 Weltweit
+## ⚡ WebSim-first: schneller und vollständiger
+
+- Der **erste Pass entspricht den ursprünglichen WebSim-Selektorfamilien**: Pizza-Cuisine, italienische Restaurants, Pizza-/Italien-Cuisine bei Café/Fast Food/Foodtruck/Takeaway, Pizzaautomaten, Pizza-Spezialität, Pizza-/Italien-Bar/Pub, Pizza im Namen **und Pizza in der Beschreibung**.
+- Zusätzliche Signale wie Notiz, Produkt-/Menüfelder, Brand/Operator, italienische Beschreibungstexte und passende Food-Shops werden **erst nach dem ersten sichtbaren Ergebnis** im Hintergrund ergänzt.
+- Drei freie OpenStreetMap-/Overpass-Spiegel laufen parallel. **Der erste nicht-leere relevante Provider** wird sofort angezeigt; eine schnelle leere Antwort blockiert keine besseren Treffer mehr.
+- Spätere Provider-Ergebnisse werden nach OSM-Identität zusammengeführt, ohne den ersten sichtbaren Satz zu ersetzen.
+- Die normale Aktion **„Hier suchen“ führt nur die schnelle Kartensuche aus**. Der alte Build-40-Pfad, der vorher eine Cache-/Integritätsprüfung vor die Suche setzte, ist von der Hauptaktion getrennt.
+- Keine künstliche 20-/50-/100-Treffergrenze für relevante OSM-Ergebnisse.
+- Ein eingestellter Radius wird exakt verwendet; `0 km` nutzt – wie das WebSim-Original – den aktuellen Kartenausschnitt. Ein bisher unveränderter alter 5-km-Standard wird einmalig auf diese Viewport-Suche migriert; bewusst gewählte andere Radien bleiben erhalten.
+- Cache-first: bereits bekannte relevante Orte erscheinen sofort und werden durch Live-Daten ergänzt.
+
+## 🌍 Weltweit
 
 PizzaScan hat keine Länder-Whitelist. Eine frische Installation startet ohne GPS neutral in der Weltübersicht. GPS, Orts-/Adresssuche oder die bewusst gewählte Kartenregion setzen anschließend das Suchzentrum.
 
@@ -53,7 +64,7 @@ Unicode-sichere Suche erhält Orts- und Restaurantnamen in Originalschrift. Die 
 - Suchradius **0–10 km in 0,5-km-Schritten** mit sichtbarem Suchzentrum und Radiuskreis.
 - Filter „Jetzt geöffnet“, Mindestbewertung, Ortstypen, Besuche und persönliche Bewertungen.
 - Pizza-Radar für relevante Orte im aktuellen Gebiet.
-- Build 44 entfernt die große Build-40-Aktionsfläche aus der Hauptansicht: **„Suchen“ und „Neu laden“ sind kleine Pill-Buttons in einer Zeile**, der lange Cache-Hinweis verschwindet aus der Kartenfläche und „Hier suchen“ bleibt eine dezente schnelle Aktion.
+- Build 44 entfernt die große Build-40-Aktionsfläche aus der Hauptansicht: **„Suche“ und „Aktualisieren“ sind kleine Pill-Buttons in einer Zeile**, der lange Cache-Hinweis verschwindet aus der Kartenfläche und „Hier suchen“ bleibt eine dezente schnelle Aktion.
 - Bottom-Navigation für Karte und Fotobewertung, Portrait/Landscape und Dark Mode.
 
 ## ⭐ Bewertungen & persönliche Historie
