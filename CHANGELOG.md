@@ -1,3 +1,12 @@
+## 2.3.12 · Build 47
+
+- Complete WebSim search parity: targeted Pizza/Italian Overpass results are authoritative.
+- Compact app map uses a WebSim-sized discovery envelope in viewport mode.
+- Safe background OSM/Photon name supplements for pizza, pizzeria, ristorante, trattoria, osteria and Italian restaurant.
+- Search bar keeps local loaded-place suggestions plus global place/address search; selecting a result immediately re-runs pizza discovery.
+- GPS and map movement trigger immediate pizza discovery; map-move debounce reduced to ~180 ms.
+- Generic restaurants without Pizza/Italian relevance remain excluded.
+
 ## 2.3.11 · Build 46
 
 - Finalizes the restored WebSim-targeted Pizza/Italian discovery path.
