@@ -122,7 +122,7 @@ function sync(root){
    if(b.textContent!==VERSION)b.textContent=VERSION;
    if(!b.__build47VersionObserver){
     b.__build47VersionObserver=true;
-    new MutationObserver(()=>{if(root.PizzaBuild48||root.PizzaScanDiscovery48?.build>=48)return;if(b.textContent!==VERSION)b.textContent=VERSION;}).observe(b,{childList:true,characterData:true,subtree:true});
+    new MutationObserver(()=>{if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49||root.PizzaBuild48||root.PizzaScanDiscovery48?.build>=48)return;if(b.textContent!==VERSION)b.textContent=VERSION;}).observe(b,{childList:true,characterData:true,subtree:true});
    }
   }
  }catch{}
@@ -156,7 +156,7 @@ function install(root){
   };
   service.overpass.__build47=true;
  }
- let tries=0;const ready=()=>{tries++;const changed=migrate(root,PD);sync(root);installStyle(root);try{if(typeof map!=='undefined'&&map&&!map.__build47FastMove){map.__build47FastMove=true;map.on('moveend',()=>{try{if(mapConfig().autoSearch){clearTimeout(queryTimer);queryTimer=setTimeout(()=>loadPlaces(),180);}}catch{}});}if(changed&&typeof map!=='undefined'&&map&&typeof loadPlaces==='function')root.setTimeout(()=>loadPlaces({force:true}),50);}catch{}if((typeof settings==='undefined'||typeof map==='undefined'||!map)&&tries<120)root.setTimeout(ready,50);};ready();
+ let tries=0;const ready=()=>{tries++;const changed=migrate(root,PD);sync(root);installStyle(root);try{if(typeof map!=='undefined'&&map&&!map.__build47FastMove){map.__build47FastMove=true;map.on('moveend',()=>{try{if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;if(mapConfig().autoSearch){clearTimeout(queryTimer);queryTimer=setTimeout(()=>loadPlaces(),180);}}catch{}});}if(changed&&typeof map!=='undefined'&&map&&typeof loadPlaces==='function')root.setTimeout(()=>loadPlaces({force:true}),50);}catch{}if((typeof settings==='undefined'||typeof map==='undefined'||!map)&&tries<120)root.setTimeout(ready,50);};ready();
  [0,250,700,1400,3000].forEach(ms=>root.setTimeout(()=>{sync(root);installStyle(root);},ms));
  root.PizzaScanDiscovery47={version:VERSION,build:BUILD,mode:'complete-websim-search-parity',queryHitsAuthoritative:true,websimSizedViewport:true,photonNameSupplement:true,searchBar:true,addressSearch:true,localSuggestions:true,gpsSearch:true,autoSearchDelayMs:180,genericRestaurantsVisible:false};
  return true;
