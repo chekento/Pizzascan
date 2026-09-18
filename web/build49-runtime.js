@@ -217,6 +217,11 @@ function compactUi(root){
       const note=d.createElement('p');note.className='hint build49-radius-note';note.textContent='WebSim-Modus: gesucht wird immer im aktuell sichtbaren Kartenausschnitt.';field.appendChild(note);
     }
   }
+  const auto=d.getElementById('filter-auto');
+  if(auto){
+    auto.checked=true;auto.disabled=true;
+    const label=auto.closest?.('label');if(label)label.title='WebSim-Modus: Nach Kartenbewegungen wird automatisch neu gesucht.';
+  }
   const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 49:</strong> WebSim-Originalsuche: sichtbarer Kartenausschnitt, identische Pizza-/Italien-OSM-Suchfamilien, Suche nach Kartenbewegung und Nominatim für Ort/Adresse.';
 }
 
