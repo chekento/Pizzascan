@@ -69,7 +69,8 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
 
    const before=fastQueries;
    await page.locator('#map-refresh').click();
-   await until(page,()=>fastQueries>before,5000);
+   const deadline=Date.now()+5000;while(fastQueries<=before&&Date.now()<deadline)await new Promise(r=>setTimeout(r,100));
+   assert.ok(fastQueries>before,'Hier suchen starts the fast Build 44 discovery path');
    assert.equal(page.url().startsWith(url),true);
    console.log('PASS Build 44 WebSim-first search: first non-empty mirror, progressive union, background enrichment and compact toolbar');
  }finally{await browser.close();s.close();}
