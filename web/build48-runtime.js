@@ -13,6 +13,7 @@
 const VERSION='2.3.13';
 const BUILD=48;
 const MIGRATION='pizzascan-build48-search-ui-v1';
+const FINALIZED='pizzascan-build48-nearby-finalized-v1';
 const DEFAULT_NEARBY_RADIUS=5;
 
 function normalizedRadius(value){
@@ -36,6 +37,24 @@ function migrate(root){
     return changed;
   }catch(error){
     console.warn('Build48 migration skipped',error);
+    return false;
+  }
+}
+
+function finalizeNearbyDefault(root){
+  try{
+    if(!root.localStorage||root.localStorage.getItem(FINALIZED)||typeof settings==='undefined'||!settings)return false;
+    const current=Number(settings.filters?.radius);
+    const next=normalizedRadius(current);
+    const changed=current!==next;
+    if(changed){
+      settings.filters={...(settings.filters||{}),radius:next,autoSearch:true};
+      try{saveSettings();}catch{}
+    }
+    root.localStorage.setItem(FINALIZED,'1');
+    return changed;
+  }catch(error){
+    console.warn('Build48 nearby finalization skipped',error);
     return false;
   }
 }
@@ -360,6 +379,7 @@ function install(root){
 
     let mapReady=false;
     try{mapReady=typeof map!=='undefined'&&!!map&&typeof loadPlaces==='function';}catch{}
+    if(mapReady&&finalizeNearbyDefault(root))needsRefresh=true;
     if(needsRefresh&&mapReady){
       needsRefresh=false;
       try{
@@ -396,7 +416,7 @@ function install(root){
 }
 
 return {
-  VERSION,BUILD,MIGRATION,DEFAULT_NEARBY_RADIUS,
-  normalizedRadius,migrate,syncVersion,upgradeUi,photonFallback,installRecovery,install
+  VERSION,BUILD,MIGRATION,FINALIZED,DEFAULT_NEARBY_RADIUS,
+  normalizedRadius,migrate,finalizeNearbyDefault,syncVersion,upgradeUi,photonFallback,installRecovery,install
 };
 });
