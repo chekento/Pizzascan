@@ -43,10 +43,11 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
      names:places.map(p=>p.name),
      build:window.PizzaScanDiscovery44,
      version:window.PizzaScan.version,
-     toolbar:!!document.querySelector('#build40-tools[data-build44="true"]'),
-     heights:[...document.querySelectorAll('#build40-tools .build44-mini-tool')].map(x=>x.getBoundingClientRect().height),
+     toolbar:!!document.getElementById('build44-tools'),
+     heights:[...document.querySelectorAll('#build44-tools .build44-mini-tool')].map(x=>x.getBoundingClientRect().height),
+     legacyHidden:!document.getElementById('build40-tools')||getComputedStyle(document.getElementById('build40-tools')).display==='none',
      refresh:document.getElementById('map-refresh').textContent.trim(),
-     cacheNote:!!document.getElementById('cache-mode-note')
+     cacheNoteHidden:!document.getElementById('cache-mode-note')||getComputedStyle(document.getElementById('cache-mode-note')).display==='none'
    }));
    assert.equal(early.version,'2.3.9');
    assert.equal(early.build.build,44);
@@ -58,7 +59,8 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
    assert.equal(early.toolbar,true);
    assert.ok(early.heights.length===2&&early.heights.every(h=>h<=36),'toolbar buttons stay compact on a 393px phone');
    assert.equal(early.refresh,'Hier suchen');
-   assert.equal(early.cacheNote,false,'bulky Build 40 cache paragraph is removed from the main map');
+   assert.equal(early.legacyHidden,true,'legacy stacked Build 40 action card stays hidden');
+   assert.equal(early.cacheNoteHidden,true,'bulky Build 40 cache paragraph is removed from the main map');
 
    await until(page,()=>places.some(p=>p.name==='Trattoria Verde'),7000);
    await until(page,()=>places.some(p=>p.name==='Forno 44'),7000);
