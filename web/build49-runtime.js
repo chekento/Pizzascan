@@ -88,6 +88,17 @@ function tagHits(elements,root){
   return (Array.isArray(elements)?elements:[]).map(e=>({...e,tags:{...(e.tags||{}),[hit]:'yes','pizzascan:source':'websim-source-exact'}}));
 }
 
+function installMapPolicy(root){
+  try{
+    if(typeof mapConfig==='function'&&!mapConfig.__build49){
+      const previous=mapConfig;
+      const wrapped=function(){return {...previous(),radius:0,autoSearch:true};};
+      wrapped.__build49=true;wrapped.__inner=previous;mapConfig=wrapped;
+    }
+  }catch(error){console.warn('Build49 map policy install skipped',error);return false;}
+  return true;
+}
+
 function installOverpass(root){
   const PD=root.PizzaPlaces;
   let service=null;
@@ -197,6 +208,14 @@ function compactUi(root){
   if(refresh){refresh.textContent='↻ Suchen';refresh.classList.remove('filter-chip','build44-action');refresh.classList.add('map-status-action');delete refresh.dataset.build44Moved;if(caption&&refresh.parentElement!==caption)caption.appendChild(refresh);}
   if(count&&caption&&count.parentElement!==caption)caption.insertBefore(count,refresh||null);
   if(meta)meta.hidden=true;
+  const radius=d.getElementById('filter-radius');
+  if(radius){
+    radius.value='0';radius.disabled=true;
+    const field=radius.closest?.('.field');
+    if(field&&!field.querySelector('.build49-radius-note')){
+      const note=d.createElement('p');note.className='hint build49-radius-note';note.textContent='WebSim-Modus: gesucht wird immer im aktuell sichtbaren Kartenausschnitt.';field.appendChild(note);
+    }
+  }
   const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 49:</strong> WebSim-Originalsuche: sichtbarer Kartenausschnitt, identische Pizza-/Italien-OSM-Suchfamilien, Suche nach Kartenbewegung und Nominatim für Ort/Adresse.';
 }
 
@@ -219,15 +238,15 @@ function install(root){
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;
-    syncVersion(root);compactUi(root);installOverpass(root);installSearch(root);
+    syncVersion(root);installMapPolicy(root);compactUi(root);installOverpass(root);installSearch(root);
     let mapReady=false;try{mapReady=typeof map!=='undefined'&&!!map&&typeof loadPlaces==='function';}catch{}
     if(refresh&&mapReady){refresh=false;root.setTimeout(()=>{try{loadPlaces({force:true});}catch{}},80);}
     if((typeof settings==='undefined'||!mapReady)&&attempts<120)root.setTimeout(ready,50);
   };
   ready();
-  [0,120,300,700,1500,3000,6000].forEach(ms=>root.setTimeout(()=>{syncVersion(root);compactUi(root);installOverpass(root);installSearch(root);},ms));
+  [0,120,300,700,1500,3000,6000].forEach(ms=>root.setTimeout(()=>{syncVersion(root);installMapPolicy(root);compactUi(root);installOverpass(root);installSearch(root);},ms));
   return true;
 }
 
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,centerizeWebsim,migrationConfig,migrate,tagHits,installOverpass,installSearch,compactUi,syncVersion,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,centerizeWebsim,migrationConfig,migrate,tagHits,installMapPolicy,installOverpass,installSearch,compactUi,syncVersion,install};
 });
