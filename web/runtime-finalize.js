@@ -6,7 +6,7 @@
  */
 (function(root){
 'use strict';
-const PROVIDER_TIMEOUT=65000;
+const PROVIDER_TIMEOUT=12000;
 let installed=false,completeSearchStarted=false,completeSearchFinished=false,visitedFilterInstalled=false;
 
 function request(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('PizzaScan-Speicherzugriff fehlgeschlagen.'));});}
@@ -70,6 +70,10 @@ function cachedElementsFor(query,smart){
 
 function installCompleteProviderUnion(){
   if(typeof placeService==='undefined'||!placeService?.overpass||placeService.overpass.__build38CompleteUnion)return false;
+  /* Build 42+ already provides progressive first-success discovery. Never replace it
+     with the legacy wait-for-every-provider transport: that was the main reason a
+     search could feel much slower than the original WebSim map. */
+  if(placeService.overpass.__build42||placeService.overpass.__build44||placeService.overpass.__websimOriginalZip)return false;
   const fallback=placeService.overpass.bind(placeService);
   const wrapped=async function(query,options={}){
     const smart=root.PizzaSmartDiscovery;
@@ -145,7 +149,7 @@ async function finalize(){
         if(!completeSearchFinished&&typeof loadPlaces==='function')await loadPlaces({force:true});
       }
     }
-    root.PizzaBuild38Runtime={installed:true,restored,mapReady,completeProviderUnion:true,completeSearchStarted,completeSearchFinished,noResultCap:true,persistentHistory:true,visitedOnlyFilter:visitedFilterInstalled};
+    root.PizzaBuild38Runtime={installed:true,restored,mapReady,completeProviderUnion:!!placeService?.overpass?.__build38CompleteUnion,completeSearchStarted,completeSearchFinished,noResultCap:true,persistentHistory:true,visitedOnlyFilter:visitedFilterInstalled};
   }catch(error){
     console.warn('PizzaScan Build 38 finalization failed',error);
     root.PizzaBuild38Runtime={installed:false,error:String(error?.message||error)};
