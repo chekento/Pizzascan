@@ -7,9 +7,9 @@ android {
         applicationId 'cloud.kosch.pizzascan'
         minSdk 26
         targetSdk 36
-        // Build 48: practical nearby search recovery and redesigned map controls.
-        versionCode 48
-        versionName '2.3.13'
+        // Build 49: source-original WebSim search parity and ultra-compact map controls.
+        versionCode 49
+        versionName '2.3.14'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     sourceSets { main { assets.srcDirs = ['../web'] } }
@@ -45,7 +45,7 @@ dependencies {
 tasks.register('verifyWebAssets') {
     doLast {
         ['index.html', 'script.js', 'core.js', 'style.css',
-         'hotfix-map.js', 'hotfix-map.css', 'persistent-model-ui.js', 'search-ui.js', 'search-ui.css', 'settings-search.js', 'review-discovery.js', 'broad-defaults.js', 'poi-discovery.js', 'pizza-only.js', 'smart-discovery.js', 'place-history.js', 'runtime-finalize.js', 'open-reviews-publish.js', 'build39-runtime.js', 'build40-runtime.js', 'build41-hardening.js', 'build42-discovery.js', 'build42-release.js', 'build44-runtime.js', 'build46-runtime.js', 'build47-runtime.js', 'build48-runtime.js', 'build41-hardening.css', 'poi-search.js', 'native-overpass.js', 'release-info.js', 'google-reviews.js', 'google-reviews.css', 'i18n.js', 'i18n-extra.js', 'i18n.css', 'i18n-shim.js', 'i18n-content.js', 'i18n-static.js',
+         'hotfix-map.js', 'hotfix-map.css', 'persistent-model-ui.js', 'search-ui.js', 'search-ui.css', 'settings-search.js', 'review-discovery.js', 'broad-defaults.js', 'poi-discovery.js', 'pizza-only.js', 'smart-discovery.js', 'place-history.js', 'runtime-finalize.js', 'open-reviews-publish.js', 'build39-runtime.js', 'build40-runtime.js', 'build41-hardening.js', 'build42-discovery.js', 'build42-release.js', 'build44-runtime.js', 'build46-runtime.js', 'build47-runtime.js', 'build48-runtime.js', 'build49-runtime.js', 'build41-hardening.css', 'poi-search.js', 'native-overpass.js', 'release-info.js', 'google-reviews.js', 'google-reviews.css', 'i18n.js', 'i18n-extra.js', 'i18n.css', 'i18n-shim.js', 'i18n-content.js', 'i18n-static.js',
          'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css',
          'analysis.js', 'model-info.js', 'ratings.js', 'ratings-ui.js', 'places.js', 'map-ui.js', 'vendor/hours.js', 'vendor/ai-worker.js', 'review-builder.js', 'draft-store.js', 'draft-list.js', 'review-ui.js', 'privacy-ui.js', 'privacy-233.js', 'privacy.html', 'geocoder-proxy.html', 'geocoder-proxy.js'].each { name ->
             if (!file("../web/$name").isFile()) {

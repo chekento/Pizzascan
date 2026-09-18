@@ -91,7 +91,7 @@ function filterPlaces(list,cfg={},context={},hours=()=>({state:'unknown'})){
 function exactConfiguredRadius(root,fallback){try{const r=Number(root.mapConfig?.().radius);if(Number.isFinite(r)&&r>=0&&r<=10)return r;}catch{}return Number(fallback)||0;}
 function firstSuccess(promises){return new Promise((resolve,reject)=>{let left=promises.length;const errors=[];if(!left)return reject(Error('Keine Kartenquelle konfiguriert'));promises.forEach((p,i)=>Promise.resolve(p).then(v=>resolve({i,v}),e=>{errors[i]=e;if(--left===0)reject(errors.find(Boolean)||Error('Keine Kartenquelle erreichbar'));}));});}
 function syncVersion(root){
-  if(root.PizzaScanDiscovery46?.build>=46)return;
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49||root.PizzaScanDiscovery46?.build>=46)return;
   try{if(root.PizzaScan)root.PizzaScan.version=VERSION;}catch{}
   try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.9.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
   try{const badge=root.document?.querySelector?.('.brand small');if(badge)badge.textContent=VERSION;}catch{}
@@ -114,7 +114,7 @@ function compactUi(root){
     `;d.head.appendChild(s);
   }
   const filters=d.querySelector('.map-filters'),refresh=d.getElementById('map-refresh');
-  if(filters&&refresh&&!refresh.dataset.build44Moved){
+  if(filters&&refresh&&!refresh.dataset.build44Moved&&!root.PizzaScanDiscovery49?.build){
     refresh.className='filter-chip build44-action';
     refresh.textContent='↻ Aktualisieren';
     refresh.title='Pizza-Orte im aktuellen Suchbereich aktualisieren';

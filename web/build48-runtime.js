@@ -23,6 +23,7 @@ function normalizedRadius(value){
 }
 
 function migrate(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return false;
   try{
     if(!root.localStorage||root.localStorage.getItem(MIGRATION))return false;
     if(typeof settings==='undefined'||!settings)return false;
@@ -42,6 +43,7 @@ function migrate(root){
 }
 
 function finalizeNearbyDefault(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return false;
   try{
     if(!root.localStorage||root.localStorage.getItem(FINALIZED)||typeof settings==='undefined'||!settings)return false;
     const current=Number(settings.filters?.radius);
@@ -60,6 +62,7 @@ function finalizeNearbyDefault(root){
 }
 
 function syncVersion(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;
   try{
     const app=root.PizzaScan;
     if(app){
@@ -77,7 +80,7 @@ function syncVersion(root){
       if(badge.textContent!==VERSION)badge.textContent=VERSION;
       if(!badge.__build48Observer){
         badge.__build48Observer=true;
-        new MutationObserver(()=>{if(badge.textContent!==VERSION)badge.textContent=VERSION;})
+        new MutationObserver(()=>{if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;if(badge.textContent!==VERSION)badge.textContent=VERSION;})
           .observe(badge,{childList:true,characterData:true,subtree:true});
       }
     }
@@ -244,6 +247,7 @@ function installStyles(root){
 }
 
 function upgradeUi(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;
   const d=root.document;
   if(!d)return;
   installStyles(root);
@@ -334,6 +338,7 @@ async function photonFallback(root,service,query,options={}){
 }
 
 function installRecovery(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return false;
   let service=null;
   try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
   if(!service||typeof service.overpass!=='function'||service.overpass.__build48)return false;
