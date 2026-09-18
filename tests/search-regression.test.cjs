@@ -20,20 +20,20 @@ test('pizza enrichment loads after recovery and before app initialization',()=>{
  assert.ok(map>=0&&native>map&&review>native&&broad>review&&poi>broad&&only>poi&&app>only,'pizza enrichment must install after broad recovery and before app initialization');
 });
 
-test('default migration restores broad 5 km results and automatic search regeneration',()=>{
+test('default migration restores viewport results and automatic search regeneration',()=>{
  const cfg=B.broadMigration({types:['pizzeria'],onlyOpen:true,includeItalian:false,includeUnconfirmed:false,radius:1,autoSearch:false,hideVisited:true,minRating:4.9},P.TYPES);
  assert.deepEqual(cfg.types,Object.keys(P.TYPES));
  assert.equal(cfg.onlyOpen,false);
  assert.equal(cfg.includeItalian,true);
  assert.equal(cfg.includeUnconfirmed,true);
- assert.equal(cfg.radius,5);
+ assert.equal(cfg.radius,0);
  assert.equal(cfg.autoSearch,true);
  assert.equal(cfg.hideVisited,false);
  assert.equal(cfg.minRating,0);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v12');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v13');
  const fresh=B.normalizeConfig({}, {}, P.TYPES);
  assert.equal(fresh.includeUnconfirmed,true,'fresh installs keep broad restaurant visibility');
- assert.equal(fresh.radius,5,'fresh installs restore the original 5 km discovery baseline');
+ assert.equal(fresh.radius,0,'fresh installs restore the original WebSim viewport discovery baseline');
  assert.equal(fresh.autoSearch,true,'moving the map regenerates results by default');
 });
 
