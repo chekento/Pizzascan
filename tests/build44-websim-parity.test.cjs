@@ -15,6 +15,7 @@ test('Build 44 fast query covers every original WebSim pizza/Italian selector fa
   assert.match(q,/amenity"~"bar\|pub/);
   assert.match(q,/speciality/);
   assert.match(q,/name/);
+  assert.match(q,/description/,'original WebSim description=pizza selector remains in the fast baseline');
   assert.doesNotMatch(q,/restaurant\|fast_food\|cafe\|food_truck\|takeaway\|food_court\|bar\|pub\|biergarten/,'must not regress to the all-gastro scan');
 });
 
