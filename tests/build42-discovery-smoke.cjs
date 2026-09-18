@@ -40,7 +40,7 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
   assert.equal(first.build.websimMinimum,true);
   assert.equal(!first.build.genericRestaurantsVisible,true);
   assert.equal(first.build.firstProviderImmediate,true);
-  assert.equal(first.version,'2.3.9');
+  assert.equal(first.version,'2.3.10');
   assert.match(fastQuery,/around:5000/,'Fixed-radius discovery must use the actual 5 km circle');
   assert.match(fastQuery,/pizzascan-build44-websim-parity/);
   assert.match(fastQuery,/cuisine/);
