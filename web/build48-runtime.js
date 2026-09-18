@@ -247,6 +247,7 @@ function installStyles(root){
 }
 
 function upgradeUi(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;
   const d=root.document;
   if(!d)return;
   installStyles(root);
@@ -337,6 +338,7 @@ async function photonFallback(root,service,query,options={}){
 }
 
 function installRecovery(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return false;
   let service=null;
   try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
   if(!service||typeof service.overpass!=='function'||service.overpass.__build48)return false;
