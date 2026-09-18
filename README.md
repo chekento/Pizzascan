@@ -2,7 +2,7 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.11 · Build 46</h1>
+<h1 align="center">PizzaScan 2.3.12 · Build 47</h1>
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
@@ -13,15 +13,15 @@
 ## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.11.apk"><strong>⬇️ PizzaScan 2.3.11 · Build 46 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.12.apk"><strong>⬇️ PizzaScan 2.3.12 · Build 47 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.11 · Build 46 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.12 · Build 47 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
-> **Build 46 finalisiert die wiederhergestellte WebSim-Suche:** Die gezielte Pizza-/Italien-Abfrage bleibt maßgeblich, der erste erfolgreiche OSM-Spiegel erscheint sofort, weitere Spiegel ergänzen im Hintergrund. Antworten alle Spiegel leer, endet der Abruf sofort sauber – ohne Rückfall in ältere, langsame Suchketten.
+> **Build 47 stellt die vollständige WebSim-Suche wieder her:** Die originale Pizza-/Italien-OSM-Abfrage bleibt autoritativ, die kompakte APK-Karte erhält einen WebSim-großen Discovery-Bereich, und sichere OSM/Photon-Namenssuchen ergänzen Pizza/Pizzeria/Ristorante/Trattoria/Osteria im Hintergrund. Suchleiste, Ort/Adresse, lokale Vorschläge, GPS und automatische Kartensuche bleiben vollständig aktiv.
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.11.txt"><strong>SHA-256</strong></a>
+<a href="downloads/SHA256SUMS-2.3.12.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;
 <a href="CHANGELOG.md"><strong>📝 Changelog</strong></a>
 &nbsp; · &nbsp;
@@ -32,7 +32,7 @@
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 46 übernimmt die ursprüngliche WebSim-Suche als maßgeblichen Discovery-Vertrag und erweitert sie nur additiv:
+Build 47 übernimmt die ursprüngliche WebSim-Suche als maßgeblichen Discovery-Vertrag und erweitert sie nur additiv:
 
 - **Kein allgemeiner Gastro-Vollscan mehr.** Normale Burger-, Döner-, asiatische oder sonstige Restaurants ohne Pizza-/Italien-Bezug werden nicht gelistet.
 - **Pizza muss trotzdem nicht im Namen stehen.** Eine Bar, ein Café oder Restaurant wird gefunden, wenn strukturierte OSM-Daten Pizza belegen, z. B. über `cuisine`, `speciality`, Produkte, Beschreibung, Notizen oder Pizzaautomat-Tags.
