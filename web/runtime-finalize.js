@@ -149,7 +149,7 @@ async function finalize(){
         if(!completeSearchFinished&&typeof loadPlaces==='function')await loadPlaces({force:true});
       }
     }
-    root.PizzaBuild38Runtime={installed:true,restored,mapReady,completeProviderUnion:!!placeService?.overpass?.__build38CompleteUnion,completeSearchStarted,completeSearchFinished,noResultCap:true,persistentHistory:true,visitedOnlyFilter:visitedFilterInstalled};
+    root.PizzaBuild38Runtime={installed:true,restored,mapReady,completeProviderUnion:(typeof placeService!=='undefined'&&!!placeService?.overpass?.__build38CompleteUnion),completeSearchStarted,completeSearchFinished,noResultCap:true,persistentHistory:true,visitedOnlyFilter:visitedFilterInstalled};
   }catch(error){
     console.warn('PizzaScan Build 38 finalization failed',error);
     root.PizzaBuild38Runtime={installed:false,error:String(error?.message||error)};
