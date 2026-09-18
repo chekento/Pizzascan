@@ -76,7 +76,8 @@ function migrate(root){
     if(!root.localStorage||root.localStorage.getItem(MIGRATION)||typeof settings==='undefined'||!settings)return false;
     settings.filters=migrationConfig(settings.filters||{});
     try{saveSettings();}catch{}
-    ['pizzascan-map-cache-v3','pizzascan-map-cache-v2','pizzascan-build48-nearby-finalized-v1'].forEach(k=>root.localStorage.removeItem(k));
+    ['pizzascan-map-cache-v3','pizzascan-map-cache-v2'].forEach(k=>root.localStorage.removeItem(k));
+    root.localStorage.setItem('pizzascan-build48-nearby-finalized-v1','1');
     try{if(typeof mapAreas!=='undefined')mapAreas=[];if(typeof mapPool!=='undefined'&&Array.isArray(mapPool))mapPool=[];}catch{}
     root.localStorage.setItem(MIGRATION,'1');
     return true;
