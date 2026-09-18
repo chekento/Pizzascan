@@ -84,7 +84,7 @@ function filterPlaces(list,cfg={},context={},hours=()=>({state:'unknown'})){
 }
 function exactConfiguredRadius(root,fallback){try{const r=Number(root.mapConfig?.().radius);if(Number.isFinite(r)&&r>=0&&r<=10)return r;}catch{}return Number(fallback)||0;}
 function firstSuccess(promises){return new Promise((resolve,reject)=>{let n=promises.length,errors=[];if(!n)return reject(Error('Keine Kartenquelle konfiguriert'));promises.forEach((p,i)=>Promise.resolve(p).then(v=>resolve(v),e=>{errors[i]=e;if(--n===0)reject(errors.find(Boolean)||Error('Keine Kartenquelle erreichbar'));}));});}
-function tagHits(elements){return (Array.isArray(elements)?elements:[]).map(e=>({...e,tags:{...(e.tags||{}),[HIT]:'yes'}}));}
+function tagHits(elements){return (Array.isArray(elements)?elements:[]).filter(e=>pizzaEvidence(e?.tags||{})||italianEvidence(e?.tags||{})).map(e=>({...e,tags:{...(e.tags||{}),[HIT]:'yes'}}));}
 function migrationConfig(prev={},types=[]){return {...prev,radius:0,autoSearch:true,onlyOpen:false,unknownHours:false,includeItalian:true,includeUnconfirmed:true,types:[...types],hideVisited:false,ratingsEnabled:true,minRating:0,includeUnrated:false};}
 function migrate(root,PD){
  try{
