@@ -6,9 +6,9 @@
   else{root.PizzaBroadDefaults=api;api.install(root);}
 })(globalThis,function(){
 'use strict';
-const MARKER='pizzascan-broad-defaults-v12';
+const MARKER='pizzascan-broad-defaults-v13';
 const BROAD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
-const DEFAULT_RADIUS=5;
+const DEFAULT_RADIUS=0;
 const SUPPLEMENT_BELOW=12;
 
 function allTypes(types){return Object.keys(types||{});}
@@ -21,7 +21,7 @@ function normalizeConfig(base={},raw={},types={}){
     unknownHours:has('unknownHours')?raw.unknownHours===true:false,
     includeItalian:has('includeItalian')?raw.includeItalian!==false:true,
     includeUnconfirmed:has('includeUnconfirmed')?raw.includeUnconfirmed!==false:true,
-    /* The packaged baseline is 5 km. */
+    /* Build 45 restores the original WebSim baseline: visible map viewport. */
     radius:has('radius')&&[0,1,3,5,10].includes(Number(raw.radius))?Number(raw.radius):DEFAULT_RADIUS,
     autoSearch:has('autoSearch')?raw.autoSearch!==false:true,
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,

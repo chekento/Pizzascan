@@ -1,3 +1,13 @@
+## 2.3.10 · Build 45
+
+- Restores the original WebSim targeted Pizza/Italian Overpass query as the authoritative discovery contract.
+- Query hits are no longer discarded by a stricter second-stage evidence filter.
+- One-time search migration resets legacy hidden filters: viewport search, all relevant place types, Italian enabled, open-only off, rating minimum 0.
+- Default search area returns to the visible map viewport; fixed 0–10 km radius remains optional.
+- First successful Overpass provider still renders immediately and later providers merge progressively.
+- Auto-search after map movement is reduced to about 250 ms instead of the older ~1.1 s delay.
+- Personal ratings, favorites, visit history, drafts and downloaded AI models are not reset.
+
 ## 2.3.9 · Build 44
 
 - Restores the original WebSim Pizza/Italian discovery families as the minimum search baseline.

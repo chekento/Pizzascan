@@ -5,11 +5,11 @@ const path=require('node:path');
 const B=require('../web/broad-defaults.js');
 const TYPES={pizzeria:{},cafe:{},fast_food:{},food_truck:{},vending_pizza:{},other:{}};
 
-test('fresh installs default to broad 5 km auto-search with all place types enabled',()=>{
+test('fresh installs default to viewport auto-search with all place types enabled',()=>{
  const cfg=B.normalizeConfig({sort:'distance',travelMode:'walking',autoSearch:false,radius:3}, {}, TYPES);
  assert.deepEqual(cfg.types,Object.keys(TYPES));
- assert.equal(cfg.radius,5);
- assert.equal(B.DEFAULT_RADIUS,5);
+ assert.equal(cfg.radius,0);
+ assert.equal(B.DEFAULT_RADIUS,0);
  assert.equal(cfg.autoSearch,true);
  assert.equal(cfg.onlyOpen,false);
  assert.equal(cfg.unknownHours,false);
@@ -27,12 +27,12 @@ test('explicit user filters still narrow broad place defaults after migration',(
  assert.equal(cfg.radius,3);
  assert.equal(cfg.autoSearch,false);
  assert.equal(cfg.onlyOpen,true);
- assert.equal(cfg.includeUnconfirmed,false,'explicit user choice may still narrow generic POIs after the v12 reset has run');
+ assert.equal(cfg.includeUnconfirmed,false,'explicit user choice may still narrow generic POIs after the v13 reset has run');
  assert.equal(cfg.minRating,4.6);
  assert.equal(cfg.includeUnrated,false);
 });
 
-test('migration reopens broad categories, ratings and 5 km automatic discovery',()=>{
+test('migration reopens broad categories, ratings and viewport automatic discovery',()=>{
  const next=B.broadMigration({sort:'name',travelMode:'bicycling',autoSearch:false,minRating:4.8,onlyOpen:true,types:['pizzeria'],includeUnconfirmed:false,radius:1},TYPES);
  assert.equal(next.sort,'name');
  assert.equal(next.travelMode,'bicycling');
@@ -43,7 +43,7 @@ test('migration reopens broad categories, ratings and 5 km automatic discovery',
  assert.equal(next.minRating,0);
  assert.equal(next.includeUnrated,false);
  assert.equal(next.includeUnconfirmed,true);
- assert.equal(next.radius,5);
+ assert.equal(next.radius,0);
 });
 
 test('early mapConfig access cannot consume the one-time broad migration before settings exist',()=>{
@@ -71,7 +71,7 @@ test('map query keeps broad named food results and adds original PizzaScan cover
  assert.match(restored,/cuisine.*italian\|italiano\|italiana/i);
  assert.match(restored,/around:5000,53\.67,10\.24/);
  assert.equal(B.expandDiscoveryQuery(base,false),base);
- assert.equal(B.MARKER,'pizzascan-broad-defaults-v12');
+ assert.equal(B.MARKER,'pizzascan-broad-defaults-v13');
 });
 
 test('thin result sets are delegated to resilient POI recovery instead of a duplicate Photon loop',()=>{
