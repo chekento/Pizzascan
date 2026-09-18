@@ -105,3 +105,58 @@
   #build40-tools[data-build44="true"] .build44-mini-tool{min-height:30px!important;height:30px!important}
   .build44-advanced-body .type-filters{grid-template-columns:1fr 1fr}
 }
+
+
+/* Build 44 final mobile layout: the former Build-40 stacked action card is
+   redundant next to the permanent search/GPS controls and is never shown. */
+#build40-tools,
+#cache-mode-note{
+  display:none!important;
+}
+#build44-tools.build44-map-tools{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  flex-wrap:nowrap!important;
+  width:100%!important;
+  min-height:0!important;
+  margin:6px 0 8px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#build44-tools .build44-mini-tool{
+  flex:0 0 auto!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:30px!important;
+  height:30px!important;
+  margin:0!important;
+  padding:0 10px!important;
+  border:1px solid var(--line)!important;
+  border-radius:999px!important;
+  background:var(--surface)!important;
+  color:var(--text)!important;
+  box-shadow:none!important;
+  font-size:11.5px!important;
+  font-weight:750!important;
+  line-height:1!important;
+}
+#build44-tools .build44-mini-tool:active{transform:scale(.97)}
+#build44-tools .build44-cache-chip{
+  flex:0 0 auto!important;
+  margin-left:auto!important;
+  padding:4px 7px!important;
+  border-radius:999px!important;
+  color:var(--muted)!important;
+  background:color-mix(in srgb,var(--surface) 88%,transparent)!important;
+  font-size:9.5px!important;
+  line-height:1!important;
+  white-space:nowrap!important;
+  opacity:.7!important;
+}
+@media(max-width:420px){
+  #build44-tools .build44-mini-tool{padding:0 8px!important;font-size:11px!important}
+  #build44-tools .build44-cache-chip{font-size:9px!important;padding:4px 6px!important}
+}
