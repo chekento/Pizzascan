@@ -80,7 +80,7 @@ function syncVersion(root){
       if(badge.textContent!==VERSION)badge.textContent=VERSION;
       if(!badge.__build48Observer){
         badge.__build48Observer=true;
-        new MutationObserver(()=>{if(badge.textContent!==VERSION)badge.textContent=VERSION;})
+        new MutationObserver(()=>{if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;if(badge.textContent!==VERSION)badge.textContent=VERSION;})
           .observe(badge,{childList:true,characterData:true,subtree:true});
       }
     }
