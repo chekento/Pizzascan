@@ -2,7 +2,7 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.8 · Build 43</h1>
+<h1 align="center">PizzaScan 2.3.9 · Build 44</h1>
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
@@ -13,15 +13,15 @@
 ## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.8.apk"><strong>⬇️ PizzaScan 2.3.8 · Build 43 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.9.apk"><strong>⬇️ PizzaScan 2.3.9 · Build 44 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.8 · Build 43 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.9 · Build 44 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
-> **Build 43 korrigiert die Suche grundlegend:** PizzaScan listet nicht mehr wahllos allgemeine Restaurants. Ein Ort braucht einen **direkten Pizza-Bezug oder belastbare italienische Evidenz**. Gleichzeitig bleibt die Suche schnell: Die erste erfolgreiche OpenStreetMap-/Overpass-Quelle wird sofort angezeigt, weitere Spiegel ergänzen Treffer progressiv.
+> **Build 44:** Die normale Kartensuche folgt wieder dem schnellen Original-WebSim-Prinzip. Ein fokussierter WebSim-first-Pass liefert die ersten relevanten Pizza-/Italien-Treffer, ohne auf Cache-Integritätsprüfungen oder alle Provider warten zu müssen. Ein schneller leerer OSM-Spiegel darf nicht mehr gewinnen; weitere Spiegel und zusätzliche Pizza-Evidenz ergänzen anschließend im Hintergrund.
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.8.txt"><strong>SHA-256</strong></a>
+<a href="downloads/SHA256SUMS-2.3.9.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;
 <a href="CHANGELOG.md"><strong>📝 Changelog</strong></a>
 &nbsp; · &nbsp;
@@ -32,7 +32,7 @@
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 43 orientiert sich wieder an der erfolgreichen Suchidee des ursprünglichen WebSim-Projekts und erweitert sie gezielt:
+Build 44 verwendet die ursprünglichen WebSim-Selektorfamilien als verbindliche Fast-Path-Basis und erweitert sie nur additiv:
 
 - **Kein allgemeiner Gastro-Vollscan mehr.** Normale Burger-, Döner-, asiatische oder sonstige Restaurants ohne Pizza-/Italien-Bezug werden nicht gelistet.
 - **Pizza muss trotzdem nicht im Namen stehen.** Eine Bar, ein Café oder Restaurant wird gefunden, wenn strukturierte OSM-Daten Pizza belegen, z. B. über `cuisine`, `speciality`, Produkte, Beschreibung, Notizen oder Pizzaautomat-Tags.
@@ -41,18 +41,7 @@ Build 43 orientiert sich wieder an der erfolgreichen Suchidee des ursprüngliche
 - Mehrsprachige Pizza-Signale werden unterstützt, unter anderem lateinische Schreibweisen sowie Japanisch, Chinesisch, Arabisch, Kyrillisch, Griechisch, Hebräisch, Koreanisch und Thai.
 - Alte Build-42-Cacheeinträge ohne Pizza-/Italien-Evidenz werden aus der sichtbaren Ergebnisliste entfernt.
 
-## ⚡ Schnellere progressive Suche
-
-- Primärer Ortsindex: **OpenStreetMap / Overpass** über mehrere HTTPS-Spiegel.
-- Gezielte Abfrage statt unnötig großer allgemeiner Gastro-Abfrage.
-- Der **erste erfolgreiche OSM-Spiegel wird sofort gerendert**; weitere Spiegel laufen parallel weiter und ergänzen/deduplizieren danach.
-- Keine künstliche 20-/50-/100-Treffergrenze für relevante OSM-Ergebnisse.
-- Ein eingestellter Radius wird exakt verwendet: **5 km bedeutet auch intern 5 km**.
-- `0 km` nutzt den aktuellen Kartenausschnitt.
-- GPS, Orts-/Adresssuche und „Hier suchen“ setzen den realen Suchbereich.
-- Cache-first: bekannte relevante Orte bleiben bei temporären Provider-/Netzproblemen verfügbar.
-
-## 🌍 Weltweit
+## ⚡ WebSim-first: schneller und vollständiger\n\n- Der **erste Pass entspricht semantisch den ursprünglichen WebSim-Selektorfamilien**: Pizza-Cuisine, italienische Restaurants, Pizza-/Italien-Cuisine bei Café/Fast Food/Foodtruck/Takeaway, Pizzaautomaten, Pizza-Spezialität, Pizza-/Italien-Bar/Pub und Pizza im Namen.\n- Teurere Zusatzsignale wie Beschreibung, Notiz, Produkt-/Menüfelder, Brand/Operator und passende Food-Shops werden **erst nach dem ersten sichtbaren Ergebnis** im Hintergrund abgefragt.\n- Drei freie OpenStreetMap-/Overpass-Spiegel laufen parallel. **Der erste nicht-leere relevante Provider** wird sofort angezeigt; eine schnelle leere Antwort blockiert keine besseren Treffer mehr.\n- Spätere Provider-Ergebnisse werden nach OSM-Identität zusammengeführt, ohne den ersten sichtbaren Satz zu ersetzen.\n- Die normale Aktion **„Hier suchen“ führt nur die schnelle Kartensuche aus**. Der alte Build-40-Pfad, der vorher eine Cache-/Integritätsprüfung vor die Suche setzte, ist von der Hauptaktion getrennt.\n- Keine künstliche 20-/50-/100-Treffergrenze für relevante OSM-Ergebnisse.\n- Ein eingestellter Radius wird exakt verwendet; 0 km nutzt den aktuellen Kartenausschnitt.\n- Cache-first: bereits bekannte relevante Orte erscheinen sofort und werden durch Live-Daten ergänzt.\n## 🌍 Weltweit
 
 PizzaScan hat keine Länder-Whitelist. Eine frische Installation startet ohne GPS neutral in der Weltübersicht. GPS, Orts-/Adresssuche oder die bewusst gewählte Kartenregion setzen anschließend das Suchzentrum.
 
@@ -64,7 +53,7 @@ Unicode-sichere Suche erhält Orts- und Restaurantnamen in Originalschrift. Die 
 - Suchradius **0–10 km in 0,5-km-Schritten** mit sichtbarem Suchzentrum und Radiuskreis.
 - Filter „Jetzt geöffnet“, Mindestbewertung, Ortstypen, Besuche und persönliche Bewertungen.
 - Pizza-Radar für relevante Orte im aktuellen Gebiet.
-- Build 43 integriert die früher sehr großen Aktionen **„Ort suchen“ und „Vollständig aktualisieren“ kompakter und dezenter**; auch der Cache-Hinweis nimmt deutlich weniger Platz ein.
+- Build 44 entfernt die große Build-40-Aktionsfläche aus der Hauptansicht: **„Suchen“ und „Neu laden“ sind kleine Pill-Buttons in einer Zeile**, der lange Cache-Hinweis verschwindet aus der Kartenfläche und „Hier suchen“ bleibt eine dezente schnelle Aktion.
 - Bottom-Navigation für Karte und Fotobewertung, Portrait/Landscape und Dark Mode.
 
 ## ⭐ Bewertungen & persönliche Historie
@@ -113,7 +102,7 @@ Der veröffentlichte Android-Build wird vor dem Main-Publish geprüft auf:
 
 - Unit-/Regressionstests
 - Browser-/Playwright-Smokes
-- Build-43-Relevanztest: generisches Restaurant raus, Pizza-Bar ohne „Pizza“ im Namen rein, italienische Trattoria rein
+- Build-44-Paritätstest: Original-WebSim-Selektorfamilien, erster nicht-leerer Provider, progressive Spiegel, Hintergrund-Evidenz und kompakte Mobile-Toolbar
 - Web-UI direkt aus der gebauten APK
 - Android-Lint, Paket und Signatur
 - Android-16-Installation/Start
