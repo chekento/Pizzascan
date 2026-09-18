@@ -131,7 +131,7 @@ function sync(root){
   R?.syncVersion?.();R?.decorate?.();
  }catch{}
 }
-function installStyle(root){const d=root.document;if(!d||d.getElementById('build47-style'))return;const s=d.createElement('style');s.id='build47-style';s.textContent=`#map{height:clamp(360px,52dvh,620px)!important}.map-caption{min-height:18px!important}@media(max-height:500px){#map{height:220px!important}}`;d.head.appendChild(s);}
+function installStyle(root){const d=root.document;if(!d||d.getElementById('build47-style'))return;const s=d.createElement('style');s.id='build47-style';s.textContent=`body:not(.map-fullscreen) #map{height:clamp(360px,52dvh,620px)!important}.map-caption{min-height:18px!important}@media(max-height:500px){body:not(.map-fullscreen) #map{height:220px!important}}`;d.head.appendChild(s);}
 function install(root){
  const PD=root.PizzaPlaces,Core=root.PizzaCore;if(!PD||!Core)return false;
  PD.query=(center,radius,bounds)=>websimQuery(center,Number(root.mapConfig?.().radius??radius)||0,(Number(root.mapConfig?.().radius??radius)||0)>0?bounds:websimSizedBounds(root,bounds));
