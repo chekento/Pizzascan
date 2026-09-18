@@ -22,7 +22,7 @@ function bbox(bounds){
 }
 
 /* Selector families copied from source-original/script.js.
- * Only the output form uses center data so Android can render ways/relations. */
+ * The output clause is copied too; centerizeWebsim reconstructs usable centers from the returned skeleton nodes without broadening the query. */
 function websimQuery(bounds){
   const b=bbox(bounds),q=[];
   q.push('[out:json][timeout:60];(');
@@ -39,8 +39,33 @@ function websimQuery(bounds){
   q.push('node["name"~"pizza|pizzeria|pizze",i]('+b+');way["name"~"pizza|pizzeria|pizze",i]('+b+');relation["name"~"pizza|pizzeria|pizze",i]('+b+');');
   q.push('node["description"~"pizza",i]('+b+');way["description"~"pizza",i]('+b+');relation["description"~"pizza",i]('+b+');');
   q.push('node["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');way["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');relation["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');');
-  q.push(');out body center qt;');
+  q.push(');out body; >; out skel qt;');
   return q.join('\n');
+}
+
+function centerizeWebsim(elements){
+  const list=Array.isArray(elements)?elements:[];
+  const nodes=new Map(),ways=new Map();
+  for(const e of list)if(e?.type==='node'&&Number.isFinite(Number(e.lat))&&Number.isFinite(Number(e.lon)))nodes.set(Number(e.id),{lat:Number(e.lat),lon:Number(e.lon)});
+  const mean=points=>{const v=points.filter(p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon));if(!v.length)return null;return {lat:v.reduce((s,p)=>s+p.lat,0)/v.length,lon:v.reduce((s,p)=>s+p.lon,0)/v.length};};
+  for(const e of list)if(e?.type==='way'){
+    const center=e.center&&Number.isFinite(Number(e.center.lat))&&Number.isFinite(Number(e.center.lon))?{lat:Number(e.center.lat),lon:Number(e.center.lon)}:mean((e.nodes||[]).map(id=>nodes.get(Number(id))));
+    if(center)ways.set(Number(e.id),center);
+  }
+  const out=[];
+  for(const e of list){
+    if(!e?.tags||!Object.keys(e.tags).length)continue;
+    if(e.type==='node'){if(nodes.has(Number(e.id)))out.push(e);continue;}
+    if(e.type==='way'){
+      const center=ways.get(Number(e.id));if(center)out.push({...e,center});continue;
+    }
+    if(e.type==='relation'){
+      let center=e.center&&Number.isFinite(Number(e.center.lat))&&Number.isFinite(Number(e.center.lon))?{lat:Number(e.center.lat),lon:Number(e.center.lon)}:null;
+      if(!center)center=mean((e.members||[]).map(m=>m.type==='node'?nodes.get(Number(m.ref)):m.type==='way'?ways.get(Number(m.ref)):null));
+      if(center)out.push({...e,center});
+    }
+  }
+  return out;
 }
 
 function migrationConfig(previous={}){
@@ -79,7 +104,7 @@ function installOverpass(root){
     try{
       const data=await this.json(ENDPOINT,{method:'POST',body:new URLSearchParams({data:query})},options.signal,65000);
       if(!Array.isArray(data?.elements)||data.remark)throw Error(data?.remark||'Unvollständige Kartendaten');
-      const elements=tagHits(data.elements,root);
+      const elements=tagHits(centerizeWebsim(data.elements),root);
       this.lastErrors=[];
       options.onStatus?.(elements.length?String(elements.length)+' WebSim-Treffer · OpenStreetMap':'Keine Pizza-Orte im sichtbaren Kartenausschnitt');
       return {data:{elements},source:'overpass-api.de · WebSim',sources:['overpass-api.de'],complete:true,progressive:false,websimExact:true};
@@ -204,5 +229,5 @@ function install(root){
   return true;
 }
 
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,installOverpass,installSearch,compactUi,syncVersion,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,centerizeWebsim,migrationConfig,migrate,tagHits,installOverpass,installSearch,compactUi,syncVersion,install};
 });
