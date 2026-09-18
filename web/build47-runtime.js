@@ -107,7 +107,30 @@ function queryAreaInfo(query){
 function inside(info,p,Core){if(!info||!validCenter(p))return false;if(info.bounds)return p.lat>=info.bounds.south&&p.lat<=info.bounds.north&&p.lng>=info.bounds.west&&p.lng<=info.bounds.east;return Core?.distance?Core.distance(info.center,p)<=info.radius:true;}
 function nameMatches(term,name=''){const n=String(name);if(/pizza|pizzeria/i.test(term))return PIZZA.test(n);if(/ristorante/i.test(term))return /ristorante/i.test(n);if(/trattoria/i.test(term))return /trattoria/i.test(n);if(/osteria/i.test(term))return /osteria/i.test(n);return /italian|italiano|italiana|cucina/i.test(n);}
 function migrate(root,PD){try{if(!root.localStorage||root.localStorage.getItem(MIGRATION)||typeof settings==='undefined'||!settings)return false;settings.filters={...(settings.filters||{}),radius:0,autoSearch:true,onlyOpen:false,unknownHours:false,includeItalian:true,includeUnconfirmed:true,types:Object.keys(PD.TYPES||{}),hideVisited:false,ratingsEnabled:true,minRating:0,includeUnrated:false};try{saveSettings();}catch{}for(const k of ['pizzascan-map-cache-v3','pizzascan-map-cache-v2','pizzascan-first-map-discovery-v1','pizzascan-first-map-discovery-v2'])root.localStorage.removeItem(k);root.localStorage.setItem(MIGRATION,'1');try{if(typeof mapAreas!=='undefined')mapAreas=[];}catch{}return true;}catch(e){console.warn('Build47 migration skipped',e);return false;}}
-function sync(root){try{const app=root.PizzaScan;if(app)Object.defineProperty(app,'version',{configurable:true,enumerable:true,get:()=>VERSION,set(){}});}catch{}try{const b=root.document?.querySelector('.brand small');if(b)b.textContent=VERSION;}catch{}try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.12.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}}
+function sync(root){
+ try{
+  const app=root.PizzaScan;
+  if(app){
+   const d=Object.getOwnPropertyDescriptor(app,'version');
+   if(d?.configurable!==false)Object.defineProperty(app,'version',{configurable:false,enumerable:true,get:()=>VERSION,set(){}});
+  }
+ }catch{}
+ try{
+  const b=root.document?.querySelector('.brand small');
+  if(b){
+   if(b.textContent!==VERSION)b.textContent=VERSION;
+   if(!b.__build47VersionObserver){
+    b.__build47VersionObserver=true;
+    new MutationObserver(()=>{if(b.textContent!==VERSION)b.textContent=VERSION;}).observe(b,{childList:true,characterData:true,subtree:true});
+   }
+  }
+ }catch{}
+ try{
+  const R=root.PizzaReleaseInfo;
+  if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.12.apk'});
+  R?.syncVersion?.();R?.decorate?.();
+ }catch{}
+}
 function installStyle(root){const d=root.document;if(!d||d.getElementById('build47-style'))return;const s=d.createElement('style');s.id='build47-style';s.textContent=`#map{height:clamp(360px,52dvh,620px)!important}.map-caption{min-height:18px!important}@media(max-height:500px){#map{height:220px!important}}`;d.head.appendChild(s);}
 function install(root){
  const PD=root.PizzaPlaces,Core=root.PizzaCore;if(!PD||!Core)return false;
