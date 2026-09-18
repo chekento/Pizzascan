@@ -142,6 +142,19 @@ function installSearch(root){
       const items=loaded.filter(p=>String(p?.name||'').toLowerCase().includes(q)).slice(0,5);
       showSearchResults(items.map(p=>({...p,kind:'venue',place:p})),true);
     };
+    selectSearch=function(index){
+      const result=searchResults[index];
+      if(!result)return;
+      showSearchResults([]);
+      const input=d.getElementById('search'),status=d.getElementById('search-status');
+      if(status)status.textContent='';
+      if(input){input.value=result.name||'';input.blur();}
+      document.body.classList.remove('fs-search-open');
+      d.getElementById('fs-search')?.setAttribute('aria-expanded','false');
+      root.PizzaSearchUI?.collapse?.();
+      try{mapRequest?.abort();}catch{}
+      if(Number.isFinite(Number(result.lat))&&Number.isFinite(Number(result.lng)))map.setView([Number(result.lat),Number(result.lng)],15);
+    };
     searchCity=async function(event){
       event?.preventDefault?.();
       try{clearTimeout(searchTimer);}catch{}
@@ -240,7 +253,7 @@ function install(root){
   if(!root.document||!root.PizzaPlaces)return false;
   const PD=root.PizzaPlaces;
   PD.query=(center,radius,bounds)=>websimQuery(bounds);
-  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-exact',viewportBBox:true,exactSelectorFamilies:12,nominatimSearch:true,photonDiscovery:false,slimToolbar:true};
+  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-exact',viewportBBox:true,exactSelectorFamilies:12,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:true};
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;
