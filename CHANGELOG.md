@@ -1,3 +1,12 @@
+## 2.3.11 · Build 46
+
+- Finalizes the restored WebSim-targeted Pizza/Italian discovery path.
+- First successful Overpass provider renders immediately; late mirrors merge progressively.
+- If every provider returns no relevant hits, the search now completes immediately instead of falling back into older layered provider chains.
+- Visible-map viewport remains the default search area; fixed radius remains optional.
+- Generic restaurants without Pizza/Italian evidence remain excluded.
+- Personal ratings, favorites, history, drafts and downloaded AI models remain untouched.
+
 ## 2.3.10 · Build 45
 
 - Restores the original WebSim targeted Pizza/Italian Overpass query as the authoritative discovery contract.
