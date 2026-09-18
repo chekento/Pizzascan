@@ -1,3 +1,13 @@
+## 2.3.13 · Build 48
+
+- Fixes the Android null-result regression seen with Build 47's viewport-first default by migrating that default once to a practical 5 km nearby radius.
+- Keeps the targeted Pizza/Italian Overpass contract; unrelated generic restaurants remain excluded.
+- Adds a bounded Photon name fallback only when every targeted Overpass response is empty, using explicit Pizza/Pizzeria/Ristorante/Trattoria/Osteria/Italian-name signals.
+- Clears only transient map caches during the migration; favorites, personal ratings, visit history, drafts and downloaded AI models remain untouched.
+- Redesigns the map control area into a compact responsive panel for open-now, ratings, filters and Pizza Radar.
+- Moves the live search/update status from below the map to a dedicated status strip above the map, with “Hier suchen” attached to that strip.
+- Keeps GPS, manual place/address search, map movement search and progressive OSM provider merging active.
+
 ## 2.3.12 · Build 47
 
 - Complete WebSim search parity: targeted Pizza/Italian Overpass results are authoritative.
