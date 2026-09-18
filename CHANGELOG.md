@@ -1,5 +1,21 @@
 # PizzaScan Changelog
 
+## 2.3.9 — Build 44 · WebSim-first Suche
+
+Aktueller Entwicklungsstand: `versionCode 44`, `versionName 2.3.9`, Android-Paket `cloud.kosch.pizzascan`.
+
+### Build 44 — Original-WebSim-Parität, schneller First Paint und kompakte Kartensteuerung
+
+- Die normale Umgebungssuche verwendet wieder die **Selektorfamilien des ursprünglichen WebSim-Projekts als schnellen ersten Pass**: Pizza-Cuisine, italienische Restaurants, passende Café-/Fast-Food-/Foodtruck-/Takeaway-/Bar-/Pub-Cuisine, Pizzaautomaten, Pizza-Spezialität und Pizza-Namenssignale.
+- Eine leere schnelle Overpass-Antwort beendet die Suche nicht mehr. Angezeigt wird der **erste Provider mit tatsächlich relevanten Treffern**.
+- Weitere freie OSM-Spiegel ergänzen Treffer progressiv nach OSM-Identität, ohne den ersten sichtbaren Satz zu blockieren.
+- Zusätzliche Pizza-Evidenz aus Beschreibung, Notiz, Produkt-/Menüfeldern, Brand/Operator und passenden Food-Shops läuft additiv **nach dem First Paint**.
+- Normale Restaurants ohne Pizza- oder belastbaren Italien-Bezug bleiben ausgeschlossen.
+- Die normale Aktion **„Hier suchen“** wird nicht mehr vom alten vollständigen Cache-/Integritätslauf abgefangen.
+- Die große Build-40-Aktionsfläche wurde strukturell ersetzt: kleine **„Suchen“**- und **„Neu laden“**-Pills in einer Reihe, kein langer Cache-Hinweis im Kartenbereich.
+- Das Filter-Sheet ist kompakter; seltene Kartenoptionen werden in einen aufklappbaren Bereich verschoben.
+- Neue Tests prüfen Original-WebSim-Selektorparität, First-Non-Empty-Provider, progressive Ergänzung, Hintergrund-Evidenz und Mobile-Toolbar.
+
 ## 2.3.6 — aktuelle Direktversion · 17.09.2026
 
 Aktueller Stand: `versionCode 41`, `versionName 2.3.6`, Android-Paket `cloud.kosch.pizzascan`.
