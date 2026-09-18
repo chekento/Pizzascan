@@ -68,7 +68,7 @@
   function paintStatus(){
     const el=document.getElementById('ratings-status'),fs=document.getElementById('fs-rating-filter');if(!el)return;
     const cfg=mapConfig(),list=onlySaved?saved:places;el.hidden=!cfg.ratingsEnabled||!list.length;
-    const shortcut=document.getElementById('rating-filter-open');if(shortcut){const active=cfg.ratingsEnabled&&cfg.minRating>0;shortcut.textContent=active?'★ ≥ '+number(cfg.minRating):'★ '+t('shortcut');shortcut.classList.toggle('active',active);shortcut.setAttribute('aria-pressed',String(active));shortcut.setAttribute('aria-label',t('minimum')+(active?': '+thresholdText(cfg.minRating):''));}
+    const shortcut=document.getElementById('rating-filter-open');if(shortcut){const active=cfg.ratingsEnabled&&cfg.minRating>0,compact49=!!root.PizzaScanDiscovery49?.build;shortcut.textContent=active?'★ ≥ '+number(cfg.minRating):(compact49?'★ Rating':'★ '+t('shortcut'));shortcut.classList.toggle('active',active);shortcut.setAttribute('aria-pressed',String(active));shortcut.setAttribute('aria-label',t('minimum')+(active?': '+thresholdText(cfg.minRating):''));}
     if(fs){fs.hidden=!cfg.ratingsEnabled||cfg.minRating===0;fs.textContent=cfg.minRating?`★ ≥ ${number(cfg.minRating)} · Mangrove`:'';}
     if(el.hidden)return;
     const rated=list.filter(p=>summary(p).rating!=null).length;
