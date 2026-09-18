@@ -82,6 +82,7 @@ function filterPlaces(list,cfg={},context={},hours=()=>({state:'unknown'})){
   return true;
  });
 }
+function exactConfiguredRadius(root,fallback){try{const r=Number(root.mapConfig?.().radius);if(Number.isFinite(r)&&r>=0&&r<=10)return r;}catch{}return Number(fallback)||0;}
 function firstSuccess(promises){return new Promise((resolve,reject)=>{let n=promises.length,errors=[];if(!n)return reject(Error('Keine Kartenquelle konfiguriert'));promises.forEach((p,i)=>Promise.resolve(p).then(v=>resolve(v),e=>{errors[i]=e;if(--n===0)reject(errors.find(Boolean)||Error('Keine Kartenquelle erreichbar'));}));});}
 function tagHits(elements){return (Array.isArray(elements)?elements:[]).map(e=>({...e,tags:{...(e.tags||{}),[HIT]:'yes'}}));}
 function migrationConfig(prev={},types=[]){return {...prev,radius:0,autoSearch:true,onlyOpen:false,unknownHours:false,includeItalian:true,includeUnconfirmed:true,types:[...types],hideVisited:false,ratingsEnabled:true,minRating:0,includeUnrated:false};}
@@ -101,7 +102,7 @@ function migrate(root,PD){
 function sync(root){try{if(root.PizzaScan)root.PizzaScan.version=VERSION;}catch{}try{const b=root.document?.querySelector('.brand small');if(b)b.textContent=VERSION;}catch{}try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.10.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}}
 function install(root){
  const PD=root.PizzaPlaces,Core=root.PizzaCore;if(!PD||!Core)return false;
- PD.query=(center,radius,bounds)=>websimQuery(center,Number(radius)||0,bounds);
+ PD.query=(center,radius,bounds)=>websimQuery(center,exactConfiguredRadius(root,radius),bounds);
  PD.normalize=e=>normalizeElement(e,Core);PD.fromOverpass=els=>normalizeElements(els,Core);PD.filter=filterPlaces;
  let service=null;try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
  if(service&&typeof service.json==='function'){
@@ -145,5 +146,5 @@ function install(root){
  root.PizzaScanDiscovery45={version:VERSION,build:BUILD,mode:'websim-query-authoritative',defaultViewport:true,queryHitsAuthoritative:true,legacyFilterReset:true,autoSearchDelayMs:250,genericRestaurantsVisible:false};
  return true;
 }
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,HIT,PROVIDERS,PIZZA,ITALIAN,area,websimQuery,text,pizzaEvidence,italianEvidence,isQueryHit,classify,normalizeElement,normalizeElements,relevantPlace,filterPlaces,firstSuccess,tagHits,migrationConfig,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,HIT,PROVIDERS,PIZZA,ITALIAN,area,websimQuery,text,pizzaEvidence,italianEvidence,isQueryHit,classify,normalizeElement,normalizeElements,relevantPlace,filterPlaces,exactConfiguredRadius,firstSuccess,tagHits,migrationConfig,install};
 });
