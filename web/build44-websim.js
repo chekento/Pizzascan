@@ -161,10 +161,11 @@ function installFastTransport(root,PD){
   const previous=service.overpass.bind(service);
   let requestSerial=0;
 
-  function applyLate(group,serial,label='OSM'){
+  function applyLate(group,serial,label='OSM',attempt=0){
     if(!group?.elements?.length)return;
     try{
       if(serial!==requestSerial||typeof mapRequest!=='undefined'&&mapRequest?.signal?.aborted)return;
+      if(typeof mapLoading!=='undefined'&&mapLoading&&attempt<12){root.setTimeout(()=>applyLate(group,serial,label,attempt+1),60);return;}
       const found=PD.fromOverpass(group.elements);
       if(!found.length)return;
       mapPool=PD.merge(mapPool,found);
@@ -290,6 +291,8 @@ function improveFilterMenu(root){
     const old=showFilters;
     showFilters=function(){const out=old.apply(this,arguments);root.setTimeout(()=>decorateFilterSheet(root),0);return out;};
     showFilters.__build44=true;showFilters.__inner=old;root.showFilters=showFilters;
+    const filterButton=root.document.getElementById('filter-open'),fsFilter=root.document.getElementById('fs-filter');
+    if(filterButton)filterButton.onclick=showFilters;if(fsFilter)fsFilter.onclick=showFilters;
   }catch{}
 }
 function syncAfterBoot(root){
