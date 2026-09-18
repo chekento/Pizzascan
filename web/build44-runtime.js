@@ -88,6 +88,7 @@ function filterPlaces(list,cfg={},context={},hours=()=>({state:'unknown'})){
     return true;
   });
 }
+function exactConfiguredRadius(root,fallback){try{const r=Number(root.mapConfig?.().radius);if(Number.isFinite(r)&&r>=0&&r<=10)return r;}catch{}return Number(fallback)||0;}
 function firstSuccess(promises){return new Promise((resolve,reject)=>{let left=promises.length;const errors=[];if(!left)return reject(Error('Keine Kartenquelle konfiguriert'));promises.forEach((p,i)=>Promise.resolve(p).then(v=>resolve({i,v}),e=>{errors[i]=e;if(--left===0)reject(errors.find(Boolean)||Error('Keine Kartenquelle erreichbar'));}));});}
 function syncVersion(root){
   try{if(root.PizzaScan)root.PizzaScan.version=VERSION;}catch{}
@@ -132,7 +133,7 @@ function compactUi(root){
 }
 function install(root){
   const PD=root.PizzaPlaces,Core=root.PizzaCore;if(!root.document||!PD||!Core)return false;
-  PD.query=websimQuery;PD.normalize=e=>normalizeElement(e,Core);PD.fromOverpass=els=>normalizeElements(els,Core);PD.filter=filterPlaces;
+  PD.query=(center,radius,bounds)=>websimQuery(center,exactConfiguredRadius(root,radius),bounds);PD.normalize=e=>normalizeElement(e,Core);PD.fromOverpass=els=>normalizeElements(els,Core);PD.filter=filterPlaces;
   if(PD.TYPES?.pizzeria)PD.TYPES.pizzeria={...PD.TYPES.pizzeria,emoji:'🍕',name:'Pizza / Italienisch'};
   try{if(typeof mapPool!=='undefined'&&Array.isArray(mapPool))mapPool=mapPool.filter(relevantPlace).map(p=>p?.pizzaEvidence==='possible'&&p?.type==='other'?Core.place({...p,type:'pizzeria'}):p);if(typeof places!=='undefined'&&Array.isArray(places))places=places.filter(relevantPlace).map(p=>p?.pizzaEvidence==='possible'&&p?.type==='other'?Core.place({...p,type:'pizzeria'}):p);}catch{}
   let service=null;try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
@@ -194,5 +195,5 @@ function install(root){
   root.PizzaScanDiscovery44={version:VERSION,build:BUILD,mode:'websim-parity-progressive',websimMinimum:true,genericRestaurantsVisible:false,firstProviderImmediate:true,lateProviderMerge:true,italianUsesPizzaFilterFamily:true};
   return true;
 }
-return {VERSION,BUILD,PROVIDERS,PROVIDER_TIMEOUT,PIZZA_RE,ITALIAN_CUISINE_RE,ITALIAN_NAME_RE,area,websimQuery,tagText,pizzaEvidence,italianEvidence,relevantTags,classify,normalizeElement,normalizeElements,relevantPlace,filterPlaces,firstSuccess,install};
+return {VERSION,BUILD,PROVIDERS,PROVIDER_TIMEOUT,PIZZA_RE,ITALIAN_CUISINE_RE,ITALIAN_NAME_RE,area,websimQuery,tagText,pizzaEvidence,italianEvidence,relevantTags,classify,normalizeElement,normalizeElements,relevantPlace,filterPlaces,exactConfiguredRadius,firstSuccess,install};
 });
