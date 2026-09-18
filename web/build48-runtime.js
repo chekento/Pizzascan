@@ -23,6 +23,7 @@ function normalizedRadius(value){
 }
 
 function migrate(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return false;
   try{
     if(!root.localStorage||root.localStorage.getItem(MIGRATION))return false;
     if(typeof settings==='undefined'||!settings)return false;
@@ -42,6 +43,7 @@ function migrate(root){
 }
 
 function finalizeNearbyDefault(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return false;
   try{
     if(!root.localStorage||root.localStorage.getItem(FINALIZED)||typeof settings==='undefined'||!settings)return false;
     const current=Number(settings.filters?.radius);
@@ -60,6 +62,7 @@ function finalizeNearbyDefault(root){
 }
 
 function syncVersion(root){
+  if(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)return;
   try{
     const app=root.PizzaScan;
     if(app){
