@@ -114,12 +114,16 @@ function compactUi(root){
   }
   const filters=d.querySelector('.map-filters'),refresh=d.getElementById('map-refresh');
   if(filters&&refresh&&!refresh.dataset.build44Moved){
-    const b=d.createElement('button');b.type='button';b.className='filter-chip build44-action';b.id='build44-refresh';b.textContent='↻ Aktualisieren';b.title='Pizza-Orte im aktuellen Suchbereich aktualisieren';b.onclick=()=>refresh.click();filters.appendChild(b);refresh.dataset.build44Moved='1';
+    refresh.className='filter-chip build44-action';
+    refresh.textContent='↻ Aktualisieren';
+    refresh.title='Pizza-Orte im aktuellen Suchbereich aktualisieren';
+    filters.appendChild(refresh);
+    refresh.dataset.build44Moved='1';
   }
   const norm=x=>String(x||'').replace(/\s+/g,' ').trim().toLowerCase();
   for(const b of [...d.querySelectorAll('button')]){
     const t=norm(b.textContent);
-    if((t.includes('vollständig aktualisieren')||t==='ort suchen'||t==='🔎 ort suchen')&&!['build44-refresh','search-toggle','map-refresh'].includes(b.id)){
+    if((t.includes('vollständig aktualisieren')||t==='ort suchen'||t==='🔎 ort suchen')&&!['search-toggle','map-refresh'].includes(b.id)){
       b.classList.add('build44-obsolete-action');
     }
   }
