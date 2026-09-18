@@ -114,8 +114,8 @@ public class AppSmokeTest {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click();navigate('map');");
-            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.12' && document.querySelector('.brand small').textContent==='2.3.12'"));
-            assertEquals("true", js(scenario, "window.PizzaScanDiscovery47?.build===47 && PizzaScanDiscovery47.queryHitsAuthoritative===true && PizzaScanDiscovery47.websimSizedViewport===true && PizzaScanDiscovery47.photonNameSupplement===true"));
+            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.13' && document.querySelector('.brand small').textContent==='2.3.13'"));
+            assertEquals("true", js(scenario, "window.PizzaScanDiscovery48?.build===48 && PizzaScanDiscovery48.defaultNearbyRadiusKm===5 && PizzaScanDiscovery48.emptyOverpassPhotonRecovery===true && PizzaScanDiscovery48.statusAboveMap===true && PizzaScanDiscovery48.compactControlPanel===true"));
             assertEquals("true", js(scenario, "document.querySelector('.app-bottom-bar').getBoundingClientRect().height<=76 && document.querySelectorAll('.app-footer a').length===2"));
             js(scenario, "document.getElementById('rating-filter-open').click();");
             assertEquals("true", js(scenario, "document.getElementById('filter-min-rating').step==='0.1' && document.getElementById('filter-min-rating').getBoundingClientRect().height>0"));

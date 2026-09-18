@@ -2,7 +2,7 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.12 · Build 47</h1>
+<h1 align="center">PizzaScan 2.3.13 · Build 48</h1>
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
@@ -13,15 +13,15 @@
 ## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.12.apk"><strong>⬇️ PizzaScan 2.3.12 · Build 47 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.13.apk"><strong>⬇️ PizzaScan 2.3.13 · Build 48 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.12 · Build 47 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.13 · Build 48 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
-> **Build 47 stellt die vollständige WebSim-Suche wieder her:** Die originale Pizza-/Italien-OSM-Abfrage bleibt autoritativ, die kompakte APK-Karte erhält einen WebSim-großen Discovery-Bereich, und sichere OSM/Photon-Namenssuchen ergänzen Pizza/Pizzeria/Ristorante/Trattoria/Osteria im Hintergrund. Suchleiste, Ort/Adresse, lokale Vorschläge, GPS und automatische Kartensuche bleiben vollständig aktiv.
+> **Build 48 repariert den Nulltreffer-Fall aus Build 47 und räumt die Kartensteuerung auf:** Der Standard-Nahbereich liegt wieder bei 5 km. Bleiben alle gezielten Overpass-Antworten leer, nutzt PizzaScan zusätzlich eine sichere Photon-Namenssuche nach Pizza/Pizzeria/Ristorante/Trattoria/Osteria. Der Live-Suchstatus steht jetzt oberhalb der Karte; Filter, Bewertungen und Radar sitzen in einem kompakten Control-Panel.
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.12.txt"><strong>SHA-256</strong></a>
+<a href="downloads/SHA256SUMS-2.3.13.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;
 <a href="CHANGELOG.md"><strong>📝 Changelog</strong></a>
 &nbsp; · &nbsp;
@@ -32,7 +32,7 @@
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 47 übernimmt die ursprüngliche WebSim-Suche als maßgeblichen Discovery-Vertrag und erweitert sie nur additiv:
+Build 48 behält die ursprüngliche WebSim-Suche als maßgeblichen Discovery-Vertrag und ergänzt sie um einen robusteren Nahbereich:
 
 - **Kein allgemeiner Gastro-Vollscan mehr.** Normale Burger-, Döner-, asiatische oder sonstige Restaurants ohne Pizza-/Italien-Bezug werden nicht gelistet.
 - **Pizza muss trotzdem nicht im Namen stehen.** Eine Bar, ein Café oder Restaurant wird gefunden, wenn strukturierte OSM-Daten Pizza belegen, z. B. über `cuisine`, `speciality`, Produkte, Beschreibung, Notizen oder Pizzaautomat-Tags.
@@ -47,11 +47,11 @@ Build 47 übernimmt die ursprüngliche WebSim-Suche als maßgeblichen Discovery-
 - Gezielte Abfrage statt unnötig großer allgemeiner Gastro-Abfrage.
 - Der **erste erfolgreiche OSM-Spiegel wird sofort gerendert**; weitere Spiegel ergänzen/deduplizieren im Hintergrund.
 - **Gezielte Query-Treffer bleiben maßgeblich:** Pizza-/Italien-Treffer werden nicht durch eine strengere spätere Filterstufe wieder verworfen.
-- **Standard = sichtbarer Kartenausschnitt**, wie im Original-WebSim. Der Radiusregler bleibt optional für 0–10 km.
-- **Leere Providerantworten sind sofort abgeschlossen:** kein Rückfall mehr in frühere verschachtelte Fallback-Providerketten.
+- **Standard = 5 km rund um die Kartenmitte**, damit eine kompakte Smartphone-Karte nicht versehentlich einen zu kleinen Nulltreffer-Ausschnitt erzeugt. Der Radius bleibt in den Filtern anpassbar.
+- **Leere Overpass-Antworten bleiben schnell:** wenn alle gezielten OSM-Spiegel leer sind, folgt genau ein begrenzter Photon-Namensfallback für eindeutige Pizza-/Italien-Signale statt einer generischen Gastro-Suche.
 - Keine künstliche 20-/50-/100-Treffergrenze für relevante OSM-Ergebnisse.
 - Ein eingestellter Radius wird exakt verwendet: **5 km bedeutet auch intern 5 km**.
-- `0 km` nutzt den aktuellen Kartenausschnitt.
+- Der frühere `0 km`-Viewport-Standard wird beim Upgrade einmalig auf 5 km migriert; danach kann der Suchbereich weiterhin bewusst geändert werden.
 - GPS, Orts-/Adresssuche und „Hier suchen“ setzen den realen Suchbereich.
 - Cache-first: bekannte relevante Orte bleiben bei temporären Provider-/Netzproblemen verfügbar.
 
@@ -67,7 +67,7 @@ Unicode-sichere Suche erhält Orts- und Restaurantnamen in Originalschrift. Die 
 - Suchradius **0–10 km in 0,5-km-Schritten** mit sichtbarem Suchzentrum und Radiuskreis.
 - Filter „Jetzt geöffnet“, Mindestbewertung, Ortstypen, Besuche und persönliche Bewertungen.
 - Pizza-Radar für relevante Orte im aktuellen Gebiet.
-- Build 45 behält die kompakte Karten-Toolbar aus Build 44 bei und priorisiert die Karte sowie die tatsächlichen Pizza-Treffer.
+- Build 48 bündelt Filter, Bewertungen und Radar in einem kompakten Control-Panel und verschiebt den Live-Suchstatus von unterhalb der Karte direkt darüber.
 - Bottom-Navigation für Karte und Fotobewertung, Portrait/Landscape und Dark Mode.
 
 ## ⭐ Bewertungen & persönliche Historie

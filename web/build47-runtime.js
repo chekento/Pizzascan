@@ -112,7 +112,7 @@ function sync(root){
   const app=root.PizzaScan;
   if(app){
    const d=Object.getOwnPropertyDescriptor(app,'version');
-   if(d?.configurable!==false)Object.defineProperty(app,'version',{configurable:false,enumerable:true,get:()=>VERSION,set(){}});
+   if(d?.configurable!==false)Object.defineProperty(app,'version',{configurable:true,enumerable:true,get:()=>VERSION,set(){}});
   }
  }catch{}
  try{
