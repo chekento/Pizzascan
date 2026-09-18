@@ -66,6 +66,7 @@
  }
  function exactConfiguredRadius(root,fallback){try{const r=Number(root.mapConfig?.().radius);if(Number.isFinite(r)&&r>=0&&r<=10)return r;}catch{}return Number(fallback)||0;}
  function syncVersion(root){
+  if(root.PizzaScanDiscovery44?.build>=44)return;
   try{if(root.PizzaScan)root.PizzaScan.version=VERSION;}catch{}
   try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.8.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
   try{const badge=root.document?.querySelector?.('.brand small');if(badge)badge.textContent=VERSION;}catch{}

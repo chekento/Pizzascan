@@ -1,3 +1,12 @@
+## 2.3.9 · Build 44
+
+- Restores the original WebSim Pizza/Italian discovery families as the minimum search baseline.
+- Removes the legacy runtime transport that could wait for the complete provider union before returning results.
+- First successful Overpass response renders immediately; additional mirrors merge progressively in the background.
+- Italian restaurants stay in the original pizza filter family while remaining visually marked as unconfirmed pizza candidates.
+- Generic restaurants without pizza/Italian evidence remain excluded.
+- Replaces oversized search/refresh controls with a compact map toolbar and shorter cache status.
+
 # PizzaScan Changelog
 
 ## 2.3.6 — aktuelle Direktversion · 17.09.2026
