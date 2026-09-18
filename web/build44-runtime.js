@@ -134,7 +134,7 @@ function install(root){
   const PD=root.PizzaPlaces,Core=root.PizzaCore;if(!root.document||!PD||!Core)return false;
   PD.query=websimQuery;PD.normalize=e=>normalizeElement(e,Core);PD.fromOverpass=els=>normalizeElements(els,Core);PD.filter=filterPlaces;
   if(PD.TYPES?.pizzeria)PD.TYPES.pizzeria={...PD.TYPES.pizzeria,emoji:'🍕',name:'Pizza / Italienisch'};
-  try{if(typeof mapPool!=='undefined'&&Array.isArray(mapPool))mapPool=mapPool.filter(relevantPlace);}catch{}
+  try{if(typeof mapPool!=='undefined'&&Array.isArray(mapPool))mapPool=mapPool.filter(relevantPlace).map(p=>p?.pizzaEvidence==='possible'&&p?.type==='other'?Core.place({...p,type:'pizzeria'}):p);if(typeof places!=='undefined'&&Array.isArray(places))places=places.filter(relevantPlace).map(p=>p?.pizzaEvidence==='possible'&&p?.type==='other'?Core.place({...p,type:'pizzeria'}):p);}catch{}
   let service=null;try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
   if(service&&typeof service.json==='function'){
     const previous=service.overpass?.bind(service),serial={value:0};
