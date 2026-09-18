@@ -2,7 +2,7 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.9 · Build 44</h1>
+<h1 align="center">PizzaScan 2.3.10 · Build 45</h1>
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
@@ -13,15 +13,15 @@
 ## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.9.apk"><strong>⬇️ PizzaScan 2.3.9 · Build 44 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.10.apk"><strong>⬇️ PizzaScan 2.3.10 · Build 45 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.9 · Build 44 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.10 · Build 45 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
-> **Build 44 zieht die Android-Version mindestens auf den Stand des ursprünglichen WebSim-Projekts:** Die WebSim-Pizza-/Italien-Suchfamilien bleiben vollständig erhalten, generische Restaurants bleiben draußen, der erste erfolgreiche Overpass-Spiegel wird ohne Wartefenster sofort gerendert und weitere Spiegel ergänzen nur noch im Hintergrund. Der alte Runtime-Pfad, der auf alle Provider warten konnte, ist deaktiviert.
+> **Build 45 stellt die ursprüngliche WebSim-Suche als verbindliche Basis wieder her:** Treffer der gezielten Pizza-/Italien-Overpass-Abfrage werden nicht anschließend durch strengere interne Evidenzfilter verworfen. Alte versteckte Suchfilter werden einmalig zurückgesetzt; Standard ist wieder die Suche im sichtbaren Kartenausschnitt. Ein fester Radius bleibt optional.
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.9.txt"><strong>SHA-256</strong></a>
+<a href="downloads/SHA256SUMS-2.3.10.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;
 <a href="CHANGELOG.md"><strong>📝 Changelog</strong></a>
 &nbsp; · &nbsp;
@@ -32,7 +32,7 @@
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 44 verwendet den ursprünglichen WebSim-Suchkern als Mindestbasis und erweitert ihn gezielt:
+Build 45 übernimmt die ursprüngliche WebSim-Suche als maßgeblichen Discovery-Vertrag und erweitert sie nur additiv:
 
 - **Kein allgemeiner Gastro-Vollscan mehr.** Normale Burger-, Döner-, asiatische oder sonstige Restaurants ohne Pizza-/Italien-Bezug werden nicht gelistet.
 - **Pizza muss trotzdem nicht im Namen stehen.** Eine Bar, ein Café oder Restaurant wird gefunden, wenn strukturierte OSM-Daten Pizza belegen, z. B. über `cuisine`, `speciality`, Produkte, Beschreibung, Notizen oder Pizzaautomat-Tags.
@@ -45,7 +45,9 @@ Build 44 verwendet den ursprünglichen WebSim-Suchkern als Mindestbasis und erwe
 
 - Primärer Ortsindex: **OpenStreetMap / Overpass** über mehrere HTTPS-Spiegel.
 - Gezielte Abfrage statt unnötig großer allgemeiner Gastro-Abfrage.
-- Der **erste erfolgreiche OSM-Spiegel wird sofort gerendert**; es gibt kein zusätzliches 3,5-s- oder vollständiges Provider-Wartefenster mehr. Weitere Spiegel ergänzen/deduplizieren danach im Hintergrund.
+- Der **erste erfolgreiche OSM-Spiegel wird sofort gerendert**; weitere Spiegel ergänzen/deduplizieren im Hintergrund.
+- **Query-Treffer sind autoritativ:** Wenn ein Objekt durch die gezielte WebSim-Pizza-/Italien-Abfrage gefunden wurde, wird es nicht durch einen zweiten, strengeren JavaScript-Filter wieder verworfen.
+- **Standard = sichtbarer Kartenausschnitt**, wie im Original-WebSim. Der Radiusregler bleibt optional für 0–10 km.
 - Keine künstliche 20-/50-/100-Treffergrenze für relevante OSM-Ergebnisse.
 - Ein eingestellter Radius wird exakt verwendet: **5 km bedeutet auch intern 5 km**.
 - `0 km` nutzt den aktuellen Kartenausschnitt.
@@ -64,7 +66,7 @@ Unicode-sichere Suche erhält Orts- und Restaurantnamen in Originalschrift. Die 
 - Suchradius **0–10 km in 0,5-km-Schritten** mit sichtbarem Suchzentrum und Radiuskreis.
 - Filter „Jetzt geöffnet“, Mindestbewertung, Ortstypen, Besuche und persönliche Bewertungen.
 - Pizza-Radar für relevante Orte im aktuellen Gebiet.
-- Build 44 ersetzt den früher überdimensionierten Such-/Refresh-Bereich durch eine **kompakte Karten-Toolbar**. Redundante Großbuttons werden entfernt; Status und Cache-Hinweis bleiben klein und dezent.
+- Build 45 behält die kompakte Karten-Toolbar aus Build 44 bei und priorisiert die Karte sowie die tatsächlichen Pizza-Treffer.
 - Bottom-Navigation für Karte und Fotobewertung, Portrait/Landscape und Dark Mode.
 
 ## ⭐ Bewertungen & persönliche Historie
