@@ -50,6 +50,7 @@ function text(tags={}){return Object.entries(tags).filter(([k,v])=>v!=null&&/^(n
 function pizzaEvidence(t={}){return t['vending:pizza']==='yes'||PIZZA.test(String(t.vending||''))||PIZZA.test(text(t));}
 function italianEvidence(t={}){return ITALIAN.test([t.cuisine,t.name,t.brand,t.operator,t.description,t.note].filter(Boolean).join(' '));}
 function isQueryHit(t={}){return t[HIT]==='yes';}
+function queryEvidence(t={}){return pizzaEvidence(t)||italianEvidence(t);}
 function classify(t={},confirmed=false){
  const a=String(t.amenity||'');
  if(t['vending:pizza']==='yes'||/pizza/i.test(String(t.vending||'')))return 'vending_pizza';
