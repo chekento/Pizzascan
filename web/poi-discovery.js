@@ -245,15 +245,21 @@ function install(root){
     };
     PD.fromOverpass.__poiDiscovery=true;
   }
-  try{
-    if(typeof placeService!=='undefined'&&placeService&&!placeService.overpass.__poiDiscovery){
-      const service=placeService;
+  function installServiceRecovery(){
+    let service=null;
+    try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
+    if(!service||typeof service.overpass!=='function')return false;
+    if(service.overpass.__poiDiscovery)return true;
+    try{
       disableLegacyFallback(service);
       const base=service.overpass.bind(service);
       const wrapped=async function(query,options={}){
         let primary=null,primaryError=null;
         try{primary=await base(query,options);}catch(error){primaryError=error;if(options.signal?.aborted)throw error;}
-        if(primary&&!isSparse(primary))return primary;
+        /* Build 51 has already executed the complete WebSim viewport query.
+         * Do not replace a valid sparse-but-exact response with a second,
+         * different recovery query; only recover on an empty/failed response. */
+        if(primary&&(primary.websimExact||!isSparse(primary)))return primary;
         let elements=primary?.data?.elements||[],sources=[primary?.source].filter(Boolean);
 
         const recovered=await recoverProviders(service,query,options,elements);
@@ -263,14 +269,26 @@ function install(root){
           elements=await recoverPhoton(service,query,options,elements);
           if(elements.length>before)sources.push('photon.komoot.io');
         }
-        if(elements.length)return {data:{...(primary?.data||{}),elements},source:[...new Set(sources.filter(Boolean))].join(' + ')};
+        if(elements.length)return {data:{...(primary?.data||{}),elements},source:[...new Set(sources.filter(Boolean))].join(' + '),websimExact:false};
         if(primary)return primary;
         throw primaryError||Error('Keine Restaurant-/Pizza-POI-Datenquelle erreichbar.');
       };
-      wrapped.__poiDiscovery=true;service.overpass=wrapped;
-    }
-  }catch(error){console.warn('PizzaScan broad restaurant/pizza discovery recovery skipped',error);}
-  root.PizzaScanPoiDiscovery={marker:MARKER,terms:FALLBACK_TERMS.slice(),photonTags:PHOTON_TAGS.slice(),providers:RECOVERY_PROVIDERS.slice(),legacyFallbackBypassed:true};
+      wrapped.__poiDiscovery=true;wrapped.__poiDiscoveryInner=base;service.overpass=wrapped;
+      return true;
+    }catch(error){console.warn('PizzaScan broad restaurant/pizza discovery recovery skipped',error);return false;}
+  }
+
+  /* poi-discovery.js is deferred before script.js creates placeService. Retry
+   * after the complete deferred bundle has run so the recovery wrapper is
+   * installed on the real instance as well as on the existing prototype. */
+  let serviceInstalled=installServiceRecovery(),attempts=0;
+  const retryService=()=>{
+    attempts++;
+    serviceInstalled=installServiceRecovery()||serviceInstalled;
+    if(!serviceInstalled&&typeof root.setTimeout==='function'&&attempts<120)root.setTimeout(retryService,50);
+  };
+  retryService();
+  root.PizzaScanPoiDiscovery={marker:MARKER,terms:FALLBACK_TERMS.slice(),photonTags:PHOTON_TAGS.slice(),providers:RECOVERY_PROVIDERS.slice(),legacyFallbackBypassed:true,serviceRecoveryPending:!serviceInstalled};
 }
 
 return {MARKER,FOOD_AMENITIES,PIZZA_WORDS,ITALIAN_CUISINE,ITALIAN_NAME_WORDS,FALLBACK_TERMS,PHOTON_TAGS,RECOVERY_PROVIDERS,SPARSE_BELOW,ADEQUATE_POIS,FALLBACK_TARGET,PHOTON_LIMIT,MIN_GENERIC_POIS,extractArea,areaInfo,text,pizzaTags,elementPizza,pizzaCount,genericFoodElement,genericFoodCount,broadEnough,robustQuery,mergeElements,evidence,isSparse,placeToElement,inside,photonNearbyUrl,photonFeatureElements,structuredPhoton,recoverProviders,recoverPhoton,disableLegacyFallback,install};
