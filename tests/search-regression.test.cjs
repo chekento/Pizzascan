@@ -20,7 +20,7 @@ test('pizza enrichment loads after recovery and before app initialization',()=>{
  assert.ok(map>=0&&native>map&&review>native&&broad>review&&poi>broad&&only>poi&&app>only,'pizza enrichment must install after broad recovery and before app initialization');
 });
 
-test('default migration restores viewport results and automatic search regeneration',()=>{
+test('default migration restores viewport results while preserving explicit rating filters',()=>{
  const cfg=B.broadMigration({types:['pizzeria'],onlyOpen:true,includeItalian:false,includeUnconfirmed:false,radius:1,autoSearch:false,hideVisited:true,minRating:4.9},P.TYPES);
  assert.deepEqual(cfg.types,Object.keys(P.TYPES));
  assert.equal(cfg.onlyOpen,false);
@@ -29,7 +29,7 @@ test('default migration restores viewport results and automatic search regenerat
  assert.equal(cfg.radius,0);
  assert.equal(cfg.autoSearch,true);
  assert.equal(cfg.hideVisited,false);
- assert.equal(cfg.minRating,0);
+ assert.equal(cfg.minRating,4.9);
  assert.equal(B.MARKER,'pizzascan-broad-defaults-v13');
  const fresh=B.normalizeConfig({}, {}, P.TYPES);
  assert.equal(fresh.includeUnconfirmed,true,'fresh installs keep broad restaurant visibility');
