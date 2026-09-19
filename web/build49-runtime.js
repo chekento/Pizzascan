@@ -1,4 +1,4 @@
-/* PizzaScan Build 52: WebSim-complete discovery, stable map geometry and Android transport failover. */
+/* PizzaScan Build 53: WebSim-complete discovery, stable map geometry and Android transport failover. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -6,10 +6,10 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 
-const VERSION='2.3.17';
-const BUILD=52;
-const MIGRATION='pizzascan-build52-search-migration-v1';
-const QUERY_MARKER='pizzascan-build52-websim-coverage-complete';
+const VERSION='2.3.18';
+const BUILD=53
+const MIGRATION='pizzascan-build53-search-migration-v1';
+const QUERY_MARKER='pizzascan-build53-websim-coverage-complete';
 const ENDPOINT='https://overpass-api.de/api/interpreter';
 const ENDPOINTS=[ENDPOINT,'https://overpass.private.coffee/api/interpreter','https://overpass.osm.jp/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const NOMINATIM='https://nominatim.openstreetmap.org/search';
@@ -137,7 +137,7 @@ function makeOverpass(root,previous){
     throw Error('Kartendaten konnten nicht geladen werden'+(detail?': '+detail:''));
   };
   wrapped.__build49=true;
-  wrapped.__build51=true;wrapped.__build52=true;
+  wrapped.__build51=true;wrapped.__build52=true;wrapped.__build53=true;
   wrapped.__inner=previous;
   return wrapped;
 }
@@ -273,7 +273,7 @@ function compactUi(root){
     auto.checked=true;auto.disabled=true;
     const label=auto.closest?.('label');if(label)label.title='WebSim-Modus: Nach Kartenbewegungen wird automatisch neu gesucht.';
   }
-  const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 52:</strong> WebSim-komplette Kartenausschnittsuche für Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Treffer; Wege und Relationen werden mit Mittelpunkt übernommen.';
+  const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 53:</strong> WebSim-komplette Kartenausschnittsuche für Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Treffer; Wege und Relationen werden mit Mittelpunkt übernommen.';
 }
 
 function installSheetHook(root){
@@ -298,13 +298,13 @@ function syncVersion(root){
     const badge=root.document?.querySelector('.brand small');
     if(badge){if(badge.textContent!==VERSION)badge.textContent=VERSION;if(!badge.__build49Observer){badge.__build49Observer=true;new MutationObserver(()=>{if(badge.textContent!==VERSION)badge.textContent=VERSION;}).observe(badge,{childList:true,characterData:true,subtree:true});}}
   }catch{}
-  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.17.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
+  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.18.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
 }
 
 function install(root){
   if(!root.document||!root.PizzaPlaces)return false;
   lockQuery(root);
-  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice()};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;root.PizzaScanDiscovery52=root.PizzaScanDiscovery49;
+  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice()};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;root.PizzaScanDiscovery52=root.PizzaScanDiscovery49;root.PizzaScanDiscovery53=root.PizzaScanDiscovery49;
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;

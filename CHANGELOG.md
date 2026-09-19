@@ -1,3 +1,8 @@
+## 2.3.18 · Build 53
+
+- Behebt den letzten Android-Transportfehler: Der native Overpass-Failover wird jetzt auch auf der tatsächlich verwendeten `placeService`-Instanz installiert, obwohl die Karten-Härtung deren `json`-Methode überschreibt.
+- Dadurch bleibt die vollständige WebSim-Abfrage mit Trattoria, Ristorante, Osteria, Pizza-/Italien-Signalen und weiteren relevanten OSM-POIs auch bei einem Ausfall des Primärservers verfügbar.
+
 ## 2.3.17 · Build 52
 
 - Repariert den Android-Kartenabruf mit nativer Overpass-Mirror-Kette: dieselbe WebSim-Abfrage wird bei einem Ausfall von `overpass-api.de` automatisch über freigegebene OSM-Endpunkte wiederholt.

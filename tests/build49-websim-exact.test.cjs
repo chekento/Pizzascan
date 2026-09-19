@@ -2,22 +2,22 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const B=require('../web/build49-runtime.js');
 
-test('Build 52 version and WebSim-complete mode',()=>{
-  assert.equal(B.VERSION,'2.3.17');
-  assert.equal(B.BUILD,52);
+test('Build 53 version and WebSim-complete mode',()=>{
+  assert.equal(B.VERSION,'2.3.18');
+  assert.equal(B.BUILD,53);
   assert.equal(B.ENDPOINT,'https://overpass-api.de/api/interpreter');
   assert.equal(B.NOMINATIM,'https://nominatim.openstreetmap.org/search');
 });
 
-test('Build 52 always searches the visible map bbox like WebSim',()=>{
+test('Build 53 always searches the visible map bbox like WebSim',()=>{
   const q=B.websimQuery({south:53.8,west:10.6,north:53.9,east:10.8});
   assert.match(q,/53\.8,10\.6,53\.9,10\.8/);
   assert.doesNotMatch(q,/around:/);
-  assert.match(q,/pizzascan-build52-websim-coverage-complete/);
+  assert.match(q,/pizzascan-build53-websim-coverage-complete/);
   assert.match(q,/out body center;/);
 });
 
-test('Build 52 keeps the WebSim selector families and restores named Italian venues',()=>{
+test('Build 53 keeps the WebSim selector families and restores named Italian venues',()=>{
   const q=B.websimQuery({south:1,west:2,north:3,east:4});
   const required=[
     '["cuisine"~"pizza',
@@ -41,7 +41,7 @@ test('Build 52 keeps the WebSim selector families and restores named Italian ven
   assert.doesNotMatch(q,/burger|doner|sushi/i);
 });
 
-test('Build 52 restores viewport auto-search without erasing unrelated filter choices',()=>{
+test('Build 53 restores viewport auto-search without erasing unrelated filter choices',()=>{
   const cfg=B.migrationConfig({radius:5,autoSearch:false,onlyOpen:true,minRating:4.6,types:['pizzeria']},['pizzeria','trattoria']);
   assert.equal(cfg.radius,0);
   assert.equal(cfg.autoSearch,true);
@@ -53,12 +53,12 @@ test('Build 52 restores viewport auto-search without erasing unrelated filter ch
   assert.deepEqual(cfg.types,['pizzeria','trattoria']);
 });
 
-test('Build 52 locks the coverage-complete query against legacy runtime reassignment',()=>{
+test('Build 53 locks the coverage-complete query against legacy runtime reassignment',()=>{
   const root={PizzaPlaces:{query(){return 'legacy';}}};
   assert.equal(B.lockQuery(root),true);
   const q1=root.PizzaPlaces.query(null,null,{south:1,west:2,north:3,east:4});
   root.PizzaPlaces.query=()=> 'broad legacy';
   const q2=root.PizzaPlaces.query(null,null,{south:1,west:2,north:3,east:4});
-  assert.match(q1,/pizzascan-build52-websim-coverage-complete/);
+  assert.match(q1,/pizzascan-build53-websim-coverage-complete/);
   assert.equal(q2,q1);
 });
