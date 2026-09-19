@@ -313,7 +313,7 @@ function syncVersion(root){
 function install(root){
   if(!root.document||!root.PizzaPlaces)return false;
   lockQuery(root);
-  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice()};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;root.PizzaScanDiscovery52=root.PizzaScanDiscovery49;root.PizzaScanDiscovery53=root.PizzaScanDiscovery49;root.PizzaScanDiscovery54=root.PizzaScanDiscovery49;
+  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice(),websimQuery};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;root.PizzaScanDiscovery52=root.PizzaScanDiscovery49;root.PizzaScanDiscovery53=root.PizzaScanDiscovery49;root.PizzaScanDiscovery54=root.PizzaScanDiscovery49;
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;
