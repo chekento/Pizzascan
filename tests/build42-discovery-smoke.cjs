@@ -12,7 +12,7 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
  let query='',fallbackCalls=0,photonCalls=0;
  await mapFixtures(page);
  await page.route('**/overpass-api.de/**',r=>{
-  query=new URLSearchParams(r.request().postData()||'').get('data')||'';
+  const candidate=new URLSearchParams(r.request().postData()||'').get('data')||'';if(candidate.includes('pizzascan-build54-websim-coverage-complete'))query=candidate;
   return r.fulfill({json:{elements:exact}});
  });
  await page.route('**/overpass.private.coffee/**',r=>{fallbackCalls++;return r.fulfill({json:{elements:[]}});});
