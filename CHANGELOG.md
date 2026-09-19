@@ -1,3 +1,10 @@
+## 2.3.19 · Build 54
+
+- Repariert die letzte Build-54-Smoke-Test-Regression und liefert die verifizierte APK jetzt nach erfolgreichem Android-16-Emulator-Test aus.
+- Startet die Kartensuche nach der Standortfreigabe automatisch und verwendet weiterhin die vollständige WebSim-Suchabdeckung für Pizza, Pizzeria, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Signale.
+- Stabilisiert POI-Popups und Detailseiten, merkt sich einklappbare Bereiche sowie Einstellungen und hält den gemeinsamen Bewertungswert von 0,1 bis 10,0 für Place und Rezension synchron.
+- Ermöglicht den lokalen Import und Export kompletter Sammlungen aus Orten, eigenen Bewertungen und Rezensionen; der Google-Abschnitt erscheint nur mit hinterlegtem API-Schlüssel.
+
 ## 2.3.18 · Build 53
 
 - Behebt den letzten Android-Transportfehler: Der native Overpass-Failover wird jetzt auch auf der tatsächlich verwendeten `placeService`-Instanz installiert, obwohl die Karten-Härtung deren `json`-Methode überschreibt.
