@@ -72,6 +72,19 @@ test('packaged Android retries the identical query natively on a trusted mirror 
  assert.equal(root.PizzaScanNativeOverpass.lastEndpoint,N.ENDPOINTS[1]);
 });
 
+test('installer patches the live global placeService instance after hotfix-map shadows the prototype',()=>{
+ const previous=globalThis.placeService;
+ const service={json:async()=>({elements:[]})};
+ globalThis.placeService=service;
+ try{
+  const root={navigator:{userAgent:'Mozilla/5.0 Chrome'},PizzaScanNative:{}};
+  assert.equal(N.install(root),true);
+  assert.equal(service.json.__nativeOverpass,true);
+ }finally{
+  if(previous===undefined)delete globalThis.placeService;else globalThis.placeService=previous;
+ }
+});
+
 test('ordinary browser keeps the existing web transport',async()=>{
  let webCalls=0;
  const root={navigator:{userAgent:'Mozilla/5.0 Chrome'},PizzaScanNative:{},bridge:async()=>{throw Error('must not run');},placeService:{json:async()=>{webCalls++;return {elements:[1]};}}};
