@@ -5,10 +5,10 @@ const element=(id,tags={},type='node')=>({type,id,lat:center.lat+id/100000,lon:c
 const good=data=>({ok:true,status:200,json:async()=>data});
 const bad={ok:false,status:503,text:async()=>''};
 const memory=()=>{const m=new Map();return {getItem:k=>m.get(k)||null,setItem:(k,v)=>m.set(k,v),removeItem:k=>m.delete(k),key:i=>[...m.keys()][i],get length(){return m.size;}};};
-test('All six remote map categories normalize explicitly and generic restaurants become Weitere Orte',()=>{
+test('Remote map categories include Trattoria and generic named food stays visible',()=>{
  const list=P.fromOverpass([element(1),element(2,{amenity:'cafe'}),element(3,{amenity:'fast_food'}),element(4,{amenity:'food_truck'}),element(5,{amenity:'vending_machine','vending:pizza':'yes'}),element(6,{amenity:'pub'}),element(7,{name:'Trattoria Roma',cuisine:'italian'}),element(8,{name:'Sushi Bar',cuisine:'japanese'}),element(9,{disused:'yes'}),element(10,{amenity:'construction'})],{allowNamed:true});
- assert.deepEqual(list.map(p=>p.type),['pizzeria','cafe','fast_food','food_truck','vending_pizza','other','other','other']);
- assert.equal(list[6].pizzaEvidence,'possible');assert.equal(list[0].pizzaEvidence,'confirmed');assert.equal(list[7].pizzaEvidence,'search');assert.equal(new Set(Object.values(P.TYPES).map(x=>x.emoji)).size,6);
+ assert.deepEqual(list.map(p=>p.type),['pizzeria','cafe','fast_food','food_truck','vending_pizza','other','trattoria','other']);
+ assert.equal(list[6].pizzaEvidence,'possible');assert.equal(list[0].pizzaEvidence,'confirmed');assert.equal(list[7].pizzaEvidence,'search');assert.equal(new Set(Object.values(P.TYPES).map(x=>x.emoji)).size,9);
  const q=P.query(center,3);assert.match(q,/italian/);assert.match(q,/around:3000/);assert.match(q,/vending:pizza/);assert.match(q,/\["amenity"~"restaurant\|fast_food\|cafe\|food_truck\|bar\|pub\|biergarten\|takeaway\|food_court"\]\["name"\]/);assert.match(q,/\["mobile"="yes"\]/);assert.match(q,/out body center;/,'Node coordinates and way centers must both be requested');
 });
 test('Fallback category terms do not fabricate pizza evidence for cafés, restaurants or food trucks',()=>{
