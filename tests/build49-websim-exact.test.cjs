@@ -2,14 +2,14 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const B=require('../web/build49-runtime.js');
 
-test('Build 49 version and source-original mode',()=>{
-  assert.equal(B.VERSION,'2.3.14');
-  assert.equal(B.BUILD,49);
+test('Build 50 version and source-original mode',()=>{
+  assert.equal(B.VERSION,'2.3.15');
+  assert.equal(B.BUILD,50);
   assert.equal(B.ENDPOINT,'https://overpass-api.de/api/interpreter');
   assert.equal(B.NOMINATIM,'https://nominatim.openstreetmap.org/search');
 });
 
-test('Build 49 always searches the visible map bbox like WebSim',()=>{
+test('Build 50 always searches the visible map bbox like WebSim',()=>{
   const q=B.websimQuery({south:53.8,west:10.6,north:53.9,east:10.8});
   assert.match(q,/53\.8,10\.6,53\.9,10\.8/);
   assert.doesNotMatch(q,/around:/);
@@ -17,7 +17,7 @@ test('Build 49 always searches the visible map bbox like WebSim',()=>{
   assert.match(q,/out body; >; out skel qt;/);
 });
 
-test('Build 49 keeps the exact source-original PizzaScan selector families',()=>{
+test('Build 50 keeps the exact source-original PizzaScan selector families',()=>{
   const q=B.websimQuery({south:1,west:2,north:3,east:4});
   const required=[
     '["cuisine"="pizza"]',
@@ -38,7 +38,7 @@ test('Build 49 keeps the exact source-original PizzaScan selector families',()=>
   assert.doesNotMatch(q,/ristorante|trattoria|osteria|brand|operator|dish|alt_name/);
 });
 
-test('Build 49 restores WebSim viewport auto-search instead of fixed 5 km',()=>{
+test('Build 50 restores WebSim viewport auto-search instead of fixed 5 km',()=>{
   const cfg=B.migrationConfig({radius:5,autoSearch:false,onlyOpen:true,minRating:4.6});
   assert.equal(cfg.radius,0);
   assert.equal(cfg.autoSearch,true);
@@ -48,11 +48,11 @@ test('Build 49 restores WebSim viewport auto-search instead of fixed 5 km',()=>{
   assert.equal(cfg.includeUnconfirmed,true);
 });
 
-test('Build 49 does not add extra result-shaping beyond the WebSim response',()=>{
+test('Build 50 does not add extra result-shaping beyond the WebSim response',()=>{
   assert.equal(Object.prototype.hasOwnProperty.call(B,'centerizeWebsim'),false);
 });
 
-test('Build 49 locks the exact query against legacy runtime reassignment',()=>{
+test('Build 50 locks the exact query against legacy runtime reassignment',()=>{
   const root={PizzaPlaces:{query(){return 'legacy';}}};
   assert.equal(B.lockQuery(root),true);
   const q1=root.PizzaPlaces.query(null,null,{south:1,west:2,north:3,east:4});
