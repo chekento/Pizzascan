@@ -39,7 +39,8 @@ async function untilNode(fn,timeout=5000){const end=Date.now()+timeout;while(Dat
   await until(page,()=>PizzaScan.ready);
   await page.evaluate(()=>loadPlaces({force:true}));
   await until(page,()=>!PizzaScan.diagnostics().mapLoading);
-  assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().mapConfig.radius),1,'Later app starts keep the user-selected radius');
+  assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().mapConfig.radius),0,'Build 49 keeps the effective search area on the visible WebSim viewport after reload');
+  assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().mapConfig.autoSearch),true,'Build 49 keeps WebSim move-search enabled after reload');
   assert.ok(overpassCalls>beforeReload,'Reload performs a map lookup');
 
   const beforeOnline=overpassCalls;
@@ -47,7 +48,8 @@ async function untilNode(fn,timeout=5000){const end=Date.now()+timeout;while(Dat
   await page.evaluate(()=>window.dispatchEvent(new Event('online')));
   await untilNode(()=>overpassCalls>beforeOnline,5000);
   await until(page,()=>PizzaScan.diagnostics().places===1&&!PizzaScan.diagnostics().mapLoading,10000);
-  assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().mapConfig.radius),1,'Network recovery does not alter filters');
-  console.log('PASS one-time discovery preserves later filters and online recovery refreshes the map');
+  assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().mapConfig.radius),0,'Network recovery keeps the WebSim viewport policy active');
+  assert.equal(await page.evaluate(()=>PizzaScan.diagnostics().mapConfig.autoSearch),true,'Network recovery keeps WebSim automatic move-search active');
+  console.log('PASS Build 49 WebSim viewport policy persists across reload and online recovery refreshes the map');
  }finally{await browser.close();s.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
