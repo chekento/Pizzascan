@@ -27,7 +27,7 @@ function normalizeConfig(base={},raw={},types={}){
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,
     ratingsEnabled:has('ratingsEnabled')?raw.ratingsEnabled!==false:true,
     minRating:has('minRating')&&Number.isFinite(Number(raw.minRating))?Math.max(0,Math.min(5,Number(raw.minRating))):0,
-    includeUnrated:has('includeUnrated')?raw.includeUnrated===true:false
+    includeUnrated:has('includeUnrated')?raw.includeUnrated===true:true
   };
 }
 function broadMigration(previous={},types={}){
