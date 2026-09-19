@@ -67,7 +67,9 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCallback;
     private Uri captureUri;
     private File captureFile;
+    private static final int MAX_EXPORT_BYTES = 64 * 1024 * 1024;
     private String pendingExport;
+    private StringBuilder pendingExportChunks;
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
     private volatile String appLanguage = Locale.getDefault().getLanguage();
@@ -313,12 +315,34 @@ public class MainActivity extends Activity {
                     break;
                 }
                 case "save": {
-                    if (pendingExport != null) throw new IllegalStateException("Bitte laufenden Export abschließen");
+                    if (pendingExport != null || pendingExportChunks != null) throw new IllegalStateException("Bitte laufenden Export abschließen");
                     pendingExport = request.optString("text");
                     Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     create.addCategory(Intent.CATEGORY_OPENABLE); create.setType("application/json");
                     create.putExtra(Intent.EXTRA_TITLE, request.optString("name", "pizzascan-backup.json").replaceAll("[^a-zA-Z0-9._-]", "_"));
                     try { startActivityForResult(create, SAVE_FILE); } catch (Exception e) { pendingExport = null; throw e; }
+                    break;
+                }
+                case "saveStart": {
+                    if (pendingExport != null || pendingExportChunks != null) throw new IllegalStateException("Bitte laufenden Export abschließen");
+                    pendingExportChunks = new StringBuilder();
+                    Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                    create.addCategory(Intent.CATEGORY_OPENABLE); create.setType("application/json");
+                    create.putExtra(Intent.EXTRA_TITLE, request.optString("name", "pizzascan-backup.json").replaceAll("[^a-zA-Z0-9._-]", "_"));
+                    try { startActivityForResult(create, SAVE_FILE); } catch (Exception e) { pendingExportChunks = null; throw e; }
+                    break;
+                }
+                case "saveChunk": {
+                    if (pendingExportChunks == null) throw new IllegalStateException("Kein großer Export gestartet");
+                    String chunk = request.optString("chunk");
+                    if ((pendingExportChunks.length() + chunk.length()) * 2L > MAX_EXPORT_BYTES) {
+                        pendingExportChunks = null;
+                        throw new IllegalStateException("Export ist zu groß für diesen Gerätespeicher");
+                    }
+                    pendingExportChunks.append(chunk);
+                    break;
+                }
+                case "saveEnd": {
                     break;
                 }
                 case "sharePhoto": {
@@ -398,12 +422,14 @@ public class MainActivity extends Activity {
             if (captureFile != null && (captureUri == null || result != RESULT_OK)) captureFile.delete();
             captureUri = null; captureFile = null;
         } else if (code == SAVE_FILE) {
-            if (result == RESULT_OK && data != null && pendingExport != null) {
+            if (result == RESULT_OK && data != null && (pendingExport != null || pendingExportChunks != null)) {
+                String export = pendingExport != null ? pendingExport : pendingExportChunks.toString();
                 try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
-                    out.write(pendingExport.getBytes(StandardCharsets.UTF_8)); toast(ui(R.string.export_saved));
+                    out.write(export.getBytes(StandardCharsets.UTF_8)); toast(ui(R.string.export_saved));
                 } catch (Exception e) { toast(ui(R.string.export_failed)); }
             }
             pendingExport = null;
+            pendingExportChunks = null;
         }
     }
 

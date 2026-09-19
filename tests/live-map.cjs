@@ -13,7 +13,7 @@ const cities=[
 ];
 (async()=>{
  const {server:s,url}=await server(),browser=await chromium.launch();
- const context=await browser.newContext({viewport:{width:393,height:851},userAgent:'Mozilla/5.0 PizzaScan/2.3.19 (+https://github.com/chekento/Pizzascan)'});
+ const context=await browser.newContext({viewport:{width:393,height:851},userAgent:'Mozilla/5.0 PizzaScan/2.3.20 (+https://github.com/chekento/Pizzascan)'});
  await context.addInitScript(()=>{localStorage.setItem('pizzascan-settings-v2',JSON.stringify({welcomed:true}));localStorage.removeItem('pizzascan-map-view-v1');localStorage.removeItem('pizzascan-global-awaiting-center-v1');});
  const page=await context.newPage(),failures=[];page.on('requestfailed',r=>failures.push({url:r.url(),error:r.failure()?.errorText}));fs.mkdirSync('test-results',{recursive:true});
  try{

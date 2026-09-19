@@ -1,9 +1,24 @@
 const PERSONAL_RATINGS='pizzascan-place-ratings-v1';
-function personalRatingData(){return read(PERSONAL_RATINGS,{});}
-function personalRatingKey(place){return String(place?.placeId||'').slice(0,120);}
-function personalRatingGet(place){const row=personalRatingData()[personalRatingKey(place)],n=Number(row?.rating);return Number.isFinite(n)&&n>=.1&&n<=10?Math.round(n*10)/10:null;}
-function personalRatingSet(place,value){const key=personalRatingKey(place),n=Number(value);if(!key||!Number.isFinite(n)||n<.1||n>10)return false;const all=personalRatingData();all[key]={rating:Math.round(n*10)/10,updatedAt:new Date().toISOString(),place:{placeId:key,name:String(place.name||'').slice(0,200),lat:Number(place.lat),lng:Number(place.lng),address:String(place.address||'').slice(0,300),type:String(place.type||'other').slice(0,60)}};return placeService.write(PERSONAL_RATINGS,all);}
-function personalRatingClear(place){const key=personalRatingKey(place),all=personalRatingData();if(!key||!Object.prototype.hasOwnProperty.call(all,key))return true;delete all[key];return placeService.write(PERSONAL_RATINGS,all);}
+function personalRatingKey(place){return String(place?.placeId||'').slice(0,160);}
+function validPersonalRating(value){const n=Number(value);return Number.isFinite(n)&&n>=.1&&n<=10?Math.round(n*10)/10:null;}
+function personalRatingRow(key,row){
+ const rating=validPersonalRating(typeof row==='number'?row:row?.rating);if(rating===null)return null;
+ const source=row&&typeof row==='object'?row:{},place=source.place&&typeof source.place==='object'?source.place:null;
+ return {rating,updatedAt:source.updatedAt||new Date().toISOString(),place:place?{placeId:String(place.placeId||key),name:String(place.name||'').slice(0,200),lat:Number(place.lat),lng:Number(place.lng),address:String(place.address||'').slice(0,300),type:String(place.type||'other').slice(0,60)}:undefined};
+}
+function personalRatingData(){
+ const raw=read(PERSONAL_RATINGS,{}),out={};
+ for(const [key,row] of Object.entries(raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{})){const clean=personalRatingRow(key,row);if(clean)out[key]=clean;}
+ return out;
+}
+function personalRatingGet(place){const row=personalRatingData()[personalRatingKey(place)],n=validPersonalRating(row?.rating);return n===null?null:n;}
+function personalRatingSet(place,value){
+ const key=personalRatingKey(place),n=validPersonalRating(value),lat=Number(place?.lat),lng=Number(place?.lng);
+ if(!key||n===null||!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return false;
+ const all=personalRatingData();const record={rating:n,updatedAt:new Date().toISOString(),place:{placeId:key,name:String(place.name||'').slice(0,200),lat,lng,address:String(place.address||'').slice(0,300),type:String(place.type||'other').slice(0,60)}};
+ all[key]=record;const ok=placeService.write(PERSONAL_RATINGS,all);globalThis.PizzaPlaceHistoryRuntime?.rememberRating?.(record);return ok;
+}
+function personalRatingClear(place){const key=personalRatingKey(place),all=personalRatingData();if(!key||!Object.prototype.hasOwnProperty.call(all,key))return true;delete all[key];globalThis.PizzaPlaceHistoryRuntime?.forgetRating?.(key);return placeService.write(PERSONAL_RATINGS,all);}
 globalThis.PizzaPersonalRatings={get:personalRatingGet,set:personalRatingSet,clear:personalRatingClear,all:personalRatingData};
 'use strict';
 const DRAFTS='pizzascan-drafts-v1';

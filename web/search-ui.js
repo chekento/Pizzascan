@@ -15,8 +15,9 @@
  function dedupe(items){const seen=new Set();return items.filter(item=>{const p=item.place||item,key=p?.placeId||item.osmId||[item.kind,item.name,item.address,Number(item.lat).toFixed(5),Number(item.lng).toFixed(5)].join('|');if(seen.has(key))return false;seen.add(key);return true;});}
  function stateLabel(item){const states=new Set(item?.searchStates||[]);if(states.has('location'))return '📍 Dein Standort';if(states.has('saved')&&states.has('visited'))return '⭐ Gemerkt · ✓ Besucht';if(states.has('saved'))return '⭐ Gemerkt';if(states.has('visited'))return '✓ Besucht';return '';}
  function decorate(items){const buttons=[...document.querySelectorAll('#search-results .search-result')];buttons.forEach((button,index)=>{const item=items[index];if(!item)return;const label=button.querySelector('span:nth-child(2)');if(!label)return;const kind=document.createElement('span');kind.className='search-kind';const type=item.place?.type||item.type,state=stateLabel(item);kind.textContent=state||item.kind==='venue'?(state||(PlaceData.TYPES[type]?.name||'Restaurant')):'Ort / Adresse';label.appendChild(kind);});const box=byId('search-results');if(box&&!box.hidden){const note=document.createElement('p');note.className='search-autocomplete-note';note.textContent='Suche unterstützt 🍕 Pizzeria, ☕ Café, 🍔 Imbiss, 🚚 Foodtruck, 🤖 Pizzaautomat, 🍽️ weitere Orte sowie ⭐ Gemerkt, ✓ Besucht und 📍 Standort.';box.appendChild(note);}}
- async function remoteAutocomplete(){const input=byId('search');if(!input)return;const q=input.value.trim();if(q.length<2){closeAutocomplete();return;}const revision=++autocompleteRevision;autocompleteAbort?.abort();const ctl=autocompleteAbort=new AbortController();const center=currentCenter();let local=PlaceData.suggestions([...places,...saved,...mapPool],q,center).map(p=>({...p,kind:'venue',place:p,osmId:p.placeId}));try{const helper=await poiHelpers();local=helper.mergeRanked([localCandidates(q,center,helper)],q,center,PizzaCore.distance).slice(0,10);}catch{}try{const remote=await placeService.photon(q,center,{signal:ctl.signal});if(revision!==autocompleteRevision||ctl.signal.aborted||input.value.trim()!==q)return;const venues=remote.filter(x=>x.kind==='venue'),locations=remote.filter(x=>x.kind!=='venue');const combined=dedupe([...local,...venues,...locations]).slice(0,10);showSearchResults(combined,combined.length>0&&combined.every(x=>x.kind==='venue'&&local.some(l=>(l.placeId||l.place?.placeId)===(x.placeId||x.place?.placeId))));decorate(combined);if(combined.length)byId('search-status').textContent=`${combined.length} Vorschläge · mit „Suchen“ erfolgt der genaue POI- und Kategorieabgleich.`;}
+ async function remoteAutocomplete(){const input=byId('search');if(!input)return;const q=input.value.trim();if(q.length<2){closeAutocomplete();return;}const revision=++autocompleteRevision;autocompleteAbort?.abort();const ctl=autocompleteAbort=new AbortController();globalThis.setMapSearchBusy?.(true);const center=currentCenter();let local=PlaceData.suggestions([...places,...saved,...mapPool],q,center).map(p=>({...p,kind:'venue',place:p,osmId:p.placeId}));try{const helper=await poiHelpers();local=helper.mergeRanked([localCandidates(q,center,helper)],q,center,PizzaCore.distance).slice(0,10);}catch{}fallbackNext={query:q,time:Date.now()};try{const remote=await placeService.photon(q,center,{signal:ctl.signal});if(revision!==autocompleteRevision||ctl.signal.aborted||input.value.trim()!==q)return;const venues=remote.filter(x=>x.kind==='venue'),locations=remote.filter(x=>x.kind!=='venue');const combined=dedupe([...local,...venues,...locations]).slice(0,10);showSearchResults(combined,combined.length>0&&combined.every(x=>x.kind==='venue'&&local.some(l=>(l.placeId||l.place?.placeId)===(x.placeId||x.place?.placeId))));decorate(combined);if(combined.length)byId('search-status').textContent=`${combined.length} Vorschläge · mit „Suchen“ erfolgt der genaue POI- und Kategorieabgleich.`;}
  catch(error){if(!ctl.signal.aborted&&revision===autocompleteRevision&&local.length){showSearchResults(local,true);decorate(local);byId('search-status').textContent='Lokale Treffer verfügbar · genauer POI-Abgleich erfolgt beim Suchbutton.';}}
+ finally{globalThis.setMapSearchBusy?.(false);}
  }
  function scheduleAutocomplete(){clearTimeout(autocompleteTimer);const q=byId('search')?.value.trim()||'';if(q.length<2){closeAutocomplete();return;}autocompleteTimer=setTimeout(remoteAutocomplete,420);}
  function osmType(value){return {N:'node',W:'way',R:'relation',node:'node',way:'way',relation:'relation'}[value]||'';}
@@ -61,7 +62,7 @@
   event?.preventDefault();clearTimeout(searchTimer);clearTimeout(autocompleteTimer);autocompleteAbort?.abort();autocompleteAbort=null;
   const input=byId('search'),q=input?.value.trim()||'';if(q.length<2)return toast('Bitte mindestens zwei Zeichen eingeben');
   const revision=++searchRevision;searchAbort?.abort();const ctl=searchAbort=new AbortController(),center=currentCenter();
-  byId('search-submit').disabled=true;byId('search-status').textContent='POIs und Kategorien werden vollständig abgeglichen …';
+  byId('search-submit').disabled=true;globalThis.setMapSearchBusy?.(true);byId('search-status').textContent='POIs, Adressen und Restaurants werden gesucht …';
   try{
    const helper=await poiHelpers();if(revision!==searchRevision||ctl.signal.aborted)return;
    const local=localCandidates(q,center,helper);showSearchResults(local,true);decorate(local);
@@ -78,11 +79,18 @@
    if(combined.length===1&&combined[0].kind==='location')selectSearch(0);
   }catch(error){
    if(revision===searchRevision&&!ctl.signal.aborted)byId('search-status').textContent='POI-Suche momentan nicht erreichbar. Bereits geladene Orte bleiben über die Karte verfügbar.';
-  }finally{if(revision===searchRevision)byId('search-submit').disabled=false;}
+  }finally{globalThis.setMapSearchBusy?.(false);if(revision===searchRevision)byId('search-submit').disabled=false;}
  }
  function install(){const panel=byId('search-panel'),toggle=byId('search-toggle'),collapse=byId('search-collapse'),input=byId('search'),form=byId('search-form');if(!panel||!toggle||!collapse||!input||!form)return;
   panel.classList.add('search-panel-collapsed');toggle.setAttribute('aria-expanded','false');toggle.onclick=openSearch;collapse.onclick=closeSearch;
   input.addEventListener('input',scheduleAutocomplete);form.addEventListener('submit',()=>{clearTimeout(autocompleteTimer);autocompleteAbort?.abort();autocompleteAbort=null;});
+  /* Build-49 installed capture listeners on the form/input. Handle both events
+   * before they reach those listeners so the current POI/address search wins. */
+  if(!document.__pizzaScanSearchCapture){
+   document.__pizzaScanSearchCapture=true;
+   document.addEventListener('submit',event=>{if(event.target!==form)return;event.preventDefault();event.stopPropagation();preciseSearch(event);},true);
+   document.addEventListener('input',event=>{if(event.target!==input)return;event.stopPropagation();scheduleAutocomplete();},true);
+  }
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.classList.contains('search-panel-collapsed')&&!document.querySelector('#sheet[open]')){event.preventDefault();closeSearch();}});
   const oldSelect=selectSearch;selectSearch=function(index){const out=oldSelect(index);closeSearch();return out;};
   toggleFullscreenSearch=function(){const opening=!document.body.classList.contains('fs-search-open');if(opening)openSearch();else closeSearch();};
