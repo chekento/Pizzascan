@@ -248,6 +248,20 @@ function compactUi(root){
   const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 49:</strong> WebSim-Originalsuche: sichtbarer Kartenausschnitt, identische Pizza-/Italien-OSM-Suchfamilien, Suche nach Kartenbewegung und Nominatim für Ort/Adresse.';
 }
 
+function installSheetHook(root){
+  try{
+    if(typeof openSheet!=='function'||openSheet.__build49)return false;
+    const previous=openSheet;
+    const wrapped=function(){
+      const out=previous.apply(this,arguments);
+      root.setTimeout(()=>compactUi(root),0);
+      return out;
+    };
+    wrapped.__build49=true;wrapped.__inner=previous;openSheet=wrapped;
+    return true;
+  }catch{return false;}
+}
+
 function syncVersion(root){
   try{
     const app=root.PizzaScan;if(app){const get=()=>VERSION;get.__build49=true;Object.defineProperty(app,'version',{configurable:true,enumerable:true,get,set(){}});}
@@ -266,15 +280,15 @@ function install(root){
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;
-    syncVersion(root);lockQuery(root);installMapPolicy(root);compactUi(root);installOverpass(root);installSearch(root);
+    syncVersion(root);lockQuery(root);installMapPolicy(root);installSheetHook(root);compactUi(root);installOverpass(root);installSearch(root);
     let mapReady=false;try{mapReady=typeof map!=='undefined'&&!!map&&typeof loadPlaces==='function';}catch{}
     if(refresh&&mapReady){refresh=false;root.setTimeout(()=>{try{loadPlaces({force:true});}catch{}},80);}
     if((typeof settings==='undefined'||!mapReady)&&attempts<120)root.setTimeout(ready,50);
   };
   ready();
-  [0,60,120,300,700,1500,3000,6000].forEach(ms=>root.setTimeout(()=>{syncVersion(root);lockQuery(root);installMapPolicy(root);compactUi(root);installOverpass(root);installSearch(root);},ms));
+  [0,60,120,300,700,1500,3000,6000].forEach(ms=>root.setTimeout(()=>{syncVersion(root);lockQuery(root);installMapPolicy(root);installSheetHook(root);compactUi(root);installOverpass(root);installSearch(root);},ms));
   return true;
 }
 
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,lockQuery,installMapPolicy,makeOverpass,installOverpass,installSearch,compactUi,syncVersion,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,lockQuery,installMapPolicy,makeOverpass,installOverpass,installSearch,compactUi,installSheetHook,syncVersion,install};
 });
