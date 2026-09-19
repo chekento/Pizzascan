@@ -4,7 +4,7 @@ const R=require('../web/release-info.js');
 
 test('release panel identifies current 2.3.17 direct build and Play closed track as next milestone',()=>{
  assert.equal(R.RELEASE.version,'2.3.17');
- assert.equal(R.RELEASE.build,51);
+ assert.equal(R.RELEASE.build,52);
  assert.equal(R.RELEASE.next,'Google Play Closed Track');
 });
 
