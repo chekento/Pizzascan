@@ -48,13 +48,16 @@ test('Build 49 restores WebSim viewport auto-search instead of fixed 5 km',()=>{
   assert.equal(cfg.includeUnconfirmed,true);
 });
 
-test('Build 49 reconstructs way centers from the exact WebSim skeleton response',()=>{
-  const out=B.centerizeWebsim([
-    {type:'way',id:9,nodes:[1,2],tags:{amenity:'restaurant',cuisine:'pizza',name:'Way Pizza'}},
-    {type:'node',id:1,lat:53,lon:10},
-    {type:'node',id:2,lat:55,lon:12}
-  ]);
-  assert.equal(out.length,1);
-  assert.equal(out[0].type,'way');
-  assert.deepEqual(out[0].center,{lat:54,lon:11});
+test('Build 49 does not add extra result-shaping beyond the WebSim response',()=>{
+  assert.equal(Object.prototype.hasOwnProperty.call(B,'centerizeWebsim'),false);
+});
+
+test('Build 49 locks the exact query against legacy runtime reassignment',()=>{
+  const root={PizzaPlaces:{query(){return 'legacy';}}};
+  assert.equal(B.lockQuery(root),true);
+  const q1=root.PizzaPlaces.query(null,null,{south:1,west:2,north:3,east:4});
+  root.PizzaPlaces.query=()=> 'broad legacy';
+  const q2=root.PizzaPlaces.query(null,null,{south:1,west:2,north:3,east:4});
+  assert.match(q1,/pizzascan-build49-websim-source-exact/);
+  assert.equal(q2,q1);
 });

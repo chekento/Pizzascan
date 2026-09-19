@@ -80,7 +80,7 @@ function install(root){
   return {data:{elements},source:successes.map(x=>x.source).join(' + '),sources:successes.map(x=>x.source),complete:true};
  }
  completeOverpass.__pizzascanBuild40=true;
- service.overpass=completeOverpass;
+ if(!(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49))service.overpass=completeOverpass;
 
  async function historyReady(){
   const started=Date.now();

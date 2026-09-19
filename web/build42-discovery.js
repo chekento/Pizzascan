@@ -127,7 +127,7 @@ function install(root){
   }catch(error){console.warn('PizzaScan progressive merge skipped',error);}
  }
 
- if(service&&typeof service.json==='function'){
+ if(service&&typeof service.json==='function'&&!(root.PizzaBuild49||root.PizzaScanDiscovery49?.build>=49)){
   const previous=service.overpass.bind(service);
   service.overpass=async function(query,options={}){
    if(!isDiscoveryQuery(query))return previous(query,options);
