@@ -45,6 +45,8 @@ function query(center,radius,bounds){
  const food=FOOD_AMENITIES;
  const words='pizza|pizzeria|pizzaria|pizze|trattoria|ristorante|osteria|tavola|taverna|enoteca|italian|italiano|italiana|italien|pasta';
  return '[out:json][timeout:45];('+
+  'nwr["amenity"~"'+food+'\"]["name"]('+area+');'+\
+  'nwr["amenity"="food_truck"]["mobile"="yes"]('+area+');'+\
   'nwr["cuisine"~"'+words+'",i]('+area+');'+
   'nwr["cuisine:it"~"'+words+'",i]('+area+');'+
   'nwr["restaurant:type"~"'+words+'",i]('+area+');'+
