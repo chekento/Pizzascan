@@ -18,7 +18,7 @@ const DIRECT_FALLBACK_TIMEOUT=60000;
 const pending=new Map();
 function allowed(url){try{return ENDPOINTS.includes(new URL(url).href);}catch{return false;}}
 function queryFrom(options={}){const body=options.body;if(body instanceof URLSearchParams)return body.get('data')||'';if(typeof body==='string')return new URLSearchParams(body).get('data')||'';return '';}
-function isAndroidNative(root){return !!root.PizzaScanNative&&typeof root.bridge==='function'&&/PizzaScan\/[0-9]/.test(root.navigator?.userAgent||'');}
+function isAndroidNative(root){return typeof root.PizzaScanNative?.postMessage==='function'&&/PizzaScan\/[0-9]/.test(root.navigator?.userAgent||'');}
 function hookReplies(root){
  const bridge=root.PizzaScanBridge;
  if(!bridge||typeof bridge.reply!=='function'||bridge.__overpassReplyHook)return false;
@@ -49,7 +49,8 @@ async function nativeRequest(root,url,query,signal){
  const payload={endpoint:new URL(url).href,query,timeout:NATIVE_TIMEOUT};
  const raw=rawNative(root,payload,signal);
  if(raw)return raw;
- return root.bridge('overpass',payload);
+ if(typeof root.bridge==='function')return root.bridge('overpass',payload);
+ throw Error('Native Overpass bridge unavailable');
 }
 function makeWrapped(root,base){
  const wrapped=async function(url,options={},signal,timeout=18000){
@@ -57,21 +58,37 @@ function makeWrapped(root,base){
   if(!native||!post||!allowed(url)||!query)return base.call(this,url,options,signal,timeout);
   if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
 
-  /* Packaged Android must not depend on WebView CORS for primary POI data. Use
-   * the native message channel directly so Overpass is not cut off by the normal
-   * 15-second UI bridge timeout. */
-  try{
-   const raw=await nativeRequest(root,url,query,signal);
+  /* Packaged Android must not depend on WebView CORS for POI data. Keep the
+   * WebSim query byte-for-byte identical, but if the primary Overpass host is
+   * unreachable, retry that same query through trusted OSM mirrors natively. */
+  const ordered=[new URL(url).href,...ENDPOINTS.filter(endpoint=>endpoint!==new URL(url).href)];
+  const nativeErrors=[];
+  for(const endpoint of ordered){
    if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
-   const data=JSON.parse(String(raw||''));
-   if(!data||!Array.isArray(data.elements))throw Error('Ungültige native Kartendaten');
-   return data;
-  }catch(error){
-   if(signal?.aborted||error?.name==='AbortError')throw error;
+   try{
+    const raw=await nativeRequest(root,endpoint,query,signal);
+    if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+    const data=JSON.parse(String(raw||''));
+    if(!data||!Array.isArray(data.elements))throw Error('Ungültige native Kartendaten');
+    root.PizzaScanNativeOverpass={...(root.PizzaScanNativeOverpass||{}),active:true,nativeFirst:true,mirrorFailover:true,lastEndpoint:endpoint,lastErrors:nativeErrors.slice(),endpoints:ENDPOINTS.slice()};
+    return data;
+   }catch(error){
+    if(signal?.aborted||error?.name==='AbortError')throw error;
+    nativeErrors.push({endpoint,message:error?.message||String(error)});
+   }
   }
 
-  /* Direct WebView fetch is a secondary rescue path only. */
-  return base.call(this,url,options,signal,Math.max(DIRECT_FALLBACK_TIMEOUT,Number(timeout)||0));
+  /* One last direct attempt is allowed for browser/WebView stacks where CORS is
+   * available. Do not leak its generic "Failed to fetch" over the native cause. */
+  try{
+   return await base.call(this,url,options,signal,Math.max(DIRECT_FALLBACK_TIMEOUT,Number(timeout)||0));
+  }catch(directError){
+   const detail=nativeErrors.map(x=>new URL(x.endpoint).hostname+': '+x.message).join(' · ');
+   const error=Error('Kartendaten konnten nicht geladen werden'+(detail?': '+detail:''));
+   error.cause=directError;
+   error.nativeErrors=nativeErrors;
+   throw error;
+  }
  };
  wrapped.__nativeOverpass=true;wrapped.__nativeOverpassInner=base;return wrapped;
 }
@@ -83,7 +100,7 @@ function install(root){
  if(proto&&typeof proto.json==='function'&&!proto.json.__nativeOverpass){proto.json=makeWrapped(root,proto.json);installed=true;}
  if(root.placeService&&typeof root.placeService.json==='function'&&!root.placeService.json.__nativeOverpass){root.placeService.json=makeWrapped(root,root.placeService.json);installed=true;}
  if(installed||proto?.json?.__nativeOverpass||root.placeService?.json?.__nativeOverpass){
-  root.PizzaScanNativeOverpass={active:true,nativeFirst:true,longTimeout:true,prototype:true,endpoints:ENDPOINTS.slice()};
+  root.PizzaScanNativeOverpass={active:true,nativeFirst:true,longTimeout:true,mirrorFailover:true,prototype:true,endpoints:ENDPOINTS.slice()};
   return true;
  }
  return false;
