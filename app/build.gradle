@@ -7,9 +7,9 @@ android {
         applicationId 'cloud.kosch.pizzascan'
         minSdk 26
         targetSdk 36
-        // Build 50: WebSim-exact search with repaired Android native POI transport.
-        versionCode 50
-        versionName '2.3.15'
+        // Build 51: 2026 UI, stable map centers and WebSim-complete Pizza/Trattoria discovery.
+        versionCode 51
+        versionName '2.3.16'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     sourceSets { main { assets.srcDirs = ['../web'] } }
