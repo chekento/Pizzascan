@@ -1,3 +1,12 @@
+## 2.3.21 · Build 56
+
+- Beschleunigt die Suche: die erste erfolgreiche POI-Antwort wird sofort gerendert, spätere OSM-Spiegel werden progressiv zusammengeführt und passende Antworten werden 15 Minuten zwischengespeichert.
+- Die automatische Suche bleibt vollständig WebSim-kompatibel und deckt Pizza, Pizzeria, Trattoria, Ristorante, Osteria, italienische Cuisine sowie die übrigen relevanten OSM-Signale im sichtbaren Kartenausschnitt ab.
+- Kartenbewegungen lösen die Suche schneller aus; die Lupe dreht sich nicht mehr, der Suchbutton zeigt den laufenden Abruf mit einer klaren Puls-/Busy-Animation.
+- Die Suchleiste schlägt Adressen und Restaurants vor und unterstützt alle relevanten Gastro-Kategorien.
+- Import und Export sind im Settings-Bereich sichtbar. Orte, Koordinaten, gemeinsame 0,1–10,0-Bewertungen, Besuche, Favoriten und Rezensionen werden zusammengeführt statt überschrieben; die Sammlung wurde mit 12.000 Orts-/Bewertungsdatensätzen geprüft. Große Android-Exporte werden auf dem Gerät gestreamt und bis 512 MB begrenzt.
+- Place-Detail, eigene Bewertung und Rezension verwenden je Ort denselben synchronisierten Bewertungswert. Einklappbare Details und Einstellungen bleiben gespeichert.
+
 ## 2.3.20 · Build 55
 
 - Repariert die zuletzt fehlenden WebSim-/OSM-Suchergebnisse: Die automatische Suche bleibt im sichtbaren Karten-BBOX und deckt neben Pizza auch Trattoria, Ristorante, Osteria, italienische Küche und die übrigen relevanten Gastro-Signale ab.
