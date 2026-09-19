@@ -21,7 +21,7 @@ test('packaged Android uses the long raw native channel before WebView Overpass'
  let posted=null,webCalls=0,bridgeCalls=0;
  const root={
   crypto:{randomUUID:()=> 'native-overpass-test'},
-  navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.5 (+https://github.com/chekento/Pizzascan)'},
+  navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.15 (+https://github.com/chekento/Pizzascan)'},
   PizzaScanBridge:{reply(){throw Error('unhandled reply');}},
   PizzaScanNative:{postMessage(message){
    posted=JSON.parse(message);
@@ -42,21 +42,34 @@ test('packaged Android uses the long raw native channel before WebView Overpass'
  assert.equal(result.elements.length,1);
 });
 
-test('packaged Android falls back to direct Overpass when native transport fails',async()=>{
- let bridgeCalls=0,webCalls=0,seenTimeout=0;
+test('packaged Android retries the identical query natively on a trusted mirror before WebView fetch',async()=>{
+ let webCalls=0;const posted=[];
  const root={
-  navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.5 (+https://github.com/chekento/Pizzascan)'},
-  PizzaScanNative:{},
-  bridge:async()=>{bridgeCalls++;throw Error('native provider failure');},
-  placeService:{json:async(url,options,signal,timeout)=>{webCalls++;seenTimeout=timeout;return {elements:[{type:'node',id:1}]};}}
+  crypto:{randomUUID:()=> 'native-overpass-'+(posted.length+1)},
+  navigator:{userAgent:'Mozilla/5.0 PizzaScan/2.3.15 (+https://github.com/chekento/Pizzascan)'},
+  PizzaScanBridge:{reply(){throw Error('unhandled reply');}},
+  PizzaScanNative:{postMessage(message){
+   const payload=JSON.parse(message);posted.push(payload);
+   setImmediate(()=>{
+    if(payload.endpoint===N.ENDPOINTS[0])root.PizzaScanBridge.reply({id:payload.id,error:'primary unavailable'});
+    else root.PizzaScanBridge.reply({id:payload.id,value:JSON.stringify({elements:[{type:'node',id:2}]})});
+   });
+  }},
+  placeService:{json:async()=>{webCalls++;throw Error('WebView CORS path must not run when a native mirror succeeds');}}
  };
+ assert.equal(N.isAndroidNative(root),true,'raw native channel does not depend on the generic bridge function');
  N.install(root);
- const query='[out:json];nwr["amenity"="restaurant"](around:10000,53.67,10.24);out;';
+ const query='[out:json][timeout:60];node["cuisine"="pizza"](1,2,3,4);out body; >; out skel qt;';
  const result=await root.placeService.json(N.ENDPOINTS[0],{method:'POST',body:new URLSearchParams({data:query})},null,8000);
- assert.equal(bridgeCalls,1);
- assert.equal(webCalls,1);
- assert.ok(seenTimeout>=N.DIRECT_FALLBACK_TIMEOUT);
- assert.equal(result.elements.length,1);
+ assert.equal(webCalls,0);
+ assert.equal(posted.length,2);
+ assert.equal(posted[0].endpoint,N.ENDPOINTS[0]);
+ assert.equal(posted[1].endpoint,N.ENDPOINTS[1]);
+ assert.equal(posted[0].query,query);
+ assert.equal(posted[1].query,query,'mirror transport must not alter the WebSim query');
+ assert.equal(result.elements[0].id,2);
+ assert.equal(root.PizzaScanNativeOverpass.mirrorFailover,true);
+ assert.equal(root.PizzaScanNativeOverpass.lastEndpoint,N.ENDPOINTS[1]);
 });
 
 test('ordinary browser keeps the existing web transport',async()=>{
