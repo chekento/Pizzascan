@@ -3,7 +3,7 @@
 const TYPES={pizzeria:{emoji:'🍕',name:'Pizzeria'},trattoria:{emoji:'🍝',name:'Trattoria'},ristorante:{emoji:'🍽️',name:'Ristorante'},osteria:{emoji:'🍷',name:'Osteria'},cafe:{emoji:'☕',name:'Café'},fast_food:{emoji:'🍔',name:'Imbiss / Schnellrestaurant'},food_truck:{emoji:'🚚',name:'Foodtruck'},vending_pizza:{emoji:'🤖',name:'Pizzaautomat'},other:{emoji:'🍴',name:'Weitere Orte'}};
 const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|bar|pub|biergarten|takeaway|food_court';
 const providers=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter'];
-const fallbackTerms=['pizza','pizzeria','trattoria','ristorante','osteria','italian restaurant','restaurant','cafe','imbiss','food truck','pizza vending','takeaway','bar','biergarten'];
+const fallbackTerms=['pizza','pizzeria','restaurant','cafe','trattoria','ristorante','osteria','italian restaurant','imbiss','food truck','pizza vending','takeaway','bar','biergarten'];
 const defaults={onlyOpen:false,unknownHours:false,includeItalian:true,radius:5,types:Object.keys(TYPES),autoSearch:false,sort:'distance',travelMode:'walking',hideVisited:false};
 const text=v=>String(v??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 function address(t){return t['addr:full']||[[t['addr:street']||t['addr:place'],t['addr:housenumber']].filter(Boolean).join(' '),[t['addr:postcode'],t['addr:city']||t['addr:town']||t['addr:village']].filter(Boolean).join(' ')].filter(Boolean).join(', ');}
@@ -20,8 +20,8 @@ function normalize(element,options={}){
  const italianCuisine=/(^| )(italian|italiano|italiana|italien|italienne|italienisch|pasta|mediterranean)( |$)/.test(cuisineText);
  const italianName=/(^| )(trattoria|ristorante|osteria|tavola|taverna|enoteca|italian|italiano|italiana|italiener|italienisch)( |$)/.test(text([t.name,t.brand,t.official_name,t.alt_name,t.operator,t.description].filter(Boolean).join(' ')));
  const relevantName=pizzaSignal||italianName;
- if(!pizzaSignal&&!italianCuisine&&!italianName)return null;
- if(!foodAmenity&&!foodShop&&!t.vending&&!t['vending:pizza']&&!options.allowNamed)return null;
+ if(!pizzaSignal&&!italianCuisine&&!italianName&&!options.allowNamed)return null;
+ if(!foodAmenity&&!foodShop&&!t.vending&&!t['vending:pizza']&&!relevantName)return null;
  const typeText=text([t.name,t.brand,t.official_name,t.alt_name,t.operator,t.cuisine,t['cuisine:it'],t['restaurant:type']].filter(Boolean).join(' '));
  const pizzaVending=/pizza/i.test(String(t.vending||''))||t['vending:pizza']==='yes';
  let type='other';
@@ -42,7 +42,7 @@ function merge(old,incoming){const result=new Map(old.map(p=>[p.placeId,p]));for
 function query(center,radius,bounds){
  if(!C.coords(center.lat,center.lng))throw Error('Ungültiger Suchmittelpunkt');
  const area=radius?('around:'+Math.round(Math.min(10,Math.max(.5,radius))*1000)+','+center.lat+','+center.lng):[bounds.south,bounds.west,bounds.north,bounds.east].join(',');
- const food='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
+ const food=FOOD_AMENITIES;
  const words='pizza|pizzeria|pizzaria|pizze|trattoria|ristorante|osteria|tavola|taverna|enoteca|italian|italiano|italiana|italien|pasta';
  return '[out:json][timeout:45];('+
   'nwr["cuisine"~"'+words+'",i]('+area+');'+
