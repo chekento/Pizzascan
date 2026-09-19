@@ -28,7 +28,7 @@ Vor einer Deinstallation persönliche PizzaScan-Daten exportieren bzw. sichern. 
 
 Für 2.3.18 ist [SHA256SUMS-2.3.18.txt](SHA256SUMS-2.3.18.txt) maßgeblich. Der aktuelle veröffentlichte Build hat die SHA-256-Prüfsumme:
 
-`__PENDING_BUILD53_SHA256__`
+`2d427532d00a865de1ab840b66fcc96e0764ecc11d51d30f2a158077caf0f11a`
 
 Die Prüfsummendatei wurde vom erfolgreichen CI-Publish zusammen mit `PizzaScan-2.3.18.apk` aktualisiert.
 
