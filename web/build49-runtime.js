@@ -1,4 +1,4 @@
-/* PizzaScan Build 50: Build 49 WebSim-exact search + Android native POI transport repair. */
+/* PizzaScan Build 51: WebSim-complete discovery, stable map geometry and Android transport failover. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -6,11 +6,12 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 
-const VERSION='2.3.15';
-const BUILD=50;
-const MIGRATION='pizzascan-build49-websim-exact-v1';
-const QUERY_MARKER='pizzascan-build49-websim-source-exact';
+const VERSION='2.3.16';
+const BUILD=51;
+const MIGRATION='pizzascan-build51-search-migration-v1';
+const QUERY_MARKER='pizzascan-build51-websim-coverage-complete';
 const ENDPOINT='https://overpass-api.de/api/interpreter';
+const ENDPOINTS=[ENDPOINT,'https://overpass.private.coffee/api/interpreter','https://overpass.osm.jp/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const NOMINATIM='https://nominatim.openstreetmap.org/search';
 
 function validBounds(b){
@@ -25,22 +26,31 @@ function bbox(bounds){
  * Build 49 deliberately keeps the returned element semantics literal too. */
 function websimQuery(bounds){
   const b=bbox(bounds),q=[];
+  const food='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
+  const pizza='pizza|pizzeria|pizzaria|pizze';
+  const italian='italian|italiano|italiana|italien|italienne|italienisch|pasta|mediterranean';
+  const italianWords='trattoria|ristorante|osteria|tavola|taverna|enoteca|italian|italiano|italiana|italien';
+  const nameWords=pizza+'|'+italianWords;
   q.push('[out:json][timeout:60];(');
   q.push('/* '+QUERY_MARKER+' */');
-  q.push('node["cuisine"="pizza"]('+b+');way["cuisine"="pizza"]('+b+');relation["cuisine"="pizza"]('+b+');');
-  q.push('node["amenity"="restaurant"]["cuisine"="italian"]('+b+');way["amenity"="restaurant"]["cuisine"="italian"]('+b+');relation["amenity"="restaurant"]["cuisine"="italian"]('+b+');');
-  q.push('node["amenity"="restaurant"]["cuisine"~"pizza|pizzeria"]('+b+');way["amenity"="restaurant"]["cuisine"~"pizza|pizzeria"]('+b+');relation["amenity"="restaurant"]["cuisine"~"pizza|pizzeria"]('+b+');');
-  q.push('node["vending"="pizza"]('+b+');node["vending:pizza"="yes"]('+b+');');
-  q.push('node["amenity"="cafe"]["cuisine"~"pizza|italian"]('+b+');way["amenity"="cafe"]["cuisine"~"pizza|italian"]('+b+');relation["amenity"="cafe"]["cuisine"~"pizza|italian"]('+b+');');
-  q.push('node["amenity"="fast_food"]["cuisine"~"pizza|italian"]('+b+');way["amenity"="fast_food"]["cuisine"~"pizza|italian"]('+b+');relation["amenity"="fast_food"]["cuisine"~"pizza|italian"]('+b+');');
-  q.push('node["amenity"="food_truck"]["cuisine"~"pizza|italian"]('+b+');way["amenity"="food_truck"]["cuisine"~"pizza|italian"]('+b+');relation["amenity"="food_truck"]["cuisine"~"pizza|italian"]('+b+');');
-  q.push('node["speciality"~"pizza",i]('+b+');way["speciality"~"pizza",i]('+b+');relation["speciality"~"pizza",i]('+b+');');
-  q.push('node["amenity"~"bar|pub"]["cuisine"~"pizza|italian"]('+b+');way["amenity"~"bar|pub"]["cuisine"~"pizza|italian"]('+b+');relation["amenity"~"bar|pub"]["cuisine"~"pizza|italian"]('+b+');');
-  q.push('node["name"~"pizza|pizzeria|pizze",i]('+b+');way["name"~"pizza|pizzeria|pizze",i]('+b+');relation["name"~"pizza|pizzeria|pizze",i]('+b+');');
-  q.push('node["description"~"pizza",i]('+b+');way["description"~"pizza",i]('+b+');relation["description"~"pizza",i]('+b+');');
-  q.push('node["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');way["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');relation["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');');
-  q.push(');out body; >; out skel qt;');
-  return q.join('\n');
+  q.push('nwr["cuisine"~"'+pizza+'|'+italian+'",i]('+b+');');
+  q.push('nwr["cuisine:it"~"'+pizza+'|'+italian+'",i]('+b+');');
+  q.push('nwr["restaurant:type"~"'+pizza+'|'+italianWords+'",i]('+b+');');
+  q.push('nwr["amenity"="restaurant"]["cuisine"~"'+pizza+'|'+italian+'",i]('+b+');');
+  q.push('nwr["amenity"~"'+food+'"]["cuisine"~"'+pizza+'|'+italian+'",i]('+b+');');
+  q.push('nwr["amenity"~"'+food+'"]["name"~"'+nameWords+'",i]('+b+');');
+  q.push('nwr["amenity"~"'+food+'"]["brand"~"'+nameWords+'",i]('+b+');');
+  q.push('nwr["amenity"~"'+food+'"]["official_name"~"'+nameWords+'",i]('+b+');');
+  q.push('nwr["amenity"~"'+food+'"]["alt_name"~"'+nameWords+'",i]('+b+');');
+  q.push('nwr["amenity"~"'+food+'"]["operator"~"'+nameWords+'",i]('+b+');');
+  q.push('nwr["amenity"~"'+food+'"]["description"~"'+nameWords+'",i]('+b+');');
+  q.push('nwr["amenity"~"'+food+'"]["speciality"~"'+pizza+'",i]('+b+');');
+  q.push('nwr["shop"~"bakery|deli|convenience|food"]["name"~"'+nameWords+'",i]('+b+');');
+  q.push('nwr["shop"~"bakery|deli|convenience|food"]["product"~"'+pizza+'",i]('+b+');');
+  q.push('nwr["vending"~"pizza",i]('+b+');');
+  q.push('nwr["vending:pizza"="yes"]('+b+');');
+  q.push(');out body center;');
+  return q.join('\\n');
 }
 
 function migrationConfig(previous={}){
@@ -49,9 +59,9 @@ function migrationConfig(previous={}){
 function migrate(root){
   try{
     if(!root.localStorage||root.localStorage.getItem(MIGRATION)||typeof settings==='undefined'||!settings)return false;
-    settings.filters=migrationConfig(settings.filters||{});
+    settings.filters=migrationConfig(settings.filters||{},Object.keys(root.PizzaPlaces?.TYPES||{}));
     try{saveSettings();}catch{}
-    ['pizzascan-map-cache-v3','pizzascan-map-cache-v2'].forEach(k=>root.localStorage.removeItem(k));
+    ['pizzascan-map-cache-v3','pizzascan-map-cache-v2','pizzascan-first-map-discovery-v1','pizzascan-first-map-discovery-v2'].forEach(k=>root.localStorage.removeItem(k));
     root.localStorage.setItem('pizzascan-build48-nearby-finalized-v1','1');
     try{if(typeof mapAreas!=='undefined')mapAreas=[];if(typeof mapPool!=='undefined'&&Array.isArray(mapPool))mapPool=[];}catch{}
     root.localStorage.setItem(MIGRATION,'1');
@@ -97,21 +107,29 @@ function makeOverpass(root,previous){
       throw Error('Kartenabfrage nicht verfügbar');
     }
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
-    options.onStatus?.('WebSim-Suche · Pizza-Orte werden geladen …');
-    try{
-      const data=await this.json(ENDPOINT,{method:'POST',body:new URLSearchParams({data:query})},options.signal,65000);
-      if(!Array.isArray(data?.elements)||data.remark)throw Error(data?.remark||'Unvollständige Kartendaten');
-      const elements=tagHits(data.elements,root);
-      this.lastErrors=[];
-      options.onStatus?.(elements.length?String(elements.length)+' WebSim-Treffer · OpenStreetMap':'Keine Pizza-Orte im sichtbaren Kartenausschnitt');
-      return {data:{elements},source:'overpass-api.de · WebSim',sources:['overpass-api.de'],complete:true,progressive:false,websimExact:true};
-    }catch(error){
-      if(options.signal?.aborted||error?.name==='AbortError')throw error;
-      this.lastErrors=[{source:'overpass-api.de',message:error?.message||String(error)}];
-      throw error;
+    options.onStatus?.('PizzaScan-Suche · Pizza, Trattoria & italienische Orte werden geladen …');
+    const endpoints=root.PizzaScanNative?[ENDPOINT]:ENDPOINTS;
+    const errors=[];
+    for(const endpoint of endpoints){
+      if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+      try{
+        const data=await this.json(endpoint,{method:'POST',body:new URLSearchParams({data:query})},options.signal,65000);
+        if(!Array.isArray(data?.elements)||data.remark)throw Error(data?.remark||'Unvollständige Kartendaten');
+        const elements=tagHits(data.elements,root);
+        this.lastErrors=errors;
+        options.onStatus?.(elements.length?String(elements.length)+' relevante Treffer · OpenStreetMap':'Keine relevanten Orte im sichtbaren Kartenausschnitt');
+        return {data:{elements},source:new URL(endpoint).hostname+' · WebSim',sources:[new URL(endpoint).hostname],complete:true,progressive:false,websimExact:true};
+      }catch(error){
+        if(options.signal?.aborted||error?.name==='AbortError')throw error;
+        errors.push({source:new URL(endpoint).hostname,message:error?.message||String(error)});
+      }
     }
+    this.lastErrors=errors;
+    const detail=errors.map(e=>e.source+': '+e.message).join(' · ');
+    throw Error('Kartendaten konnten nicht geladen werden'+(detail?': '+detail:''));
   };
   wrapped.__build49=true;
+  wrapped.__build51=true;
   wrapped.__inner=previous;
   return wrapped;
 }
@@ -198,20 +216,22 @@ function installStyles(root){
   const d=root.document;if(!d||d.getElementById('build49-ui'))return;
   const style=d.createElement('style');style.id='build49-ui';
   style.textContent=[
-    '#map-view .map-control-panel{margin:4px 0 3px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}',
-    '#map-view .map-control-panel .map-filters{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;gap:5px!important;width:100%!important;overflow-x:auto!important;overscroll-behavior-x:contain!important;scrollbar-width:none!important;padding:0 0 1px!important;margin:0!important}',
+    '#map-view .map-control-panel{margin:10px 0 8px!important;padding:5px!important;border:1px solid var(--line)!important;border-radius:18px!important;background:rgba(255,255,255,.72)!important;box-shadow:0 8px 24px rgba(23,32,31,.08)!important}',
+    '#map-view .map-control-panel .map-filters{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;gap:7px!important;width:100%!important;overflow-x:auto!important;overscroll-behavior-x:contain!important;scrollbar-width:none!important;padding:0!important;margin:0!important}',
     '#map-view .map-control-panel .map-filters::-webkit-scrollbar{display:none!important}',
-    '#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{flex:1 1 0!important;min-width:max-content!important;width:auto!important;height:27px!important;min-height:27px!important;padding:0 7px!important;margin:0!important;border:1px solid var(--line)!important;border-radius:999px!important;background:var(--surface)!important;color:var(--ink)!important;box-shadow:none!important;font-size:9.8px!important;font-weight:780!important;line-height:1!important;white-space:nowrap!important;text-align:center!important}',
+    '#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{flex:1 1 0!important;min-width:max-content!important;width:auto!important;height:36px!important;min-height:36px!important;padding:0 12px!important;margin:0!important;border:1px solid var(--line)!important;border-radius:12px!important;background:rgba(255,255,255,.82)!important;color:var(--ink)!important;box-shadow:0 2px 8px rgba(23,32,31,.05)!important;font-size:11px!important;font-weight:780!important;line-height:1!important;white-space:nowrap!important;text-align:center!important;transition:transform .16s ease,background .16s ease,border-color .16s ease!important}',
+    '#map-view .map-control-panel .map-filters .filter-chip:active{transform:scale(.98)!important}',
     '#map-view .map-control-panel .map-filters .filter-chip.active,#map-view .map-control-panel .map-filters .filter-chip[aria-pressed="true"]{border-color:var(--green)!important;background:#e1f1e4!important;color:#246939!important}',
     '#map-view .map-control-meta{display:none!important}#map-view .build44-cache-note{display:none!important}',
-    '#map-view .map-caption{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;align-items:center!important;gap:5px!important;min-height:24px!important;margin:2px 0 4px!important;padding:2px 3px 2px 7px!important;border:1px solid var(--line)!important;border-radius:10px!important;background:var(--surface)!important;box-shadow:none!important}',
+    '#map-view .map-caption{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;align-items:center!important;gap:8px!important;min-height:42px!important;margin:0 0 10px!important;padding:7px 8px 7px 13px!important;border:1px solid var(--line)!important;border-radius:16px!important;background:rgba(255,255,255,.72)!important;box-shadow:0 6px 22px rgba(23,32,31,.06)!important}',
     '#map-view .map-caption::before{display:none!important}',
-    '#map-view .map-caption #map-status{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:var(--muted)!important;font-size:9.2px!important;line-height:1.1!important}',
-    '#map-view .map-caption #result-count{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:18px!important;padding:0 5px!important;margin:0!important;border-radius:999px!important;background:var(--bg)!important;color:var(--muted)!important;font-size:8.6px!important;font-weight:800!important;white-space:nowrap!important}',
-    '#map-view .map-caption #map-refresh{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:52px!important;width:auto!important;height:20px!important;min-height:20px!important;padding:0 6px!important;margin:0!important;border:0!important;border-radius:8px!important;background:var(--ink)!important;color:var(--bg)!important;box-shadow:none!important;font-size:9px!important;font-weight:800!important;white-space:nowrap!important}',
+    '#map-view .map-caption #map-status{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:var(--muted)!important;font-size:10px!important;line-height:1.2!important}',
+    '#map-view .map-caption #result-count{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:25px!important;padding:0 8px!important;margin:0!important;border-radius:9px!important;background:var(--bg)!important;color:var(--muted)!important;font-size:10px!important;font-weight:800!important;white-space:nowrap!important}',
+    '#map-view .map-caption #map-refresh{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:88px!important;width:auto!important;height:32px!important;min-height:32px!important;padding:0 11px!important;margin:0!important;border:0!important;border-radius:10px!important;background:var(--ink)!important;color:var(--bg)!important;box-shadow:0 4px 12px rgba(23,32,31,.16)!important;font-size:10px!important;font-weight:800!important;white-space:nowrap!important}',
     '#map-view #map-frame{margin-top:0!important}',
-    '@media(max-width:350px){#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{padding:0 5px!important;font-size:9.2px!important}#map-view .map-caption #map-refresh{min-width:46px!important;padding:0 4px!important}}',
-    '.dark #map-view .map-control-panel .map-filters .filter-chip.active,.dark #map-view .map-control-panel .map-filters .filter-chip[aria-pressed="true"]{background:#274a31!important;color:#d3f7d9!important}'
+    '@media(max-width:500px){#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{padding:0 10px!important;font-size:10px!important}}',
+    '@media(max-width:350px){#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{padding:0 8px!important;font-size:9.5px!important}#map-view .map-caption #map-refresh{min-width:76px!important;padding:0 8px!important}}',
+    '.dark #map-view .map-control-panel{background:rgba(28,37,36,.78)!important}.dark #map-view .map-control-panel .map-filters .filter-chip,.dark #map-view .map-caption{background:rgba(28,37,36,.86)!important}.dark #map-view .map-control-panel .map-filters .filter-chip.active,.dark #map-view .map-control-panel .map-filters .filter-chip[aria-pressed="true"]{background:#274a31!important;color:#d3f7d9!important}'
   ].join('');
   d.head.appendChild(style);
 }
@@ -245,7 +265,7 @@ function compactUi(root){
     auto.checked=true;auto.disabled=true;
     const label=auto.closest?.('label');if(label)label.title='WebSim-Modus: Nach Kartenbewegungen wird automatisch neu gesucht.';
   }
-  const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 50:</strong> WebSim-Originalsuche: sichtbarer Kartenausschnitt, identische Pizza-/Italien-OSM-Suchfamilien, Suche nach Kartenbewegung und Nominatim für Ort/Adresse.';
+  const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 51:</strong> WebSim-komplette Kartenausschnittsuche für Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Treffer; Wege und Relationen werden mit Mittelpunkt übernommen.';
 }
 
 function installSheetHook(root){
@@ -270,13 +290,13 @@ function syncVersion(root){
     const badge=root.document?.querySelector('.brand small');
     if(badge){if(badge.textContent!==VERSION)badge.textContent=VERSION;if(!badge.__build49Observer){badge.__build49Observer=true;new MutationObserver(()=>{if(badge.textContent!==VERSION)badge.textContent=VERSION;}).observe(badge,{childList:true,characterData:true,subtree:true});}}
   }catch{}
-  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.15.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
+  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.16.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
 }
 
 function install(root){
   if(!root.document||!root.PizzaPlaces)return false;
   lockQuery(root);
-  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-exact',viewportBBox:true,exactSelectorFamilies:12,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:true};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;
+  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice()};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;
