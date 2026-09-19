@@ -1,4 +1,4 @@
-/* PizzaScan Build 53: WebSim-complete discovery, stable map geometry and Android transport failover. */
+/* PizzaScan Build 54: WebSim-complete discovery, stable map geometry and Android transport failover. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -6,10 +6,10 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 
-const VERSION='2.3.18';
-const BUILD=53
-const MIGRATION='pizzascan-build53-search-migration-v1';
-const QUERY_MARKER='pizzascan-build53-websim-coverage-complete';
+const VERSION='2.3.19';
+const BUILD=54
+const MIGRATION='pizzascan-build54-search-migration-v1';
+const QUERY_MARKER='pizzascan-build54-websim-coverage-complete';
 const ENDPOINT='https://overpass-api.de/api/interpreter';
 const ENDPOINTS=[ENDPOINT,'https://overpass.private.coffee/api/interpreter','https://overpass.osm.jp/api/interpreter','https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
 const NOMINATIM='https://nominatim.openstreetmap.org/search';
@@ -137,7 +137,7 @@ function makeOverpass(root,previous){
     throw Error('Kartendaten konnten nicht geladen werden'+(detail?': '+detail:''));
   };
   wrapped.__build49=true;
-  wrapped.__build51=true;wrapped.__build52=true;wrapped.__build53=true;
+  wrapped.__build51=true;wrapped.__build52=true;wrapped.__build53=true;wrapped.__build54=true;
   wrapped.__inner=previous;
   return wrapped;
 }
@@ -273,7 +273,7 @@ function compactUi(root){
     auto.checked=true;auto.disabled=true;
     const label=auto.closest?.('label');if(label)label.title='WebSim-Modus: Nach Kartenbewegungen wird automatisch neu gesucht.';
   }
-  const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 53:</strong> WebSim-komplette Kartenausschnittsuche für Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Treffer; Wege und Relationen werden mit Mittelpunkt übernommen.';
+  const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 54:</strong> WebSim-komplette Kartenausschnittsuche für Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Treffer; Wege und Relationen werden mit Mittelpunkt übernommen.';
 }
 
 function installSheetHook(root){
@@ -290,6 +290,15 @@ function installSheetHook(root){
   }catch{return false;}
 }
 
+function installBuild54Stability(root){
+ try{
+  if(typeof drawMarkers==='function'&&!drawMarkers.__build54PopupGuard){const previous=drawMarkers;const wrapped=function(){try{if(typeof map!=='undefined'&&map?._popup?._map)return;}catch{}return previous.apply(this,arguments);};wrapped.__build54PopupGuard=true;wrapped.__inner=previous;drawMarkers=wrapped;}
+  if(typeof map!=='undefined'&&map&&!map.__build54PopupEvents){map.__build54PopupEvents=true;map.on('popupopen',()=>{root.__pizzaScanPopupOpen=true;});map.on('popupclose',()=>{root.__pizzaScanPopupOpen=false;});}
+ }catch(error){console.warn('Build54 popup stability skipped',error);}
+}
+function scheduleBuild54InitialSearch(root){
+ try{if(root.__pizzaScanInitialDiscoveryQueued||root.__pizzaBuild54InitialSearch)return;if(typeof settings==='undefined'||!settings.welcomed||typeof map==='undefined'||!map)return;if(root.PizzaScanGlobalFresh&&map.getZoom()<11)return;root.__pizzaBuild54InitialSearch=true;root.setTimeout(()=>{try{if(!mapLoading)loadPlaces({force:true});}catch{}},140);}catch{}
+}
 function syncVersion(root){
   try{
     const app=root.PizzaScan;if(app){const get=()=>VERSION;get.__build49=true;Object.defineProperty(app,'version',{configurable:true,enumerable:true,get,set(){}});}
@@ -298,25 +307,25 @@ function syncVersion(root){
     const badge=root.document?.querySelector('.brand small');
     if(badge){if(badge.textContent!==VERSION)badge.textContent=VERSION;if(!badge.__build49Observer){badge.__build49Observer=true;new MutationObserver(()=>{if(badge.textContent!==VERSION)badge.textContent=VERSION;}).observe(badge,{childList:true,characterData:true,subtree:true});}}
   }catch{}
-  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.18.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
+  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.19.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
 }
 
 function install(root){
   if(!root.document||!root.PizzaPlaces)return false;
   lockQuery(root);
-  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice()};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;root.PizzaScanDiscovery52=root.PizzaScanDiscovery49;root.PizzaScanDiscovery53=root.PizzaScanDiscovery49;
+  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice()};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;root.PizzaScanDiscovery52=root.PizzaScanDiscovery49;root.PizzaScanDiscovery53=root.PizzaScanDiscovery49;root.PizzaScanDiscovery54=root.PizzaScanDiscovery49;
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;
-    syncVersion(root);lockQuery(root);installMapPolicy(root);installSheetHook(root);compactUi(root);installOverpass(root);installSearch(root);
+    syncVersion(root);lockQuery(root);installMapPolicy(root);installSheetHook(root);compactUi(root);installOverpass(root);installSearch(root);installBuild54Stability(root);scheduleBuild54InitialSearch(root);
     let mapReady=false;try{mapReady=typeof map!=='undefined'&&!!map&&typeof loadPlaces==='function';}catch{}
     if(refresh&&mapReady){refresh=false;root.setTimeout(()=>{try{loadPlaces({force:true});}catch{}},80);}
     if((typeof settings==='undefined'||!mapReady)&&attempts<120)root.setTimeout(ready,50);
   };
   ready();
-  [0,60,120,300,700,1500,3000,6000].forEach(ms=>root.setTimeout(()=>{syncVersion(root);lockQuery(root);installMapPolicy(root);installSheetHook(root);compactUi(root);installOverpass(root);installSearch(root);},ms));
+  [0,60,120,300,700,1500,3000,6000].forEach(ms=>root.setTimeout(()=>{syncVersion(root);lockQuery(root);installMapPolicy(root);installSheetHook(root);compactUi(root);installOverpass(root);installSearch(root);installBuild54Stability(root);scheduleBuild54InitialSearch(root);},ms));
   return true;
 }
 
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,lockQuery,installMapPolicy,makeOverpass,installOverpass,installSearch,compactUi,installSheetHook,syncVersion,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,lockQuery,installMapPolicy,makeOverpass,installOverpass,installSearch,compactUi,installSheetHook,syncVersion,installBuild54Stability,scheduleBuild54InitialSearch,install};
 });

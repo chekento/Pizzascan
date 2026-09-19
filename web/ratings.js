@@ -53,14 +53,14 @@
       if(!old||row.iat>old.iat||row.iat===old.iat&&row.signature>old.signature)authors.set(row.actor,row);
     }
     const selected=[...authors.values()];if(!selected.length)return {rating:null,count:0};
-    // Same 1–5 scale as Mangrove's reference UI: 0=>1, 50=>3, 100=>5.
+    // PizzaScan normalizes the public 0–100 score to the shared 0.1–10.0 app scale.
     // The published one-decimal value is also the value used by the slider.
-    const raw=1+selected.reduce((sum,r)=>sum+r.rating,0)/selected.length/25;
-    return {rating:Math.round((raw+Number.EPSILON)*10)/10,count:selected.length,
+    const raw=selected.reduce((sum,r)=>sum+r.rating,0)/selected.length/10;
+    return {rating:Math.max(.1,Math.round((raw+Number.EPSILON)*10)/10),count:selected.length,
       license:selected.some(r=>r.license==='CC-BY-SA-4.0')?'CC-BY-SA-4.0':'CC-BY-4.0',
       latest:Math.max(...selected.map(r=>r.iat))*1000,subjects:[...new Set(selected.map(r=>r.sub))]};
   }
-  function minimum(value){const n=Number(value);return Number.isFinite(n)?Math.round(Math.max(0,Math.min(5,n))*10)/10:0;}
+  function minimum(value){const n=Number(value);return Number.isFinite(n)?Math.round(Math.max(0,Math.min(10,n))*10)/10:0;}
   function passes(summary,threshold,includeUnknown=false){const min=minimum(threshold);return min===0||summary?.rating!=null&&summary.count>0&&summary.rating>=min||summary?.rating==null&&includeUnknown;}
   function sourceUrl(subject){return 'https://mangrove.reviews/search?'+new URLSearchParams({sub:subject});}
   function aborted(signal){if(signal?.aborted)throw new DOMException('Aborted','AbortError');}
@@ -145,5 +145,5 @@
       return {errors,complete:!errors.length};
     }
   }
-  return {Service,aggregate,normalize,geo,osmId,matches,minimum,passes,sourceUrl,licenses,ENDPOINT,CACHE_KEY,TTL};
+  const scaleToTen=value=>Math.max(.1,Math.round(Math.max(0,Math.min(100,Number(value)||0))/10*10)/10);return {Service,aggregate,normalize,geo,osmId,matches,minimum,passes,scaleToTen,sourceUrl,licenses,ENDPOINT,CACHE_KEY,TTL};
 });

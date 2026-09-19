@@ -37,20 +37,9 @@ function mergeVisitRecords(oldRecord,newRecord){
   const now=new Date().toISOString();
   return {placeId:incoming.place.placeId,place:incoming.place,firstVisitedAt:old?.firstVisitedAt||incoming.firstVisitedAt||now,updatedAt:incoming.updatedAt||now,events:[...events.values()].sort((a,b)=>a.updatedAt.localeCompare(b.updatedAt)),openReviews:{...(old?.openReviews||{}),...(incoming.openReviews||{})}};
 }
-function archiveObject(records){
-  return {format:ARCHIVE_FORMAT,version:ARCHIVE_VERSION,exportedAt:new Date().toISOString(),visits:(records||[]).map(r=>mergeVisitRecords(null,r))};
-}
-function archiveToMarkdown(records){
-  const data=archiveObject(records),lines=['# PizzaScan Besuchsarchiv','','<!-- pizzascan-visited-v1 -->','',`Exportiert: ${data.exportedAt}`,'',`Besuchte/bewertete Orte: ${data.visits.length}`,''];
-  for(const record of data.visits){
-    lines.push(`## ${record.place.name.replace(/[\r\n#]+/g,' ').trim()}`,'',`- PizzaScan-ID: \`${record.placeId}\``,`- Position: ${record.place.lat.toFixed(6)}, ${record.place.lng.toFixed(6)}`);
-    if(record.place.address)lines.push(`- Adresse: ${String(record.place.address).replace(/[\r\n]+/g,' ')}`);
-    if(record.events.length)lines.push(`- Bewertungen: ${record.events.map(e=>`${e.rating.toFixed(1)}/10`).join(', ')}`);
-    lines.push('');
-  }
-  lines.push('## Maschinenlesbares Backup','','```json',JSON.stringify(data,null,2),'```','');
-  return lines.join('\n');
-}
+function cleanOptionalPlaces(groups){const out=new Map();for(const place of groups||[])try{const clean=cleanPlace(place);out.set(clean.placeId,clean);}catch{}return [...out.values()];}
+function archiveObject(records,bundle={}){const visits=(records||[]).map(r=>mergeVisitRecords(null,r)),places=cleanOptionalPlaces([...(bundle.places||[]),...(bundle.saved||[]),...visits.map(r=>r.place)]);return {format:ARCHIVE_FORMAT,version:ARCHIVE_VERSION,exportedAt:new Date().toISOString(),visits,places,saved:cleanOptionalPlaces(bundle.saved||[]),reports:Array.isArray(bundle.reports)?bundle.reports:[],drafts:bundle.drafts&&typeof bundle.drafts==='object'?bundle.drafts:{},ratings:bundle.ratings&&typeof bundle.ratings==='object'?bundle.ratings:{},settings:bundle.settings&&typeof bundle.settings==='object'?bundle.settings:{}};}
+function archiveToMarkdown(records,bundle={}){const data=archiveObject(records,bundle),lines=['# PizzaScan Besuchsarchiv','','<!-- pizzascan-visited-v1 -->','',`Exportiert: ${data.exportedAt}`,'',`Gesammelte Orte: ${data.places.length}`,`Besuchte/bewertete Orte: ${data.visits.length}`,''];for(const record of data.visits){lines.push(`## ${record.place.name.replace(/[\r\n#]+/g,' ').trim()}`,'',`- PizzaScan-ID: \`${record.placeId}\``,`- Position: ${record.place.lat.toFixed(6)}, ${record.place.lng.toFixed(6)}`);if(record.place.address)lines.push(`- Adresse: ${String(record.place.address).replace(/[\r\n]+/g,' ')}`);if(record.events.length)lines.push(`- Bewertungen: ${record.events.map(e=>`${e.rating.toFixed(1)}/10`).join(', ')}`);lines.push('');}lines.push('## Maschinenlesbares Backup','','```json',JSON.stringify(data,null,2),'```','');return lines.join('\n');}
 function archiveFromMarkdown(text){
   const source=String(text||'');
   if(!source.includes('pizzascan-visited-v1'))throw Error('Das ist kein PizzaScan-Besuchsarchiv.');
@@ -58,7 +47,7 @@ function archiveFromMarkdown(text){
   let data;try{data=JSON.parse(match[1]);}catch{throw Error('Archivdaten sind beschädigt.');}
   if(data?.format!==ARCHIVE_FORMAT||data?.version!==ARCHIVE_VERSION||!Array.isArray(data.visits))throw Error('Nicht unterstützte PizzaScan-Archivversion.');
   if(data.visits.length>100000)throw Error('Das Archiv enthält ungewöhnlich viele Einträge.');
-  return data.visits.map(r=>mergeVisitRecords(null,r));
+  const rows=data.visits.map(r=>mergeVisitRecords(null,r));Object.defineProperty(rows,'bundle',{value:data,enumerable:false});return rows;
 }
 function dedupeElements(...groups){
   const map=new Map();
@@ -173,18 +162,17 @@ function install(root){
     placeService.write=function(key,value){const ok=rawWrite(key,value);if(ok&&key==='pizzascan-drafts-v1')rememberDrafts(value).catch(()=>{});return ok;};
   }catch{}
 
-  async function exportArchive(){
-    const rows=await all(await dbPromise,VISIT_STORE),name='PizzaScan-Besuchsarchiv-'+new Date().toISOString().slice(0,10)+'.md';
-    await bridge('save',{name,text:archiveToMarkdown(rows)});toast(`${rows.length} besuchte Orte als Markdown gesichert.`);
-  }
+  function localJson(key,fallback){try{return JSON.parse(root.localStorage?.getItem(key)||'null')??fallback;}catch{return fallback;}}
+  function compactReports(){return (reports||[]).filter(r=>r&&typeof r.id==='string').map(r=>{const copy={...r,photo:''};try{if(copy.place)copy.place=cleanPlace(copy.place);}catch{delete copy.place;}return copy;}).slice(0,5000);}
+  async function collectionBundle(rows){const cached=await all(await dbPromise,PLACE_STORE),settingsCopy=(()=>{try{return JSON.parse(JSON.stringify(settings||{}));}catch{return {};}})();return {places:cached,saved:Array.isArray(saved)?saved:[],reports:compactReports(),drafts:localJson('pizzascan-drafts-v1',{}),ratings:localJson('pizzascan-place-ratings-v1',{}),settings:settingsCopy};}
+  async function exportArchive(){const rows=await all(await dbPromise,VISIT_STORE),bundle=await collectionBundle(rows),name='PizzaScan-Sammlung-'+new Date().toISOString().slice(0,10)+'.md';await bridge('save',{name,text:archiveToMarkdown(rows,bundle)});toast(`${bundle.places.length} gesammelte Orte, ${rows.length} Bewertungen und Entwürfe als Sammlung gesichert.`);}
   async function importArchive(){
-    const input=document.createElement('input');input.type='file';input.accept='.md,text/markdown,text/plain';
-    input.onchange=async()=>{try{const file=input.files?.[0];if(!file)return;const incoming=archiveFromMarkdown(await file.text()),db=await dbPromise,merged=[];for(const row of incoming){const old=await getOne(db,VISIT_STORE,row.placeId),next=mergeVisitRecords(old,row);merged.push(next);visitedIds.add(next.placeId);}await putMany(db,VISIT_STORE,merged);await putMany(db,PLACE_STORE,merged.map(x=>x.place));mapPool=PlaceData.merge(mapPool,merged.map(x=>x.place));refreshArea();toast(`${merged.length} besuchte Orte aus dem Markdown-Archiv geladen.`);}catch(error){toast(error.message||'Archiv konnte nicht geladen werden.');}};
-    input.click();
+    const input=document.createElement('input');input.type='file';input.accept='.md,.json,text/markdown,application/json,text/plain';
+    input.onchange=async()=>{try{const file=input.files?.[0];if(!file)return;const raw=await file.text();let incoming;if(raw.includes('pizzascan-visited-v1'))incoming=archiveFromMarkdown(raw);else{const data=JSON.parse(raw);if(data?.format!==ARCHIVE_FORMAT||data?.version!==ARCHIVE_VERSION||!Array.isArray(data.visits))throw Error('Nicht unterstützte PizzaScan-Sammlung.');const rows=(data.visits||[]).map(r=>mergeVisitRecords(null,r));Object.defineProperty(rows,'bundle',{value:data,enumerable:false});incoming=rows;}const bundle=incoming.bundle||{},db=await dbPromise,merged=[];for(const row of incoming){const old=await getOne(db,VISIT_STORE,row.placeId),next=mergeVisitRecords(old,row);merged.push(next);visitedIds.add(next.placeId);}await putMany(db,VISIT_STORE,merged);const placeMap=new Map();for(const place of [...(bundle.places||[]),...(bundle.saved||[]),...merged.map(x=>x.place)])try{const clean=cleanPlace(place);placeMap.set(clean.placeId,clean);}catch{}await putMany(db,PLACE_STORE,[...placeMap.values()]);if(Array.isArray(bundle.saved)){const imported=[];for(const place of bundle.saved)try{imported.push(cleanPlace(place));}catch{}saved=PlaceData.merge(saved,imported);placeService.write('pizzascan-saved-v2',saved);}if(bundle.ratings&&typeof bundle.ratings==='object')placeService.write('pizzascan-place-ratings-v1',{...localJson('pizzascan-place-ratings-v1',{}),...bundle.ratings});if(bundle.drafts&&typeof bundle.drafts==='object'){const drafts=localJson('pizzascan-drafts-v1',{});for(const [id,value] of Object.entries(bundle.drafts))try{const clean=PizzaDrafts.entry(value);if(PizzaDrafts.hasContent(clean))drafts[id]=clean;}catch{}placeService.write('pizzascan-drafts-v1',drafts);}if(bundle.settings&&typeof bundle.settings==='object'){settings={...settings,...bundle.settings,filters:{...settings.filters,...(bundle.settings.filters||{})}};saveSettings();}if(Array.isArray(bundle.reports)&&typeof transaction==='function'){const importedReports=bundle.reports.filter(r=>r&&typeof r.id==='string').slice(0,5000);await transaction('readwrite',store=>{for(const report of importedReports)store.put(report);});reports=await transaction('readonly',store=>store.getAll());}mapPool=PlaceData.merge(mapPool,[...placeMap.values()]);refreshArea();renderPlaces();renderHistory();renderDraftBadge();toast(`${placeMap.size} Orte, ${merged.length} Besuchs-/Bewertungseinträge und die zugehörigen Einstellungen geladen.`);}catch(error){toast(error.message||'PizzaScan-Sammlung konnte nicht geladen werden.');}};input.click();
   }
   function injectArchiveSettings(){
     const body=document.getElementById('sheet-body');if(!body||document.getElementById('pizzascan-history-settings'))return;wireVisitFilters();
-    const section=document.createElement('section');section.id='pizzascan-history-settings';section.innerHTML=`<hr><h2>Besuchsarchiv & Ortscache</h2><p class="hint">Gefundene Pizza-/Italien-Orte werden dauerhaft lokal zwischengespeichert und beim nächsten Start sofort wieder geladen. Besuchte und selbst bewertete Orte bleiben unabhängig von späteren Kartensuchen erhalten.</p><div class="card-actions"><button id="history-export" class="secondary">Besuchsarchiv als Markdown sichern</button><button id="history-import" class="secondary">Markdown-Archiv laden</button></div><p class="hint">Das Markdown-Backup enthält Ortsdaten und deine eigenen Bewertungen/Notizen, aber keine Fotos und keine privaten Open-Reviews-Schlüssel.</p>`;
+    const section=document.createElement('section');section.id='pizzascan-history-settings';section.innerHTML=`<hr><h2>Gesamte Sammlung, Ortscache & Bewertungen</h2><p class="hint">Alle dauerhaft gesammelten Orte, gemerkten Standorte, eigenen Bewertungen, Besuchseinträge, Rezensionsentwürfe und relevanten Einstellungen werden lokal zusammengeführt und als eine Sammlung gesichert. Beim Laden werden vorhandene Daten zusammengeführt, nicht gelöscht.</p><div class="card-actions"><button id="history-export" class="secondary">Gesamte Sammlung sichern</button><button id="history-import" class="secondary">Sammlung laden</button></div><p class="hint">Fotos selbst werden aus Datenschutz- und Dateigrößengründen nicht in das Backup kopiert; Fotoanalysewerte, eigene Bewertungen, Notizen und Entwürfe bleiben erhalten. Google-/Open-Reviews-Schlüssel werden nie exportiert.</p>`;
     const privacy=[...body.querySelectorAll('details')].find(d=>(d.querySelector('summary')?.textContent||'').toLowerCase().includes('datenschutz'));
     if(privacy)privacy.before(section);else body.append(section);
     document.getElementById('history-export').onclick=()=>guarded(exportArchive);document.getElementById('history-import').onclick=()=>guarded(importArchive);

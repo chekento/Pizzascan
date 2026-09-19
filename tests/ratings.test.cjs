@@ -8,12 +8,12 @@ const rows=list=>list.map(r=>R.normalize(r,time)).filter(Boolean);
 const response=(reviews,status=200,headers={})=>({ok:status===200,status,headers:{get:key=>headers[key]},json:async()=>({reviews})});
 const storage=()=>{const entries=new Map();return {getItem:k=>entries.get(k)||null,setItem:(k,v)=>entries.set(k,v)};};
 
-test('Open source scores convert consistently to 1–5; zero is a valid one-star rating',()=>{
-  assert.equal(R.aggregate(rows([review(1,0)]),place).rating,1);
-  assert.equal(R.aggregate(rows([review(1,50)]),place).rating,3);
+test('Open source scores convert consistently to 0.1–10.0; zero is a valid 0.1/10 rating',()=>{
+  assert.equal(R.aggregate(rows([review(1,0)]),place).rating,0.1);
+  assert.equal(R.aggregate(rows([review(1,50)]),place).rating,5);
   const r=R.aggregate(rows([review(1,90),review(2,90)]),place);
-  assert.equal(r.rating,4.6);assert.equal(r.count,2);
-  assert.equal(R.aggregate(rows([review(1,100)]),place).rating,5);
+  assert.equal(r.rating,9);assert.equal(r.count,2);
+  assert.equal(R.aggregate(rows([review(1,100)]),place).rating,10);
   assert.equal(R.aggregate(rows([review(1,null)]),place).rating,null);
 });
 test('Only documented open licenses and original human ratings enter the aggregate',()=>{
@@ -44,7 +44,7 @@ test('Edits, repeated reviews and multiple keys for a DID count only the newest 
   b.kid=a.kid;c.did='did:plc:one';b.did='did:plc:one';a.did='did:plc:one';
   c.original_sub=c.payload.sub;c.payload.sub='urn:maresi:'+a.signature;c.payload.action='edit';
   const r=R.aggregate(rows([a,b,c,c]),place);
-  assert.equal(r.count,1);assert.equal(r.rating,5);
+  assert.equal(r.count,1);assert.equal(r.rating,10);
 });
 test('4.6 boundary, fractional settings, disabled filter and unknown ratings are consistent',()=>{
   assert.equal(R.passes({rating:4.5,count:10},4.6),false);
@@ -53,7 +53,7 @@ test('4.6 boundary, fractional settings, disabled filter and unknown ratings are
   assert.equal(R.passes({rating:null,count:0},4.6),false);
   assert.equal(R.passes({rating:null,count:0},4.6,true),true);
   assert.equal(R.passes({rating:null,count:0},0),true);
-  assert.equal(R.minimum('4.6'),4.6);assert.equal(R.minimum(Infinity),0);assert.equal(R.minimum(-1),0);assert.equal(R.minimum(8),5);
+  assert.equal(R.minimum('4.6'),4.6);assert.equal(R.minimum(Infinity),0);assert.equal(R.minimum(-1),0);assert.equal(R.minimum(8),8);assert.equal(R.minimum(12),10);
 });
 test('Area requests batch places, need no credentials, cache across restarts and strip review text',async()=>{
   let calls=0;const disk=storage();
@@ -63,7 +63,7 @@ test('Area requests batch places, need no credentials, cache across restarts and
     const data=review(1);data.payload.opinion='This review text must not be cached';data.payload.metadata.nickname='Do not retain personal fields';
     return response([data]);
   },disk,()=>time);
-  await service.load([place,second]);await service.load([place]);assert.equal(calls,1);assert.equal(service.get(place).rating,4.6);
+  await service.load([place,second]);await service.load([place]);assert.equal(calls,1);assert.equal(service.get(place).rating,9);
   const raw=disk.getItem(R.CACHE_KEY);assert.ok(!raw.includes('This review text'));assert.ok(!raw.includes('Do not retain'));
   const restored=new R.Service(()=>assert.fail('fresh cache should prevent fetch'),disk,()=>time+1000);
   await restored.load([place]);assert.equal(restored.get(place).count,1);
@@ -71,7 +71,7 @@ test('Area requests batch places, need no credentials, cache across restarts and
 test('Pagination reaches older reviews before publishing a complete average',async()=>{
   const first=Array.from({length:500},(_,n)=>review(n+1,100));let calls=0;
   const service=new R.Service(async url=>{calls++;const page=Number(new URL(url).searchParams.get('offset'));return response(page?Array.from({length:100},(_,n)=>review(n+600,0)):first);},storage(),()=>time+1000000);
-  await service.load([place]);assert.equal(calls,2);assert.equal(service.get(place).count,600);assert.equal(service.get(place).rating,4.3);
+  await service.load([place]);assert.equal(calls,2);assert.equal(service.get(place).count,600);assert.equal(service.get(place).rating,8.3);
 });
 test('Truncated, malformed and failing responses do not become fake zero-review successes',async()=>{
   const full=Array.from({length:500},(_,n)=>review(n+1));let calls=0;
@@ -84,7 +84,7 @@ test('Refresh replaces removed reviews, but an outage retains dated cached score
   let now=time,state=0;
   const service=new R.Service(async()=>state===0?response([review(1)]):state===1?response([],503):response([]),storage(),()=>now);
   await service.load([place]);now+=R.TTL+1;state=1;
-  await service.load([place]);assert.equal(service.get(place).rating,4.6);assert.equal(service.get(place).stale,true);assert.equal(service.get(place).error,true);
+  await service.load([place]);assert.equal(service.get(place).rating,9);assert.equal(service.get(place).stale,true);assert.equal(service.get(place).error,true);
   state=2;await service.load([place],{force:true});assert.equal(service.get(place).rating,null);assert.equal(service.get(place).status,'unrated');
 });
 test('Cancellation cannot commit a late response, and HTTP 429 is respected even by manual refresh',async()=>{
@@ -96,5 +96,5 @@ test('Cancellation cannot commit a late response, and HTTP 429 is respected even
 test('Cache expiry and storage failures never block the map or resurrect ancient scores',async()=>{
   let now=time;
   const service=new R.Service(async()=>response([review(1)]),{getItem(){throw Error('blocked');},setItem(){throw Error('full');}},()=>now);
-  await service.load([place]);assert.equal(service.get(place).rating,4.6);now+=8*86400000;assert.equal(service.get(place).rating,null);
+  await service.load([place]);assert.equal(service.get(place).rating,9);now+=8*86400000;assert.equal(service.get(place).rating,null);
 });
