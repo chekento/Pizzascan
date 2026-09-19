@@ -16,7 +16,7 @@
   <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.20.apk"><strong>⬇️ PizzaScan 2.3.20 · Build 55 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.19 · Build 54 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.20 · Build 55 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
 > **Build 55 bringt die 2026-Oberfläche, eine größere Kartenfläche und die vollständige WebSim-Suchfamilie zurück:** Pizza, Trattoria, Ristorante, Osteria und verwandte italienische Gastro-Orte werden nicht nur über das Wort „Pizza“, sondern über Cuisine-, Name-, Brand-, Betreiber-, Alternativname-, Beschreibung-, Spezialitäts- und Restauranttyp-Signale gefunden. Ways und Relationen werden mit ihrem stabilen Kartenmittelpunkt übernommen. Die Android-Transportstrecke nutzt dieselbe Query mit sicheren Overpass-Spiegeln als Failover; bei einer leeren oder fehlerhaften Primärantwort ergänzt die Recovery-Kette die passenden OSM-Gastro-Treffer.
 
