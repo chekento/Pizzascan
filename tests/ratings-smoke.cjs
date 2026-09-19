@@ -38,7 +38,7 @@ async function setup(browser,url,language='de',failure=false){
         const expected=language==='en'?'4.6':'4,6';assert.ok((await page.locator('#rating-threshold').innerText()).includes(expected));
         await page.locator('.rating-filter').scrollIntoViewIfNeeded();await page.screenshot({path:`test-results/ratings-settings-${language}.png`});
         await page.locator('#settings-save').click();assert.deepEqual(await ids(page),['node-102','node-103','node-104']);
-        assert.equal(await page.evaluate(()=>markers.getLayers().length),2);
+        assert.equal(await page.evaluate(()=>markers.getLayers().length),3);
         const before=fixture.calls;await page.reload();await until(page,()=>PizzaScan.ready&&places.length===4&&!mapLoading&&!PizzaRatingsUI.loading);
         assert.deepEqual(await ids(page),['node-102','node-103','node-104']);assert.equal(fixture.calls,before,'Fresh persisted ratings do not reload');
         assert.equal(await page.evaluate(()=>mapConfig().minRating),4.6);
