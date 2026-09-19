@@ -37,7 +37,7 @@ async function setup(browser,url,language='de',failure=false){
         assert.equal(await page.locator('#filter-min-rating').getAttribute('step'),'0.1');await threshold(page,9.0);
         const expected=language==='en'?'9.0':'9,0';assert.ok((await page.locator('#rating-threshold').innerText()).includes(expected));
         await page.locator('.rating-filter').scrollIntoViewIfNeeded();await page.screenshot({path:`test-results/ratings-settings-${language}.png`});
-        await page.locator('#settings-save').click();assert.deepEqual(await ids(page),['node-102','node-103','node-104']);
+await page.locator('#settings-save').click();const firstIds=await ids(page);assert.deepEqual(firstIds,['node-102','node-103','node-104'],JSON.stringify(await page.evaluate(()=>({cfg:mapConfig(),ratings:places.map(p=>({id:p.placeId,summary:PizzaRatingsUI.summary(p)}))}))));
         assert.equal(await page.evaluate(()=>markers.getLayers().length),3);
         const before=fixture.calls;await page.reload();await until(page,()=>PizzaScan.ready&&places.length===4&&!mapLoading&&!PizzaRatingsUI.loading);
         assert.deepEqual(await ids(page),['node-102','node-103','node-104']);assert.equal(fixture.calls,before,'Fresh persisted ratings do not reload');
