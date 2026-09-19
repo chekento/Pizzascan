@@ -43,7 +43,7 @@ function broadMigration(previous={},types={}){
     hideVisited:false,
     ratingsEnabled:true,
     minRating:0,
-    includeUnrated:false
+    includeUnrated:true
   };
 }
 function candidateVisible(place,cfg={},context={},hours=()=>({state:'unknown'})){
