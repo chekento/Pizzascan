@@ -64,6 +64,21 @@ function tagHits(elements,root){
   return (Array.isArray(elements)?elements:[]).map(e=>({...e,tags:{...(e.tags||{}),[hit]:'yes','pizzascan:source':'websim-source-exact'}}));
 }
 
+function lockQuery(root){
+  const PD=root.PizzaPlaces;if(!PD)return false;
+  const exact=function(center,radius,bounds){return websimQuery(bounds);};
+  exact.__build49=true;
+  try{
+    const current=Object.getOwnPropertyDescriptor(PD,'query');
+    if(current?.get?.__build49)return true;
+    const get=function(){return exact;};get.__build49=true;
+    Object.defineProperty(PD,'query',{configurable:true,enumerable:true,get,set(){}});
+    return true;
+  }catch(error){
+    try{PD.query=exact;return PD.query===exact;}catch{return false;}
+  }
+}
+
 function installMapPolicy(root){
   try{
     if(typeof mapConfig==='function'&&!mapConfig.__build49){
@@ -226,21 +241,20 @@ function syncVersion(root){
 
 function install(root){
   if(!root.document||!root.PizzaPlaces)return false;
-  const PD=root.PizzaPlaces;
-  PD.query=(center,radius,bounds)=>websimQuery(bounds);
+  lockQuery(root);
   root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-exact',viewportBBox:true,exactSelectorFamilies:12,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:true};
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;
-    syncVersion(root);installMapPolicy(root);compactUi(root);installOverpass(root);installSearch(root);
+    syncVersion(root);lockQuery(root);installMapPolicy(root);compactUi(root);installOverpass(root);installSearch(root);
     let mapReady=false;try{mapReady=typeof map!=='undefined'&&!!map&&typeof loadPlaces==='function';}catch{}
     if(refresh&&mapReady){refresh=false;root.setTimeout(()=>{try{loadPlaces({force:true});}catch{}},80);}
     if((typeof settings==='undefined'||!mapReady)&&attempts<120)root.setTimeout(ready,50);
   };
   ready();
-  [0,120,300,700,1500,3000,6000].forEach(ms=>root.setTimeout(()=>{syncVersion(root);installMapPolicy(root);compactUi(root);installOverpass(root);installSearch(root);},ms));
+  [0,60,120,300,700,1500,3000,6000].forEach(ms=>root.setTimeout(()=>{syncVersion(root);lockQuery(root);installMapPolicy(root);compactUi(root);installOverpass(root);installSearch(root);},ms));
   return true;
 }
 
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,installMapPolicy,installOverpass,installSearch,compactUi,syncVersion,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,lockQuery,installMapPolicy,installOverpass,installSearch,compactUi,syncVersion,install};
 });
