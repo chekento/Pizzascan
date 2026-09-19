@@ -226,12 +226,18 @@ function compactUi(root){
   if(refresh){refresh.textContent='↻ Suchen';refresh.classList.remove('filter-chip','build44-action');refresh.classList.add('map-status-action');delete refresh.dataset.build44Moved;if(caption&&refresh.parentElement!==caption)caption.appendChild(refresh);}
   if(count&&caption&&count.parentElement!==caption)caption.insertBefore(count,refresh||null);
   if(meta)meta.hidden=true;
-  const radius=d.getElementById('filter-radius');
+  const radii=[...d.querySelectorAll('#filter-radius')];
+  const radius=radii.find(el=>el.matches?.('input[type="range"]'))||radii[0]||null;
   if(radius){
+    const keepField=radius.closest?.('.field');
+    for(const extra of radii){
+      if(extra===radius)continue;
+      const field=extra.closest?.('.field');
+      if(field&&field!==keepField)field.remove();else extra.remove();
+    }
     radius.value='0';radius.disabled=true;
-    const field=radius.closest?.('.field');
-    if(field&&!field.querySelector('.build49-radius-note')){
-      const note=d.createElement('p');note.className='hint build49-radius-note';note.textContent='WebSim-Modus: gesucht wird immer im aktuell sichtbaren Kartenausschnitt.';field.appendChild(note);
+    if(keepField&&!keepField.querySelector('.build49-radius-note')){
+      const note=d.createElement('p');note.className='hint build49-radius-note';note.textContent='WebSim-Modus: gesucht wird immer im aktuell sichtbaren Kartenausschnitt.';keepField.appendChild(note);
     }
   }
   const auto=d.getElementById('filter-auto');
