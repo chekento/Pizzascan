@@ -55,8 +55,11 @@ function websimQuery(bounds){
   return q.join('\\n');
 }
 
-function migrationConfig(previous={}){
-  return {...previous,radius:0,autoSearch:true,includeItalian:true,includeUnconfirmed:true};
+function migrationConfig(previous={},types=[]){
+  const existing=Array.isArray(previous.types)?previous.types:[];
+  const available=Array.isArray(types)?types:[];
+  const merged=[...new Set([...existing,...available])];
+  return {...previous,radius:0,autoSearch:true,includeItalian:true,includeUnconfirmed:true,includeUnrated:true,types:merged};
 }
 function migrate(root){
   try{
