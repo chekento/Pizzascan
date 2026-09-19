@@ -40,6 +40,7 @@ function refreshArea(){const cfg=mapConfig(),center=mapCenter(),bounds=boundsObj
 async function loadPlaces(options={}){const cfg=mapConfig(),center=mapCenter(),bounds=boundsObject(),force=options.force===true;clearTimeout(queryTimer);if(map.getZoom()<11&&!cfg.radius&&!globalThis.PizzaScanDiscovery49?.build){mapError='Bitte näher hineinzoomen oder einen festen Suchradius wählen.';renderPlaces();return;}
  const cached=mapAreas.find(a=>Date.now()-a.time<300000&&cfg.radius&&a.radius>=cfg.radius+C.distance(a.center,center));if(cached&&!force){mapUpdated=new Date(cached.time).toISOString();mapError='';refreshArea();return;}
  mapRequest?.abort();const ctl=mapRequest=new AbortController(),revision=++mapRevision;mapLoading=true;mapError='';setMapSearchBusy(true);refreshArea();$('map-status').textContent='Pizzerien werden geladen …';$('map-refresh').textContent=globalThis.PizzaScanDiscovery49?.build?'↻ …':'Suche läuft …';
+ const radius=cfg.radius?Math.min(10,cfg.radius*1.2):0;
  let acceptedInitial=false;
  const acceptBatch=(elements,source,final=false)=>{
   if(revision!==mapRevision||ctl.signal.aborted)return;
@@ -54,12 +55,12 @@ async function loadPlaces(options={}){const cfg=mapConfig(),center=mapCenter(),b
   else storeMapCache();
  };
  try{
-  const radius=cfg.radius?Math.min(10,cfg.radius*1.2):0;
   const discovery=globalThis.PizzaScanDiscovery55||globalThis.PizzaScanDiscovery54||globalThis.PizzaScanDiscovery49;
   const searchQuery=discovery?.build>=54&&typeof discovery.websimQuery==='function'?discovery.websimQuery(bounds):PlaceData.query(center,radius,bounds);
   const result=await placeService.overpass(searchQuery,{signal:ctl.signal,onStatus:text=>{if(revision===mapRevision)$('map-status').textContent=text;},onBatch:batch=>acceptBatch(batch?.data?.elements||batch?.elements||[],batch?.source||'',false)});
   if(revision!==mapRevision)return;
   acceptBatch(result?.data?.elements||[],result?.source||'',true);
+ }
  catch(e){if(revision!==mapRevision||ctl.signal.aborted)return;mapError=e.message||'Verbindung fehlgeschlagen.';}
  finally{if(revision===mapRevision)mapLoading=false;setMapSearchBusy(false);if(revision===mapRevision){$('map-refresh').textContent=globalThis.PizzaScanDiscovery49?.build?'↻ Suchen':'Hier suchen';refreshArea();}}
 }

@@ -75,7 +75,6 @@
    const states=helper.stateIntent(q),category=helper.categoryIntent(q),stateOnly=states.length&&!category.length&&helper.tokens(q).every(word=>helper.GENERIC.has(word));
    if(stateOnly){byId('search-status').textContent=local.length?`${local.length} lokale Treffer · ${states.includes('saved')?'⭐ Gemerkt ':''}${states.includes('visited')?'✓ Besucht ':''}${states.includes('location')?'📍 Standort':''}`.trim():states.includes('location')?'Standort ist noch nicht gesetzt. Nutze zuerst den GPS-Button.':'Keine passenden lokal gespeicherten Orte.';return;}
    fallbackNext=null;
-   const category=helper.categoryIntent(q);
    const addressNeeded=!category.length||/\d/.test(q);
    const addressPromise=addressNeeded?fallbackRequest(q,center,ctl.signal).catch(()=>[]):Promise.resolve([]);
    const poi=await directPoiSearch(q,center,ctl.signal,helper).catch(()=>[]);

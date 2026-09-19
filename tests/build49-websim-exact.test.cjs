@@ -4,7 +4,7 @@ const B=require('../web/build49-runtime.js');
 
 test('Build 56 version and WebSim-complete mode',()=>{
   assert.equal(B.VERSION,'2.3.21');
-  assert.equal(B.BUILD,55);
+  assert.equal(B.BUILD,56);
   assert.equal(B.ENDPOINT,'https://overpass-api.de/api/interpreter');
   assert.equal(B.NOMINATIM,'https://nominatim.openstreetmap.org/search');
 });
