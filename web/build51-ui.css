@@ -241,7 +241,7 @@ main{max-width:1180px;padding:28px 24px calc(var(--bottom-clearance,96px) + 24px
   box-shadow:0 14px 30px rgba(23,33,31,.10);
 }
 .search-result{min-height:56px;border-color:var(--ps-line);border-radius:12px}
-.app-bottom-bar{
+.app-bottom-bar{height:74px;max-height:74px;padding:4px 5px 0;
   max-width:580px;
   padding:7px 7px 4px;
   border:1px solid rgba(23,33,31,.14);
@@ -252,8 +252,10 @@ main{max-width:1180px;padding:28px 24px calc(var(--bottom-clearance,96px) + 24px
   backdrop-filter:blur(22px) saturate(150%);
 }
 .dark .app-bottom-bar{background:rgba(16,24,23,.80);border-color:var(--ps-line)}
+.app-bottom-bar .dock{height:44px;min-height:44px;overflow:hidden}
 .app-bottom-bar .dock button{
-  min-height:46px;
+  height:44px;
+  min-height:44px;
   border-radius:16px;
   font-size:12px;
 }
@@ -261,7 +263,8 @@ main{max-width:1180px;padding:28px 24px calc(var(--bottom-clearance,96px) + 24px
   background:rgba(242,88,61,.11);
   color:var(--ps-accent-deep);
 }
-.app-footer{opacity:.82}
+.app-footer{height:18px;min-height:18px;overflow:hidden;flex-wrap:nowrap;white-space:nowrap;line-height:12px;opacity:.82}
+.app-footer a{padding-top:2px;padding-bottom:2px}
 button,.secondary,.primary,.text-button{transition:transform .16s ease,box-shadow .16s ease,background .16s ease,border-color .16s ease}
 button:active{transform:translateY(1px) scale(.99)}
 .primary{
