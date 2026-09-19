@@ -1,3 +1,9 @@
+## 2.3.17 · Build 52
+
+- Repariert den Android-Kartenabruf mit nativer Overpass-Mirror-Kette: dieselbe WebSim-Abfrage wird bei einem Ausfall von `overpass-api.de` automatisch über freigegebene OSM-Endpunkte wiederholt.
+- Aktiviert die POI-Recovery erst nach dem Erzeugen des Ort-Services, damit zusätzliche Treffer wie Trattoria, Ristorante, Osteria und weitere passende OSM-Gastro-Orte zuverlässig berücksichtigt werden.
+- Behält die vollständige WebSim-Suchabdeckung ohne künstliches Ergebnislimit und die moderne Kartenoberfläche bei.
+
 ## 2.3.16 · Build 51
 
 - Modernizes the map UI for 2026: larger map surface, glass controls, clearer live status, responsive cards, floating navigation and refined dark mode.
