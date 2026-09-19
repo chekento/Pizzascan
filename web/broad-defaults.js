@@ -26,7 +26,7 @@ function normalizeConfig(base={},raw={},types={}){
     autoSearch:has('autoSearch')?raw.autoSearch!==false:true,
     hideVisited:has('hideVisited')?raw.hideVisited===true:false,
     ratingsEnabled:has('ratingsEnabled')?raw.ratingsEnabled!==false:true,
-    minRating:has('minRating')&&Number.isFinite(Number(raw.minRating))?Math.max(0,Math.min(5,Number(raw.minRating))):0,
+    minRating:has('minRating')&&Number.isFinite(Number(raw.minRating))?Math.max(0,Math.min(10,Number(raw.minRating))):0,
     includeUnrated:has('includeUnrated')?raw.includeUnrated===true:true
   };
 }
@@ -42,7 +42,7 @@ function broadMigration(previous={},types={}){
     autoSearch:true,
     hideVisited:false,
     ratingsEnabled:Object.prototype.hasOwnProperty.call(previous,'ratingsEnabled')?previous.ratingsEnabled!==false:true,
-    minRating:Object.prototype.hasOwnProperty.call(previous,'minRating')&&Number.isFinite(Number(previous.minRating))?Math.max(0,Math.min(5,Number(previous.minRating))):0,
+    minRating:Object.prototype.hasOwnProperty.call(previous,'minRating')&&Number.isFinite(Number(previous.minRating))?Math.max(0,Math.min(10,Number(previous.minRating))):0,
     includeUnrated:Object.prototype.hasOwnProperty.call(previous,'includeUnrated')?previous.includeUnrated!==false:true
   };
 }

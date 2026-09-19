@@ -29,6 +29,7 @@ test('explicit user filters still narrow broad place defaults after migration',(
  assert.equal(cfg.onlyOpen,true);
  assert.equal(cfg.includeUnconfirmed,false,'explicit user choice may still narrow generic POIs after the v13 reset has run');
  assert.equal(cfg.minRating,4.6);
+ const ten=B.normalizeConfig({}, {minRating:12}, TYPES);assert.equal(ten.minRating,10);
  assert.equal(cfg.includeUnrated,false);
 });
 
