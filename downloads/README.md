@@ -20,7 +20,7 @@ Hier liegen die direkt installierbaren PizzaScan-APKs und ältere Vergleichsstä
 
 Für die normale Direktinstallation die **PizzaScan 2.3.21 · Build 56 APK** verwenden. Sie trägt den Android-Paketnamen `cloud.kosch.pizzascan`, den App-Namen `PizzaScan` und keinen zusätzlichen Test-Namenszusatz.
 
-Build 56 verwendet die WebSim-komplette Suche im sichtbaren Karten-BBOX: Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Signale über Cuisine-, Name-, Brand-, Betreiber-, Beschreibung-, Spezialitäts- und Restauranttyp-Tags. Ways und Relationen erhalten ihren stabilen Kartenmittelpunkt. Der verifizierte Build enthält außerdem die moderne Karten- und Filter-UX, Place-Historie, Bewertungen, Review Builder, optionale Mangrove/Open-Reviews-Funktionen und lokale Fotoanalyse.
+Build 56 verwendet die WebSim-komplette Suche im sichtbaren Karten-BBOX: Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Signale über Cuisine-, Name-, Brand-, Betreiber-, Beschreibung-, Spezialitäts- und Restauranttyp-Tags. Ways und Relationen erhalten ihren stabilen Kartenmittelpunkt. Der verifizierte Build enthält außerdem die moderne Karten- und Filter-UX, Place-Historie, Bewertungen, Review Builder, optionale Mangrove/Open-Reviews-Funktionen und lokale Fotoanalyse. Der sichtbare Settings-Import/Export wurde mit 12.000 Orts-/Bewertungsdatensätzen geprüft; große Android-JSON-Exporte werden gestreamt und bis 512 MB unterstützt.
 
 ## Signatur- und Update-Hinweis
 
