@@ -113,7 +113,10 @@ function makeOverpass(root,previous){
     }
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
     options.onStatus?.('PizzaScan-Suche · Pizza, Trattoria & italienische Orte werden geladen …');
-    const endpoints=root.PizzaScanNative?[ENDPOINT]:ENDPOINTS;
+    /* Always retain mirror failover at the WebSim service layer too. On
+     * Android the native transport may be unavailable on older WebViews; in
+     * that case a single primary endpoint must never collapse the map to 0 POIs. */
+    const endpoints=ENDPOINTS;
     const errors=[];
     for(const endpoint of endpoints){
       if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
