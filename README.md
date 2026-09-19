@@ -2,7 +2,7 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.18 · Build 53</h1>
+<h1 align="center">PizzaScan 2.3.19 · Build 54</h1>
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
@@ -13,15 +13,17 @@
 ## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.18.apk"><strong>⬇️ PizzaScan 2.3.18 · Build 53 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.19.apk"><strong>⬇️ PizzaScan 2.3.19 · Build 54 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.18 · Build 53 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.19 · Build 54 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
-> **Build 53 bringt die 2026-Oberfläche, eine größere Kartenfläche und die vollständige WebSim-Suchfamilie zurück:** Pizza, Trattoria, Ristorante, Osteria und verwandte italienische Gastro-Orte werden nicht nur über das Wort „Pizza“, sondern über Cuisine-, Name-, Brand-, Betreiber-, Alternativname-, Beschreibung-, Spezialitäts- und Restauranttyp-Signale gefunden. Ways und Relationen werden mit ihrem stabilen Kartenmittelpunkt übernommen. Die Android-Transportstrecke nutzt dieselbe Query mit sicheren Overpass-Spiegeln als Failover; bei einer leeren oder fehlerhaften Primärantwort ergänzt die Recovery-Kette die passenden OSM-Gastro-Treffer.
+> **Build 54 bringt die 2026-Oberfläche, eine größere Kartenfläche und die vollständige WebSim-Suchfamilie zurück:** Pizza, Trattoria, Ristorante, Osteria und verwandte italienische Gastro-Orte werden nicht nur über das Wort „Pizza“, sondern über Cuisine-, Name-, Brand-, Betreiber-, Alternativname-, Beschreibung-, Spezialitäts- und Restauranttyp-Signale gefunden. Ways und Relationen werden mit ihrem stabilen Kartenmittelpunkt übernommen. Die Android-Transportstrecke nutzt dieselbe Query mit sicheren Overpass-Spiegeln als Failover; bei einer leeren oder fehlerhaften Primärantwort ergänzt die Recovery-Kette die passenden OSM-Gastro-Treffer.
+
+**Neu in 2.3.19:** Die erste Suche startet automatisch nach Standortfreigabe, POI-Popups bleiben stabil geöffnet, Detailbereiche sind einklappbar und ihre Zustände werden gemerkt. Place und eigene Rezension teilen sich eine Bewertung von 0,1 bis 10,0; komplette Sammlungen mit Orten, Bewertungen und Entwürfen können lokal importiert und exportiert werden. Einstellungen und Auswahlen bleiben beim nächsten App-Start erhalten; Google-Bewertungen werden nur bei hinterlegtem Google-API-Schlüssel eingeblendet.
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.18.txt"><strong>SHA-256</strong></a>
+<a href="downloads/SHA256SUMS-2.3.19.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;
 <a href="CHANGELOG.md"><strong>📝 Changelog</strong></a>
 &nbsp; · &nbsp;
@@ -34,7 +36,7 @@
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 53 behandelt die frühere WebSim-Ausgabe als Suchvertrag: alle benannten Gastro-Orte im Kartenausschnitt bleiben als neutrale Orte sichtbar; Pizza-/Italien-Signale werden zusätzlich präzise markiert.
+Build 54 behandelt die frühere WebSim-Ausgabe als Suchvertrag: alle benannten Gastro-Orte im Kartenausschnitt bleiben als neutrale Orte sichtbar; Pizza-/Italien-Signale werden zusätzlich präzise markiert.
 
 - **Nicht nur „Italiener“:** Pizza, Pizzeria, Pizzaria, Trattoria, Ristorante, Osteria, Tavola, Taverna, Enoteca und italienische Küche werden erkannt.
 - **Mehr als der Name:** Cuisine- und cuisine:it-Tags, restaurant:type, Name, Brand, offizieller/alternativer Name, Betreiber, Beschreibung, Spezialität, Produkt und Pizzaautomaten werden ausgewertet.
