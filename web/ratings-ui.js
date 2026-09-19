@@ -98,12 +98,18 @@
   function applyFilter(){settings.filters={...mapConfig(),ratingsEnabled:document.getElementById('ratings-enabled').checked,minRating:PizzaRatings.minimum(document.getElementById('filter-min-rating').value),includeUnrated:document.getElementById('filter-unrated').checked};saveSettings();map.closePopup();closeSheet();refreshArea();}
   function refresh(id){const list=id?known().filter(p=>p.placeId===id):onlySaved?saved:places;schedule(list,true);}
   function privacyHtml(){return `<section class="ratings-privacy" translate="no"><h2>${esc(t('privacyTitle'))}</h2><p>${esc(t('privacyText'))}</p><p>${esc(t('privacyCache'))}</p><p><a href="https://mangrove.reviews/terms" target="_blank" rel="noopener noreferrer">Open Reviews / Mangrove</a> · <a href="https://www.tripadvisor.com/pages/privacy.html" target="_blank" rel="noopener noreferrer">Tripadvisor</a> · <a href="https://terms.yelp.com/privacy" target="_blank" rel="noopener noreferrer">Yelp</a></p></section>`;}
-  document.addEventListener('input',event=>{
-    if(!['filter-min-rating','ratings-enabled'].includes(event.target.id))return;
+  function syncFilterControls(){
     const range=document.getElementById('filter-min-rating'),toggle=document.getElementById('ratings-enabled'),value=document.getElementById('rating-threshold'),unknown=document.getElementById('filter-unrated');
-    if(!range||!toggle)return;range.disabled=!toggle.checked;unknown.disabled=!toggle.checked||Number(range.value)===0;
-    const text=thresholdText(range.value);value.textContent=text;range.setAttribute('aria-valuetext',text);
-  });
+    if(!range||!toggle)return;
+    range.disabled=!toggle.checked;
+    unknown.disabled=!toggle.checked||Number(range.value)===0;
+    const text=thresholdText(range.value);
+    if(value)value.textContent=text;
+    range.setAttribute('aria-valuetext',text);
+  }
+  function filterControlEvent(event){if(['filter-min-rating','ratings-enabled'].includes(event.target.id))syncFilterControls();}
+  document.addEventListener('input',filterControlEvent);
+  document.addEventListener('change',filterControlEvent);
   root.PizzaRatingsUI={t,copy,service,summary,card,details,filterHtml,paintStatus,schedule,refresh,privacyHtml,portalLinks,beginRender,openFilter,applyFilter,
     passes:(p,cfg)=>!cfg.ratingsEnabled||cfg.minRating===0||PizzaRatings.passes(summary(p),cfg.minRating,cfg.includeUnrated),
     get loading(){return loading;},get errors(){return errors;}};
