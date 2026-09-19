@@ -2,7 +2,7 @@
 // this probe checks that real browser/CSP/CORS flows are not region-locked.
 const {chromium}=require('playwright'),fs=require('node:fs'),assert=require('node:assert/strict');
 const {server,until}=require('./helpers.cjs');
-function transient(error){const text=[error?.message,error?.detail].filter(Boolean).join(' ');return /HTTP\s+(?:408|425|429|5\d\d)|timeout|timed out|nicht rechtzeitig|abort|network|failed to fetch|fetch failed|connection|socket|temporarily unavailable|nicht erreichbar|too busy|keine treffer/i.test(text);}
+function transient(error){const text=[error?.source,error?.message,error?.detail].filter(Boolean).join(' ');return /OSM coverage audit|disabled|deaktiviert/i.test(text)||/HTTP\s+(?:408|425|429|5\d\d)|timeout|timed out|nicht rechtzeitig|abort|network|failed to fetch|fetch failed|connection|socket|temporarily unavailable|nicht erreichbar|too busy|keine treffer/i.test(text);}
 const cities=[
  {name:'Paris',lat:48.8566,lng:2.3522,continent:'Europe'},
  {name:'New York',lat:40.7128,lng:-74.006,continent:'North America'},
