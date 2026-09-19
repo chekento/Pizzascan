@@ -254,7 +254,7 @@ function installSheetHook(root){
     const previous=openSheet;
     const wrapped=function(){
       const out=previous.apply(this,arguments);
-      root.setTimeout(()=>compactUi(root),0);
+      compactUi(root);
       return out;
     };
     wrapped.__build49=true;wrapped.__inner=previous;openSheet=wrapped;
