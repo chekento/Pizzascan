@@ -35,7 +35,7 @@ async function setup(browser,url,language='de',failure=false){
         const label=await page.locator('label[for=filter-min-rating]').innerText();
         assert.equal(label,{de:'Mindestbewertung',en:'Minimum rating',it:'Valutazione minima',es:'Valoración mínima',fr:'Note minimale'}[language]);
         assert.equal(await page.locator('#filter-min-rating').getAttribute('step'),'0.1');await threshold(page,9.0);
-        const expected=language==='en'?'9.0':'4,6';assert.ok((await page.locator('#rating-threshold').innerText()).includes(expected));
+        const expected=language==='en'?'9.0':'9,0';assert.ok((await page.locator('#rating-threshold').innerText()).includes(expected));
         await page.locator('.rating-filter').scrollIntoViewIfNeeded();await page.screenshot({path:`test-results/ratings-settings-${language}.png`});
         await page.locator('#settings-save').click();assert.deepEqual(await ids(page),['node-102','node-103','node-104']);
         assert.equal(await page.evaluate(()=>markers.getLayers().length),3);
