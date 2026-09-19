@@ -61,7 +61,7 @@ async function setup(browser,url,language='de',failure=false){
           await page.locator('#settings-open').click();await page.locator('#ratings-enabled').uncheck();await page.locator('#settings-save').click();
           assert.deepEqual(await ids(page),['node-101','node-102','node-103','node-104']);assert.equal(await page.locator('.venue-card .venue-rating').count(),0);
           const disabledCalls=fixture.calls;await page.locator('#map-refresh').click();await until(page,()=>!mapLoading);assert.equal(fixture.calls,disabledCalls,'No review network requests when disabled');
-          await page.locator('#settings-open').click();await page.locator('#ratings-enabled').check();await page.locator('#filter-unrated').uncheck();await threshold(page,5);await page.locator('#settings-save').click();
+          await page.locator('#settings-open').click();await page.locator('#ratings-enabled').check();await page.locator('#filter-unrated').uncheck();await threshold(page,5);await page.locator('#filter-unrated').uncheck();await page.locator('#settings-save').click();
           assert.deepEqual(await ids(page),[]);assert.equal(await page.evaluate(()=>markers.getLayers().length),0);await page.locator('#places [data-action=clear-rating-filter]').click();assert.equal((await ids(page)).length,4);
           await page.locator('#settings-open').click();await threshold(page,4.6);await page.locator('#settings-save').click();
           await page.locator('.venue-card [data-action=save][data-id=node-102]').click();await page.locator('#saved-toggle').click();assert.deepEqual(await ids(page),['node-102']);await page.locator('#saved-toggle').click();
