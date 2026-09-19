@@ -3,10 +3,10 @@
 - Restores the automatic map discovery to the PizzaScan WebSim source contract preserved in `source-original/script.js`: the visible Leaflet BBOX is queried directly instead of forcing a 5 km circle.
 - Uses the same WebSim Pizza/Italian Overpass selector families for cuisine, Italian restaurants, pizzeria cuisine, pizza vending, matching cafés/fast-food/food-trucks, speciality, bars/pubs, pizza names/descriptions and takeaway.
 - Removes Build 47/48 discovery expansion from the active path: no extra Ristorante/Trattoria/Osteria, brand/operator/dish/alt-name or Photon POI supplementation is added to automatic map discovery.
-- Uses `overpass-api.de` as the WebSim discovery endpoint while retaining the Android native HTTPS bridge for transport reliability.
+- Uses `overpass-api.de` as the WebSim discovery endpoint while retaining the Android native HTTPS bridge for transport reliability. Returned elements are passed through with the same WebSim result semantics; Build 49 does not synthesize extra centers or add result objects that the original response did not expose.
 - Restores explicit place/address search to Nominatim semantics: first result, map zoom 15, then refresh the visible map area.
 - Migrates Build 48's 5 km default back to WebSim viewport mode (`0 km = Kartenausschnitt`) and clears only transient map caches.
-- Reworks the map controls into an ultra-compact single-row toolbar (Offen / Rating / Filter / Radar) with a compact status + result-count + “↻ Suchen” row above the map.
+- Reworks the map controls into an ultra-compact single-row toolbar (Offen / Rating / Filter / Radar) at about 27 px height, with an approximately 24 px status + result-count + “↻ Suchen” row above the map.
 - Adds regression coverage for the exact WebSim selector families, viewport-only discovery, no automatic Photon expansion, Nominatim search, toolbar height and Android runtime flags.
 
 ## 2.3.13 · Build 48
