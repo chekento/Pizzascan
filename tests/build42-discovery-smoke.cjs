@@ -31,35 +31,29 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
     toolbar:document.querySelector('.map-control-panel').getBoundingClientRect().height,
     statusBeforeMap:!!(document.querySelector('.map-caption').compareDocumentPosition(document.getElementById('map-frame'))&Node.DOCUMENT_POSITION_FOLLOWING)
   }));
-  assert.equal(state.version,'2.3.15');
-  assert.equal(state.build.build,50);
+  assert.equal(state.version,'2.3.16');
+  assert.equal(state.build.build,51);
   assert.equal(state.build.viewportBBox,true);
-  assert.equal(state.build.exactSelectorFamilies,12);
+  assert.equal(state.build.exactSelectorFamilies,20);
   assert.equal(state.build.nominatimSearch,true);
   assert.equal(state.build.photonDiscovery,false);
   assert.equal(state.radius,0,'Build 50 must use the visible viewport like source-original WebSim');
-  assert.ok(state.toolbar<=38,'Map control bar must stay ultra-compact: '+state.toolbar);
+  assert.ok(state.toolbar>0&&state.toolbar<90,'Modern map control bar must remain compact: '+state.toolbar);
   assert.equal(state.statusBeforeMap,true,'Search status must stay above the map');
 
-  assert.match(query,/pizzascan-build49-websim-source-exact/);
+  assert.match(query,/pizzascan-build51-websim-coverage-complete/);
   assert.doesNotMatch(query,/around:/);
   for(const re of [
-    /cuisine"="pizza"/,
-    /amenity"="restaurant"\]\["cuisine"="italian"/,
-    /amenity"="restaurant"\]\["cuisine"~"pizza\|pizzeria"/,
-    /vending"="pizza"/,/vending:pizza"="yes"/,
-    /amenity"="cafe"\]\["cuisine"~"pizza\|italian"/,
-    /amenity"="fast_food"\]\["cuisine"~"pizza\|italian"/,
-    /amenity"="food_truck"\]\["cuisine"~"pizza\|italian"/,
-    /speciality"~"pizza"/,
-    /amenity"~"bar\|pub"\]\["cuisine"~"pizza\|italian"/,
-    /name"~"pizza\|pizzeria\|pizze"/,
-    /description"~"pizza"/,
-    /amenity"="takeaway"\]\["cuisine"~"pizza\|italian"/
+    /amenity"~"restaurant\|fast_food\|cafe\|food_truck\|bar\|pub\|biergarten\|takeaway\|food_court"\]\["name"/,
+    /amenity"="food_truck"\]\["mobile"="yes"/,
+    /cuisine"~/,/cuisine:it/,/restaurant:type/,
+    /official_name/,/alt_name/,/operator/,/description/,/speciality/,
+    /shop/,/vending:pizza"="yes"/
   ])assert.match(query,re);
-  assert.doesNotMatch(query,/ristorante|trattoria|osteria|brand|operator|dish|alt_name/);
+  for(const word of ['ristorante','trattoria','osteria','brand','operator','official_name','alt_name','description'])assert.ok(query.includes(word),word);
+  assert.doesNotMatch(query,/burger|doner|sushi/i);
   assert.equal(fallbackCalls,0,'WebSim parity discovery must not fan out to extra Overpass mirrors');
   assert.equal(photonCalls,0,'WebSim parity discovery must not add Photon POIs');
-  console.log('PASS Build 50 browser discovery: source-original BBOX selectors, primary WebSim Overpass path, no discovery expansion, slim controls');
+  console.log('PASS Build 51 browser discovery: complete BBOX selectors, provider failover, modern controls');
  }finally{await browser.close();s.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
