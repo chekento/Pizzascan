@@ -41,9 +41,9 @@ function broadMigration(previous={},types={}){
     radius:DEFAULT_RADIUS,
     autoSearch:true,
     hideVisited:false,
-    ratingsEnabled:true,
-    minRating:0,
-    includeUnrated:true
+    ratingsEnabled:Object.prototype.hasOwnProperty.call(previous,'ratingsEnabled')?previous.ratingsEnabled!==false:true,
+    minRating:Object.prototype.hasOwnProperty.call(previous,'minRating')&&Number.isFinite(Number(previous.minRating))?Math.max(0,Math.min(5,Number(previous.minRating))):0,
+    includeUnrated:Object.prototype.hasOwnProperty.call(previous,'includeUnrated')?previous.includeUnrated!==false:true
   };
 }
 function candidateVisible(place,cfg={},context={},hours=()=>({state:'unknown'})){
@@ -143,6 +143,7 @@ function install(root){
     };
     PD.filter.__pizzaBroadDefaults=true;
   }
+  migrateOnce();
   root.PizzaScanBroadPolicy={marker:MARKER,defaults:()=>normalizeConfig({}, {}, PD.TYPES),recoveryOwner:'poi-discovery'};
 }
 return {MARKER,BROAD_AMENITIES,DEFAULT_RADIUS,SUPPLEMENT_BELOW,allTypes,normalizeConfig,broadMigration,candidateVisible,queryAreaToken,expandDiscoveryQuery,mergeElements,shouldSupplement,install};

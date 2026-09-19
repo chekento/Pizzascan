@@ -32,7 +32,7 @@ test('explicit user filters still narrow broad place defaults after migration',(
  assert.equal(cfg.includeUnrated,false);
 });
 
-test('migration reopens broad categories, ratings and viewport automatic discovery',()=>{
+test('migration broadens discovery while preserving explicit rating settings',()=>{
  const next=B.broadMigration({sort:'name',travelMode:'bicycling',autoSearch:false,minRating:4.8,onlyOpen:true,types:['pizzeria'],includeUnconfirmed:false,radius:1},TYPES);
  assert.equal(next.sort,'name');
  assert.equal(next.travelMode,'bicycling');
@@ -40,8 +40,12 @@ test('migration reopens broad categories, ratings and viewport automatic discove
  assert.deepEqual(next.types,Object.keys(TYPES));
  assert.equal(next.onlyOpen,false);
  assert.equal(next.unknownHours,false);
- assert.equal(next.minRating,0);
+ assert.equal(next.minRating,4.8);
  assert.equal(next.includeUnrated,true);
+ const preserved=B.broadMigration({ratingsEnabled:false,minRating:5,includeUnrated:false},TYPES);
+ assert.equal(preserved.ratingsEnabled,false);
+ assert.equal(preserved.minRating,5);
+ assert.equal(preserved.includeUnrated,false);
  assert.equal(next.includeUnconfirmed,true);
  assert.equal(next.radius,0);
 });
