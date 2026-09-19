@@ -285,6 +285,7 @@ function install(root){
   const retryService=()=>{
     attempts++;
     serviceInstalled=installServiceRecovery()||serviceInstalled;
+    if(root.PizzaScanPoiDiscovery)root.PizzaScanPoiDiscovery.serviceRecoveryPending=!serviceInstalled;
     if(!serviceInstalled&&typeof root.setTimeout==='function'&&attempts<120)root.setTimeout(retryService,50);
   };
   retryService();
