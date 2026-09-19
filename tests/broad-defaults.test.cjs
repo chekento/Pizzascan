@@ -18,7 +18,7 @@ test('fresh installs default to viewport auto-search with all place types enable
  assert.equal(cfg.hideVisited,false);
  assert.equal(cfg.ratingsEnabled,true);
  assert.equal(cfg.minRating,0);
- assert.equal(cfg.includeUnrated,false);
+ assert.equal(cfg.includeUnrated,true);
 });
 
 test('explicit user filters still narrow broad place defaults after migration',()=>{
@@ -41,7 +41,7 @@ test('migration reopens broad categories, ratings and viewport automatic discove
  assert.equal(next.onlyOpen,false);
  assert.equal(next.unknownHours,false);
  assert.equal(next.minRating,0);
- assert.equal(next.includeUnrated,false);
+ assert.equal(next.includeUnrated,true);
  assert.equal(next.includeUnconfirmed,true);
  assert.equal(next.radius,0);
 });
