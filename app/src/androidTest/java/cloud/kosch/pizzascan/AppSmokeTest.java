@@ -59,6 +59,7 @@ public class AppSmokeTest {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
             assertEquals("true", js(scenario, "PizzaScan.diagnostics().native"));
+            assertEquals("true", js(scenario, "window.PizzaScanNativeOverpass?.active===true && PizzaScanNativeOverpass.nativeFirst===true && PizzaScanNativeOverpass.mirrorFailover===true"));
             assertEquals("true", js(scenario, "!!window.L && location.protocol === 'https:'"));
             scenario.onActivity(a -> {
                 assertFalse(web(a).getSettings().getAllowFileAccess());
@@ -114,8 +115,8 @@ public class AppSmokeTest {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click();navigate('map');");
-            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.14' && document.querySelector('.brand small').textContent==='2.3.14'"));
-            assertEquals("true", js(scenario, "window.PizzaScanDiscovery49?.build===49 && PizzaScanDiscovery49.viewportBBox===true && PizzaScanDiscovery49.exactSelectorFamilies===12 && PizzaScanDiscovery49.nominatimSearch===true && PizzaScanDiscovery49.photonDiscovery===false && PizzaScanDiscovery49.slimToolbar===true"));
+            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.15' && document.querySelector('.brand small').textContent==='2.3.15'"));
+            assertEquals("true", js(scenario, "window.PizzaScanDiscovery50?.build===50 && PizzaScanDiscovery50.viewportBBox===true && PizzaScanDiscovery50.exactSelectorFamilies===12 && PizzaScanDiscovery50.nominatimSearch===true && PizzaScanDiscovery50.photonDiscovery===false && PizzaScanDiscovery50.slimToolbar===true"));
             assertEquals("true", js(scenario, "document.querySelector('.app-bottom-bar').getBoundingClientRect().height<=76 && document.querySelectorAll('.app-footer a').length===2"));
             js(scenario, "document.getElementById('rating-filter-open').click();");
             assertEquals("true", js(scenario, "document.getElementById('filter-min-rating').step==='0.1' && document.getElementById('filter-min-rating').getBoundingClientRect().height>0"));
