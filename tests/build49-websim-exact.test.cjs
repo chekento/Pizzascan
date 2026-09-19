@@ -51,3 +51,13 @@ test('Build 49 restores WebSim viewport auto-search instead of fixed 5 km',()=>{
 test('Build 49 does not add extra result-shaping beyond the WebSim response',()=>{
   assert.equal(Object.prototype.hasOwnProperty.call(B,'centerizeWebsim'),false);
 });
+
+test('Build 49 locks the exact query against legacy runtime reassignment',()=>{
+  const root={PizzaPlaces:{query(){return 'legacy';}}};
+  assert.equal(B.lockQuery(root),true);
+  const q1=root.PizzaPlaces.query(null,null,{south:1,west:2,north:3,east:4});
+  root.PizzaPlaces.query=()=> 'broad legacy';
+  const q2=root.PizzaPlaces.query(null,null,{south:1,west:2,north:3,east:4});
+  assert.match(q1,/pizzascan-build49-websim-source-exact/);
+  assert.equal(q2,q1);
+});
