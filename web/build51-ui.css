@@ -319,3 +319,6 @@ input:focus,select:focus,textarea:focus{border-color:rgba(242,88,61,.64);box-sha
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
 }
+
+/* Fullscreen wins over the bounded card height above. */
+body.map-fullscreen #map{height:100dvh!important;min-height:0!important;max-height:none!important;border-radius:0!important}
