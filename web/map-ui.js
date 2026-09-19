@@ -24,7 +24,7 @@ function scheduleMapDiscovery(force=true){
  clearTimeout(queryTimer);
  const automatic=!!mapConfig().autoSearch||globalThis.PizzaScanDiscovery55?.build>=55||globalThis.PizzaScanDiscovery54?.build>=54;
  if(!automatic)return;
- queryTimer=setTimeout(()=>{try{loadPlaces({force});}catch(error){console.warn('PizzaScan Kartenbereich konnte nicht gesucht werden',error);}},480);
+ queryTimer=setTimeout(()=>{try{loadPlaces({force});}catch(error){console.warn('PizzaScan Kartenbereich konnte nicht gesucht werden',error);}},180);
 }
 function visiblePlaces(){const cfg=mapConfig(),visited=new Set(reports.filter(r=>r.visited&&r.place).map(r=>r.place.placeId));const list=PlaceData.filter(onlySaved?saved:places,cfg,{visited},p=>Hours.status(p)).filter(p=>PizzaRatingsUI.passes(p,cfg));const center=position||mapCenter();return list.sort((a,b)=>cfg.sort==='name'?a.name.localeCompare(b.name,document.documentElement.lang||'de'):cfg.sort==='open'?({open:0,unknown:1,closed:2}[Hours.status(a).state]-{open:0,unknown:1,closed:2}[Hours.status(b).state]||C.distance(center,a)-C.distance(center,b)):C.distance(center,a)-C.distance(center,b));}
 function statusBadge(p){const h=Hours.status(p);return `<span class="opening-badge ${h.state}">${esc(h.label)}</span>`;}
@@ -40,7 +40,26 @@ function refreshArea(){const cfg=mapConfig(),center=mapCenter(),bounds=boundsObj
 async function loadPlaces(options={}){const cfg=mapConfig(),center=mapCenter(),bounds=boundsObject(),force=options.force===true;clearTimeout(queryTimer);if(map.getZoom()<11&&!cfg.radius&&!globalThis.PizzaScanDiscovery49?.build){mapError='Bitte näher hineinzoomen oder einen festen Suchradius wählen.';renderPlaces();return;}
  const cached=mapAreas.find(a=>Date.now()-a.time<300000&&cfg.radius&&a.radius>=cfg.radius+C.distance(a.center,center));if(cached&&!force){mapUpdated=new Date(cached.time).toISOString();mapError='';refreshArea();return;}
  mapRequest?.abort();const ctl=mapRequest=new AbortController(),revision=++mapRevision;mapLoading=true;mapError='';setMapSearchBusy(true);refreshArea();$('map-status').textContent='Pizzerien werden geladen …';$('map-refresh').textContent=globalThis.PizzaScanDiscovery49?.build?'↻ …':'Suche läuft …';
- try{const radius=cfg.radius?Math.min(10,cfg.radius*1.2):0;const discovery=globalThis.PizzaScanDiscovery55||globalThis.PizzaScanDiscovery54||globalThis.PizzaScanDiscovery49;const searchQuery=discovery?.build>=54&&typeof discovery.websimQuery==='function'?discovery.websimQuery(bounds):PlaceData.query(center,radius,bounds);const result=await placeService.overpass(searchQuery,{signal:ctl.signal,onStatus:text=>{if(revision===mapRevision)$('map-status').textContent=text;}});if(revision!==mapRevision)return;const found=PlaceData.fromOverpass(result.data.elements);const retained=mapPool.filter(p=>!PlaceData.within(p,center,radius,bounds));mapPool=PlaceData.merge(retained,PlaceData.merge(mapPool.filter(p=>found.some(x=>x.placeId===p.placeId)),found));mapUpdated=new Date().toISOString();mapSource=result.source;mapAreas.push({center,radius,bounds,time:Date.now()});storeMapCache();}
+ let acceptedInitial=false;
+ const acceptBatch=(elements,source,final=false)=>{
+  if(revision!==mapRevision||ctl.signal.aborted)return;
+  const found=PlaceData.fromOverpass(Array.isArray(elements)?elements:[]);
+  const retained=acceptedInitial?mapPool:mapPool.filter(p=>!PlaceData.within(p,center,radius,bounds));
+  mapPool=PlaceData.merge(retained,PlaceData.merge(mapPool.filter(p=>found.some(x=>x.placeId===p.placeId)),found));
+  acceptedInitial=true;
+  if(source)mapSource=source;
+  mapUpdated=new Date().toISOString();
+  refreshArea();
+  if(final){mapAreas.push({center,radius,bounds,time:Date.now()});storeMapCache();}
+  else storeMapCache();
+ };
+ try{
+  const radius=cfg.radius?Math.min(10,cfg.radius*1.2):0;
+  const discovery=globalThis.PizzaScanDiscovery55||globalThis.PizzaScanDiscovery54||globalThis.PizzaScanDiscovery49;
+  const searchQuery=discovery?.build>=54&&typeof discovery.websimQuery==='function'?discovery.websimQuery(bounds):PlaceData.query(center,radius,bounds);
+  const result=await placeService.overpass(searchQuery,{signal:ctl.signal,onStatus:text=>{if(revision===mapRevision)$('map-status').textContent=text;},onBatch:batch=>acceptBatch(batch?.data?.elements||batch?.elements||[],batch?.source||'',false)});
+  if(revision!==mapRevision)return;
+  acceptBatch(result?.data?.elements||[],result?.source||'',true);
  catch(e){if(revision!==mapRevision||ctl.signal.aborted)return;mapError=e.message||'Verbindung fehlgeschlagen.';}
  finally{if(revision===mapRevision)mapLoading=false;setMapSearchBusy(false);if(revision===mapRevision){$('map-refresh').textContent=globalThis.PizzaScanDiscovery49?.build?'↻ Suchen':'Hier suchen';refreshArea();}}
 }

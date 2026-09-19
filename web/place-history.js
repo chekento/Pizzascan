@@ -18,6 +18,8 @@ const ARCHIVE_FORMAT='pizzascan-visited';
 const ARCHIVE_VERSION=2;
 const SUPPORTED_ARCHIVE_VERSIONS=new Set([1,2]);
 const PROVIDER_TIMEOUT=65000;
+const MAX_ARCHIVE_RECORDS=1000000;
+const MAX_ARCHIVE_BYTES=512*1024*1024;
 
 function validPlaceId(value){return /^(node|way|relation)-\d+$/.test(String(value||''));}
 function validCoords(p){return p&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))&&Math.abs(Number(p.lat))<=90&&Math.abs(Number(p.lng))<=180;}
@@ -63,7 +65,7 @@ function archiveFromMarkdown(text){
   const match=/```json\s*([\s\S]*?)\s*```/i.exec(source);if(!match)throw Error('Maschinenlesbare Archivdaten fehlen.');
   let data;try{data=JSON.parse(match[1]);}catch{throw Error('Archivdaten sind beschädigt.');}
   if(data?.format!==ARCHIVE_FORMAT||!SUPPORTED_ARCHIVE_VERSIONS.has(Number(data?.version))||!Array.isArray(data.visits))throw Error('Nicht unterstützte PizzaScan-Archivversion.');
-  if(data.visits.length>100000)throw Error('Das Archiv enthält ungewöhnlich viele Einträge.');
+  if(data.visits.length>MAX_ARCHIVE_RECORDS)throw Error('Das Archiv enthält ungewöhnlich viele Einträge.');
   const rows=data.visits.map(r=>mergeVisitRecords(null,r));Object.defineProperty(rows,'bundle',{value:data,enumerable:false});return rows;
 }
 function dedupeElements(...groups){
@@ -87,6 +89,7 @@ function openDatabase(indexedDBImpl){
 }
 function request(req){return new Promise((resolve,reject)=>{req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error||Error('Speicherzugriff fehlgeschlagen.'));});}
 function all(db,store){return request(db.transaction(store,'readonly').objectStore(store).getAll());}
+function countStore(db,store){return request(db.transaction(store,'readonly').objectStore(store).count());}
 function putMany(db,store,items){return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readwrite'),os=tx.objectStore(store);for(const item of items||[])os.put(item);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||Error('Speichern fehlgeschlagen.'));tx.onabort=()=>reject(tx.error||Error('Speichern abgebrochen.'));});}
 function getOne(db,store,key){return request(db.transaction(store,'readonly').objectStore(store).get(key));}
 function removeOne(db,store,key){return new Promise((resolve,reject)=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||Error('Löschen fehlgeschlagen.'));tx.onabort=()=>reject(tx.error||Error('Löschen abgebrochen.'));});}
@@ -182,52 +185,123 @@ function install(root){
   }catch{}
 
   function localJson(key,fallback){try{return JSON.parse(root.localStorage?.getItem(key)||'null')??fallback;}catch{return fallback;}}
-  function compactReports(){return (reports||[]).filter(r=>r&&typeof r.id==='string').slice(0,100000).map(r=>{const copy={...r,photo:''};try{if(copy.place)copy.place=cleanPlace(copy.place);}catch{delete copy.place;}return copy;});}
+  function compactReports(){return (reports||[]).filter(r=>r&&typeof r.id==='string').map(r=>{const copy={...r,photo:''};try{if(copy.place)copy.place=cleanPlace(copy.place);}catch{delete copy.place;}return copy;});}
   async function collectionBundle(rows){
- const cached=await all(await dbPromise,PLACE_STORE),savedPlaces=Array.isArray(saved)?saved:[],basePlaces=[...cached,...savedPlaces],ratings=cleanRatingBundle(localJson('pizzascan-place-ratings-v1',{}),basePlaces),settingsCopy=(()=>{try{return JSON.parse(JSON.stringify(settings||{}));}catch{return {};}})();
- return {places:cleanOptionalPlaces([...basePlaces,...Object.values(ratings).map(row=>row.place)]),saved:savedPlaces,reports:compactReports(),drafts:localJson('pizzascan-drafts-v1',{}),ratings,settings:settingsCopy};
-}
+    const db=await dbPromise;
+    const [cached,ratingRows]=await Promise.all([all(db,PLACE_STORE),all(db,RATING_STORE)]);
+    const savedPlaces=Array.isArray(saved)?saved:[],basePlaces=[...cached,...savedPlaces];
+    const ratings=cleanRatingBundle(localJson('pizzascan-place-ratings-v1',{}),basePlaces);
+    for(const row of ratingRows||[]){
+      const clean=cleanRatingEntry(row?.placeId||row?.place?.placeId,row,[...basePlaces,row?.place]);
+      if(clean&&(!ratings[clean.placeId]||Date.parse(clean.updatedAt||'')>=Date.parse(ratings[clean.placeId].updatedAt||'')))ratings[clean.placeId]=clean;
+    }
+    const settingsCopy=(()=>{try{return JSON.parse(JSON.stringify(settings||{}));}catch{return {};}})();
+    return {places:cleanOptionalPlaces([...basePlaces,...Object.values(ratings).map(row=>row.place)]),saved:savedPlaces,reports:compactReports(),drafts:localJson('pizzascan-drafts-v1',{}),ratings,settings:settingsCopy};
+  }
   async function exportArchive(){const rows=await all(await dbPromise,VISIT_STORE),bundle=await collectionBundle(rows),name='PizzaScan-Sammlung-'+new Date().toISOString().slice(0,10)+'.json',text=JSON.stringify(archiveObject(rows,bundle));await bridge('save',{name,text});toast(`${bundle.places.length} gesammelte Orte, ${Object.keys(bundle.ratings).length} eigene Bewertungen, ${rows.length} Besuchseinträge und Entwürfe als Sammlung gesichert.`);}
   async function importArchive(){
-    const input=document.createElement('input');input.type='file';input.accept='.md,.json,text/markdown,application/json,text/plain';
-    input.onchange=async()=>{try{const file=input.files?.[0];if(!file)return;const raw=await file.text();let incoming;if(raw.includes('pizzascan-visited-v1'))incoming=archiveFromMarkdown(raw);else{const data=JSON.parse(raw);if(data?.format!==ARCHIVE_FORMAT||!SUPPORTED_ARCHIVE_VERSIONS.has(Number(data?.version))||!Array.isArray(data.visits))throw Error('Nicht unterstützte PizzaScan-Sammlung.');const rows=(data.visits||[]).map(r=>mergeVisitRecords(null,r));Object.defineProperty(rows,'bundle',{value:data,enumerable:false});incoming=rows;}const bundle=incoming.bundle||{},db=await dbPromise,merged=[];for(const row of incoming){const next=mergeVisitRecords(null,row);merged.push(next);visitedIds.add(next.placeId);}await putMany(db,VISIT_STORE,merged);const importedRatings=cleanRatingBundle(bundle.ratings||{},[...(bundle.places||[]),...(bundle.saved||[]),...merged.map(x=>x.place)]);const placeMap=new Map();for(const place of [...(bundle.places||[]),...(bundle.saved||[]),...merged.map(x=>x.place),...Object.values(importedRatings).map(row=>row.place)])try{const clean=cleanPlace(place);placeMap.set(clean.placeId,clean);}catch{}await putMany(db,PLACE_STORE,[...placeMap.values()]);if(Array.isArray(bundle.saved)){const imported=[];for(const place of bundle.saved)try{imported.push(cleanPlace(place));}catch{}saved=PlaceData.merge(saved,imported);placeService.write('pizzascan-saved-v2',saved);}if(Object.keys(importedRatings).length){const currentRatings=cleanRatingBundle(localJson('pizzascan-place-ratings-v1',{}));placeService.write('pizzascan-place-ratings-v1',{...currentRatings,...importedRatings});await putMany(db,RATING_STORE,Object.values(importedRatings));}if(bundle.drafts&&typeof bundle.drafts==='object'){const drafts=localJson('pizzascan-drafts-v1',{});for(const [id,value] of Object.entries(bundle.drafts))try{const clean=PizzaDrafts.entry(value);if(PizzaDrafts.hasContent(clean))drafts[id]=clean;}catch{}placeService.write('pizzascan-drafts-v1',drafts);}if(bundle.settings&&typeof bundle.settings==='object'){settings={...settings,...bundle.settings,filters:{...settings.filters,...(bundle.settings.filters||{})}};saveSettings();}if(Array.isArray(bundle.reports)&&typeof transaction==='function'){const importedReports=bundle.reports.filter(r=>r&&typeof r.id==='string').slice(0,100000);await transaction('readwrite',store=>{for(const report of importedReports)store.put(report);});reports=await transaction('readonly',store=>store.getAll());}mapPool=PlaceData.merge(mapPool,[...placeMap.values()]);refreshArea();renderPlaces();renderHistory();renderDraftBadge();toast(`${placeMap.size} Orte, ${merged.length} Besuchs-/Bewertungseinträge und die zugehörigen Einstellungen geladen.`);}catch(error){toast(error.message||'PizzaScan-Sammlung konnte nicht geladen werden.');}};input.click();
+    const input=document.createElement('input');
+    input.type='file';input.accept='.md,.json,text/markdown,application/json,text/plain';
+    input.onchange=async()=>{
+      try{
+        const file=input.files?.[0];if(!file)return;
+        if(Number(file.size)>MAX_ARCHIVE_BYTES)throw Error('Diese Sammlung ist größer als 512 MB und kann auf diesem Gerät nicht geladen werden.');
+        const raw=await file.text();let incoming;
+        if(raw.includes('pizzascan-visited-v1'))incoming=archiveFromMarkdown(raw);
+        else{
+          const data=JSON.parse(raw);
+          if(data?.format!==ARCHIVE_FORMAT||!SUPPORTED_ARCHIVE_VERSIONS.has(Number(data?.version))||!Array.isArray(data.visits))throw Error('Nicht unterstützte PizzaScan-Sammlung.');
+          if(data.visits.length>MAX_ARCHIVE_RECORDS)throw Error('Das Archiv enthält ungewöhnlich viele Besuchseinträge.');
+          const rows=(data.visits||[]).map(r=>mergeVisitRecords(null,r));
+          Object.defineProperty(rows,'bundle',{value:data,enumerable:false});incoming=rows;
+        }
+        const bundle=incoming.bundle||{},db=await dbPromise;
+        const existingVisits=await all(db,VISIT_STORE),byPlace=new Map(existingVisits.map(row=>[row.placeId,row])),merged=[];
+        for(const row of incoming){const next=mergeVisitRecords(byPlace.get(row.placeId)||null,row);byPlace.set(next.placeId,next);merged.push(next);visitedIds.add(next.placeId);}
+        await putMany(db,VISIT_STORE,merged);
+        const fallbackPlaces=[...(bundle.places||[]),...(bundle.saved||[]),...merged.map(x=>x.place)];
+        const importedRatings=cleanRatingBundle(bundle.ratings||{},fallbackPlaces);
+        const storedRatings=await all(db,RATING_STORE);
+        const currentRatings=cleanRatingBundle(localJson('pizzascan-place-ratings-v1',{}),fallbackPlaces);
+        for(const row of storedRatings||[]){const clean=cleanRatingEntry(row?.placeId||row?.place?.placeId,row,fallbackPlaces);if(clean)currentRatings[clean.placeId]=clean;}
+        const mergedRatings={...currentRatings};
+        for(const [id,row] of Object.entries(importedRatings)){const old=mergedRatings[id];if(!old||Date.parse(row.updatedAt||'')>=Date.parse(old.updatedAt||''))mergedRatings[id]=row;}
+        const placeMap=new Map();
+        for(const place of [...fallbackPlaces,...Object.values(mergedRatings).map(row=>row.place)])try{const clean=cleanPlace(place);placeMap.set(clean.placeId,clean);}catch{}
+        await putMany(db,PLACE_STORE,[...placeMap.values()]);
+        if(Array.isArray(bundle.saved)){const imported=[];for(const place of bundle.saved)try{imported.push(cleanPlace(place));}catch{}saved=PlaceData.merge(saved,imported);placeService.write('pizzascan-saved-v2',saved);}
+        if(Object.keys(importedRatings).length){placeService.write('pizzascan-place-ratings-v1',mergedRatings);await putMany(db,RATING_STORE,Object.values(importedRatings));}
+        if(bundle.drafts&&typeof bundle.drafts==='object'){const drafts=localJson('pizzascan-drafts-v1',{});for(const [id,value] of Object.entries(bundle.drafts))try{const clean=PizzaDrafts.entry(value);if(PizzaDrafts.hasContent(clean))drafts[id]=clean;}catch{}placeService.write('pizzascan-drafts-v1',drafts);}
+        if(bundle.settings&&typeof bundle.settings==='object'){settings={...settings,...bundle.settings,filters:{...settings.filters,...(bundle.settings.filters||{})}};saveSettings();}
+        if(Array.isArray(bundle.reports)&&typeof transaction==='function'){
+          const importedReports=bundle.reports.filter(r=>r&&typeof r.id==='string');
+          await transaction('readwrite',store=>{for(const report of importedReports)store.put(report);});
+          reports=await transaction('readonly',store=>store.getAll());
+        }
+        mapPool=PlaceData.merge(mapPool,[...placeMap.values()]);refreshArea();renderPlaces();renderDraftBadge();renderArchiveStats();
+        toast(placeMap.size+' Orte, '+merged.length+' Besuchs-/Bewertungseinträge und die zugehörigen Einstellungen geladen.');
+      }catch(error){toast(error.message||'PizzaScan-Sammlung konnte nicht geladen werden.');}
+    };
+    input.click();
+  }
+  async function renderArchiveStats(){
+    const target=document.getElementById('history-stats');if(!target)return;
+    try{
+      const db=await dbPromise;
+      const [placeCount,visitCount,ratingCount]=await Promise.all([countStore(db,PLACE_STORE),countStore(db,VISIT_STORE),countStore(db,RATING_STORE)]);
+      const reportCount=Array.isArray(reports)?reports.length:0;
+      target.textContent=placeCount.toLocaleString()+' Orte · '+ratingCount.toLocaleString()+' eigene Bewertungen · '+visitCount.toLocaleString()+' Besuche · '+reportCount.toLocaleString()+' Fotoanalysen';
+    }catch{target.textContent='Lokaler Speicher wird geprüft …';}
   }
   function injectArchiveSettings(){
     const body=document.getElementById('sheet-body');if(!body||document.getElementById('pizzascan-history-settings'))return;wireVisitFilters();
-    const section=document.createElement('section');section.id='pizzascan-history-settings';section.innerHTML=`<hr><h2>Gesamte Sammlung, Orte, Bewertungen & Rezensionen</h2><p class="hint">Alle dauerhaft gesammelten Orte, gemerkten Standorte, eigenen 0,1–10,0-Bewertungen, Besuchseinträge, Rezensionsentwürfe und relevanten Einstellungen werden lokal zusammengeführt und als eine vollständige Sammlung gesichert. Beim Laden werden vorhandene Daten zusammengeführt, nicht gelöscht. Beim Laden werden vorhandene Daten zusammengeführt, nicht gelöscht.</p><div class="card-actions"><button id="history-export" class="secondary">Gesamte Sammlung sichern</button><button id="history-import" class="secondary">Sammlung laden</button></div><p class="hint">Fotos selbst werden aus Datenschutz- und Dateigrößengründen nicht in das Backup kopiert; Fotoanalysewerte, eigene Bewertungen, Notizen und Entwürfe bleiben erhalten. Google-/Open-Reviews-Schlüssel werden nie exportiert.</p>`;
-    const privacy=[...body.querySelectorAll('details')].find(d=>(d.querySelector('summary')?.textContent||'').toLowerCase().includes('datenschutz'));
-    if(privacy)privacy.before(section);else body.append(section);
-    document.getElementById('history-export').onclick=()=>guarded(exportArchive);document.getElementById('history-import').onclick=()=>guarded(importArchive);
+    const section=document.createElement('section');section.id='pizzascan-history-settings';section.innerHTML='<div class="eyebrow">DATEN & BACKUP</div><h2>Sammlung exportieren / importieren</h2><p class="hint">Alle Orte, Koordinaten, Besuche, Favoriten, eigenen Bewertungen, Rezensionsentwürfe, Fotoanalysen und relevanten Einstellungen werden zusammengeführt. Das Backup ist für deutlich mehr als 10.000 Einträge ausgelegt.</p><div class="card-actions"><button id="history-export" class="primary">⬇️ Gesamte Sammlung exportieren</button><button id="history-import" class="secondary">⬆️ Sammlung importieren</button></div><p id="history-stats" class="hint" role="status">Speicher wird geprüft …</p><details data-persist-key="settings:archive-info"><summary>Was wird übertragen?</summary><p>Übertragen werden Orts-ID, Name, Adresse, Position, Bewertung von 0,1 bis 10,0, Besuche, Notizen, Entwürfe, Fotoanalysewerte und Einstellungen. Fotos sowie API-Schlüssel bleiben aus Datenschutz- und Dateigründen auf dem Gerät.</p></details>';
+    const anchor=body.querySelector('.settings-jumps')||body.querySelector('h1');
+    if(anchor)anchor.insertAdjacentElement('afterend',section);else body.prepend(section);
+    document.getElementById('history-export').onclick=()=>guarded(exportArchive);
+    document.getElementById('history-import').onclick=()=>guarded(importArchive);
+    renderArchiveStats();
   }
   if(typeof showSettings==='function'){
     const baseShowSettings=showSettings;showSettings=function(section){const out=baseShowSettings(section);injectArchiveSettings();return out;};
   }
 
-  /* Full WebSim/dense-city result union: no result-count target, no 3.5-second
-   * early cutoff. All successful Overpass mirrors are merged by OSM identity.
-   * Cached discoveries are unioned too, so a temporarily sparse provider cannot
-   * erase places the app already found. */
+  /* Full WebSim/dense-city result union. Return the first successful
+   * provider immediately, then merge all remaining successful mirrors through
+   * loadPlaces({onBatch}) so the map stays fast without losing coverage. */
   try{
     const baseOverpass=placeService.overpass.bind(placeService);
     placeService.overpass=async function(query,options={}){
-      const smart=root.PizzaSmartDiscovery;if(!smart?.isWebsimDiscoveryQuery?.(query))return baseOverpass(query,options);
+      const smart=root.PizzaSmartDiscovery;
+      if(!smart?.isWebsimDiscoveryQuery?.(query))return baseOverpass(query,options);
       if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
-      options.onStatus?.('Alle Pizza- und Italien-Orte werden aus den Kartenquellen zusammengeführt …');
-      const endpoints=smart.PROVIDERS||[],sources=[];
-      const tasks=endpoints.map(async endpoint=>{const data=await this.json(endpoint,{method:'POST',body:new URLSearchParams({data:query})},options.signal,PROVIDER_TIMEOUT);if(!Array.isArray(data?.elements)||data.remark)throw Error(data?.remark||'Unvollständige Kartendaten');sources.push(new URL(endpoint).hostname);return data.elements;});
-      const settled=await Promise.allSettled(tasks),groups=settled.filter(x=>x.status==='fulfilled').map(x=>x.value);
+      options.onStatus?.('PizzaScan-Suche · erste Kartenquelle wird geladen …');
+      const endpoints=smart.PROVIDERS||[],sources=[],groups=[];
       const info=smart.queryAreaInfo?.(query),cached=[];
-      if(info)for(const p of mapPool||[]){const e=placeToElement(p);if(!e)continue;const point={lat:e.lat,lng:e.lon};if(smart.inside?.(info,point)&&smart.placeRelevant?.(p))cached.push(e);}
-      const elements=dedupeElements(...groups,cached);
-      if(elements.length)return {data:{elements},source:[...new Set(sources)].join(' + ')+(cached.length?' + lokaler Cache':'')};
-      return baseOverpass(query,options);
+      if(info)for(const p of mapPool||[]){const e=placeToElement(p);if(!e)continue;const point={lat:e.lat,lng:e.lng};if(smart.inside?.(info,point)&&smart.placeRelevant?.(p))cached.push(e);}
+      const fetchEndpoint=async endpoint=>{
+        const data=await this.json(endpoint,{method:'POST',body:new URLSearchParams({data:query})},options.signal,PROVIDER_TIMEOUT);
+        if(!Array.isArray(data?.elements)||data.remark)throw Error(data?.remark||'Unvollständige Kartendaten');
+        const elements=data.elements;sources.push(new URL(endpoint).hostname);groups.push(elements);return {endpoint,elements};
+      };
+      const tasks=endpoints.map(fetchEndpoint);
+      let first;
+      try{first=await Promise.any(tasks);}catch{return baseOverpass(query,options);}
+      const initial=dedupeElements(first.elements,cached),source=[...new Set(sources)];
+      options.onStatus?.(initial.length+' relevante Treffer · weitere Kartenquellen werden zusammengeführt …');
+      Promise.allSettled(tasks).then(()=>{
+        if(options.signal?.aborted)return;
+        const merged=dedupeElements(...groups,cached),allSource=[...new Set(sources)];
+        options.onBatch?.({data:{elements:merged},source:allSource.join(' + ')+(cached.length?' + lokaler Cache':''),sources:allSource,complete:true,progressive:true});
+      }).catch(()=>{});
+      return {data:{elements:initial},source:source.join(' + ')+(cached.length?' + lokaler Cache':''),sources:source,complete:false,progressive:true};
     };
     placeService.overpass.__pizzascanCompleteWebsim=true;
+    placeService.overpass.__pizzascanProgressive=true;
   }catch{}
-
   const baseInitMap=typeof initMap==='function'?initMap:null;
   if(baseInitMap)initMap=function(){const out=baseInitMap();hydrate();return out;};else hydrate();
 }
 
-return {DB_NAME,DB_VERSION,PLACE_STORE,VISIT_STORE,RATING_STORE,ARCHIVE_FORMAT,ARCHIVE_VERSION,validPlaceId,validCoords,cleanPlace,cleanEvent,mergeVisitRecords,cleanRatingEntry,cleanRatingBundle,archiveObject,archiveToMarkdown,archiveFromMarkdown,dedupeElements,placeToElement,install};
+return {DB_NAME,DB_VERSION,PLACE_STORE,VISIT_STORE,RATING_STORE,ARCHIVE_FORMAT,ARCHIVE_VERSION,MAX_ARCHIVE_RECORDS,MAX_ARCHIVE_BYTES,validPlaceId,validCoords,cleanPlace,cleanEvent,mergeVisitRecords,cleanRatingEntry,cleanRatingBundle,archiveObject,archiveToMarkdown,archiveFromMarkdown,dedupeElements,placeToElement,install};
 });

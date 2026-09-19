@@ -69,9 +69,9 @@ test('Build 38 finalizer waits for every Overpass mirror and unions cached disco
   assert.doesNotMatch(source,/3500/);
 });
 
-test('Build 55 collection archive keeps one shared rating and location for 1200 places',()=>{
+test('Build 56 collection archive keeps one shared rating and location for 12000 places',()=>{
  const ratings={};
- for(let i=0;i<1200;i++){const id='node-'+(900000+i);ratings[id]={rating:Math.round(((i%100)+1)/10*10)/10,updatedAt:'2026-09-19T00:00:00.000Z',place:{placeId:id,name:'Ort '+i,lat:50+i/10000,lng:8+i/10000,address:'Test '+i,type:'restaurant'}};}
+ for(let i=0;i<12000;i++){const id='node-'+(900000+i);ratings[id]={rating:Math.round(((i%100)+1)/10*10)/10,updatedAt:'2026-09-19T00:00:00.000Z',place:{placeId:id,name:'Ort '+i,lat:50+i/10000,lng:8+i/10000,address:'Test '+i,type:'restaurant'}};}
  const data=H.archiveObject([],{ratings});
  assert.equal(data.version,2);
  assert.equal(data.places.length,1200);
@@ -80,5 +80,5 @@ test('Build 55 collection archive keeps one shared rating and location for 1200 
  assert.equal(data.ratings['node-900000'].place.placeId,'node-900000');
  const restored=H.archiveFromMarkdown(H.archiveToMarkdown([],{ratings}));
  assert.equal(restored.bundle.places.length,1200);
- assert.equal(restored.bundle.ratings['node-901199'].place.lng,8.1199);
+ assert.equal(restored.bundle.ratings['node-911999'].place.lng,9.1999);
 });

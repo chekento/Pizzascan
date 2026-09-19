@@ -7,9 +7,9 @@ android {
         applicationId 'cloud.kosch.pizzascan'
         minSdk 26
         targetSdk 36
-        // Build 55: automatic initial discovery, stable popups, shared ratings and collection backup.
-        versionCode 55
-        versionName '2.3.20'
+        // Build 56: automatic initial discovery, stable popups, shared ratings and collection backup.
+        versionCode 56
+        versionName '2.3.21'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     sourceSets { main { assets.srcDirs = ['../web'] } }

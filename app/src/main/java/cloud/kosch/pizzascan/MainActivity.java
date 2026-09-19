@@ -10,6 +10,7 @@ import android.content.res.Configuration;
 import java.util.Locale;
 import android.util.Base64;
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -67,9 +68,11 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCallback;
     private Uri captureUri;
     private File captureFile;
-    private static final int MAX_EXPORT_BYTES = 64 * 1024 * 1024;
+    private static final long MAX_EXPORT_BYTES = 512L * 1024L * 1024L;
     private String pendingExport;
-    private StringBuilder pendingExportChunks;
+    private File pendingExportTemp;
+    private OutputStream pendingExportStream;
+    private long pendingExportBytes;
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
     private volatile String appLanguage = Locale.getDefault().getLanguage();
@@ -300,6 +303,15 @@ public class MainActivity extends Activity {
             web.evaluateJavascript("window.PizzaScanBridge?.reply(" + payload + ")", null);
         } catch (Exception e) { toast(ui(R.string.reply_error)); }
     }
+    private void discardPendingExport() {
+        try { if (pendingExportStream != null) pendingExportStream.close(); } catch (Exception ignored) {}
+        pendingExportStream = null;
+        if (pendingExportTemp != null) pendingExportTemp.delete();
+        pendingExportTemp = null;
+        pendingExport = null;
+        pendingExportBytes = 0L;
+    }
+
     private void handleMessage(JSONObject request) {
         try {
             switch (request.optString("type")) {
@@ -315,7 +327,7 @@ public class MainActivity extends Activity {
                     break;
                 }
                 case "save": {
-                    if (pendingExport != null || pendingExportChunks != null) throw new IllegalStateException("Bitte laufenden Export abschließen");
+                    if (pendingExport != null || pendingExportStream != null || pendingExportTemp != null) throw new IllegalStateException("Bitte laufenden Export abschließen");
                     pendingExport = request.optString("text");
                     Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     create.addCategory(Intent.CATEGORY_OPENABLE); create.setType("application/json");
@@ -324,25 +336,35 @@ public class MainActivity extends Activity {
                     break;
                 }
                 case "saveStart": {
-                    if (pendingExport != null || pendingExportChunks != null) throw new IllegalStateException("Bitte laufenden Export abschließen");
-                    pendingExportChunks = new StringBuilder();
+                    if (pendingExport != null || pendingExportStream != null || pendingExportTemp != null) throw new IllegalStateException("Bitte laufenden Export abschließen");
+                    File dir = getCacheDir();
+                    if (!dir.exists() && !dir.mkdirs()) throw new java.io.IOException("Export-Speicher nicht verfügbar");
+                    pendingExportTemp = File.createTempFile("pizzascan-export-", ".json", dir);
+                    pendingExportStream = new FileOutputStream(pendingExportTemp);
+                    pendingExportBytes = 0L;
                     Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     create.addCategory(Intent.CATEGORY_OPENABLE); create.setType("application/json");
                     create.putExtra(Intent.EXTRA_TITLE, request.optString("name", "pizzascan-backup.json").replaceAll("[^a-zA-Z0-9._-]", "_"));
-                    try { startActivityForResult(create, SAVE_FILE); } catch (Exception e) { pendingExportChunks = null; throw e; }
+                    try { startActivityForResult(create, SAVE_FILE); } catch (Exception e) { discardPendingExport(); throw e; }
                     break;
                 }
                 case "saveChunk": {
-                    if (pendingExportChunks == null) throw new IllegalStateException("Kein großer Export gestartet");
-                    String chunk = request.optString("chunk");
-                    if ((pendingExportChunks.length() + chunk.length()) * 2L > MAX_EXPORT_BYTES) {
-                        pendingExportChunks = null;
-                        throw new IllegalStateException("Export ist zu groß für diesen Gerätespeicher");
+                    if (pendingExportStream == null) throw new IllegalStateException("Kein großer Export gestartet");
+                    byte[] chunk = request.optString("chunk").getBytes(StandardCharsets.UTF_8);
+                    if (pendingExportBytes + chunk.length > MAX_EXPORT_BYTES) {
+                        discardPendingExport();
+                        throw new IllegalStateException("Export ist größer als 512 MB");
                     }
-                    pendingExportChunks.append(chunk);
+                    pendingExportStream.write(chunk);
+                    pendingExportBytes += chunk.length;
                     break;
                 }
                 case "saveEnd": {
+                    if (pendingExportStream != null) {
+                        pendingExportStream.flush();
+                        pendingExportStream.close();
+                        pendingExportStream = null;
+                    }
                     break;
                 }
                 case "sharePhoto": {
@@ -422,18 +444,39 @@ public class MainActivity extends Activity {
             if (captureFile != null && (captureUri == null || result != RESULT_OK)) captureFile.delete();
             captureUri = null; captureFile = null;
         } else if (code == SAVE_FILE) {
-            if (result == RESULT_OK && data != null && (pendingExport != null || pendingExportChunks != null)) {
-                String export = pendingExport != null ? pendingExport : pendingExportChunks.toString();
-                try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
-                    out.write(export.getBytes(StandardCharsets.UTF_8)); toast(ui(R.string.export_saved));
-                } catch (Exception e) { toast(ui(R.string.export_failed)); }
+            File exportTemp = pendingExportTemp;
+            String exportText = pendingExport;
+            try {
+                if (pendingExportStream != null) {
+                    pendingExportStream.close();
+                    pendingExportStream = null;
+                }
+                if (result == RESULT_OK && data != null && (exportText != null || exportTemp != null)) {
+                    try (OutputStream out = getContentResolver().openOutputStream(data.getData())) {
+                        if (exportTemp != null) {
+                            try (InputStream in = new FileInputStream(exportTemp)) {
+                                byte[] buffer = new byte[64 * 1024];
+                                int count;
+                                while ((count = in.read(buffer)) != -1) out.write(buffer, 0, count);
+                            }
+                        } else {
+                            out.write(exportText.getBytes(StandardCharsets.UTF_8));
+                        }
+                        toast(ui(R.string.export_saved));
+                    } catch (Exception e) { toast(ui(R.string.export_failed)); }
+                }
+            } catch (Exception e) { toast(ui(R.string.export_failed)); }
+            finally {
+                if (exportTemp != null) exportTemp.delete();
+                pendingExportTemp = null;
+                pendingExport = null;
+                pendingExportBytes = 0L;
             }
-            pendingExport = null;
-            pendingExportChunks = null;
         }
     }
 
     @Override protected void onDestroy() {
+        discardPendingExport();
         if (geoCallback != null) { geoCallback.invoke(geoOrigin, false, false); geoCallback = null; }
         if (web != null) { web.stopLoading(); web.loadUrl("about:blank"); web.removeAllViews(); web.destroy(); }
         super.onDestroy();

@@ -73,7 +73,7 @@ function installCompleteProviderUnion(){
   /* Build 42+ already provides progressive first-success discovery. Never replace it
      with the legacy wait-for-every-provider transport: that was the main reason a
      search could feel much slower than the original WebSim map. */
-  if(placeService.overpass.__build42||placeService.overpass.__build44||placeService.overpass.__websimOriginalZip)return false;
+  if(placeService.overpass.__build42||placeService.overpass.__build44||placeService.overpass.__websimOriginalZip||placeService.overpass.__build49||placeService.overpass.__pizzascanCompleteWebsim||placeService.overpass.__pizzascanProgressive){completeSearchStarted=true;completeSearchFinished=true;return false;}
   const fallback=placeService.overpass.bind(placeService);
   const wrapped=async function(query,options={}){
     const smart=root.PizzaSmartDiscovery;
