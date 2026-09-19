@@ -41,7 +41,7 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
   assert.ok(state.toolbar>0&&state.toolbar<90,'Modern map control bar must remain compact: '+state.toolbar);
   assert.equal(state.statusBeforeMap,true,'Search status must stay above the map');
 
-  assert.match(query,/pizzascan-build51-websim-coverage-complete/);
+  assert.match(query,/pizzascan-build52-websim-coverage-complete/);
   assert.doesNotMatch(query,/around:/);
   for(const re of [
     /amenity"~"restaurant\|fast_food\|cafe\|food_truck\|bar\|pub\|biergarten\|takeaway\|food_court"\]\["name"/,
