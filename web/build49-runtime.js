@@ -90,15 +90,10 @@ function installMapPolicy(root){
   return true;
 }
 
-function installOverpass(root){
-  const PD=root.PizzaPlaces;
-  let service=null;
-  try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
-  if(!PD||!service||typeof service.json!=='function'||service.overpass?.__build49)return false;
-  const previous=service.overpass?.bind(service);
-  service.overpass=async function(query,options={}){
+function makeOverpass(root,previous){
+  const wrapped=async function(query,options={}){
     if(!String(query||'').includes(QUERY_MARKER)){
-      if(previous)return previous(query,options);
+      if(typeof previous==='function')return previous.call(this,query,options);
       throw Error('Kartenabfrage nicht verfügbar');
     }
     if(options.signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
@@ -116,9 +111,27 @@ function installOverpass(root){
       throw error;
     }
   };
-  service.overpass.__build49=true;
-  service.overpass.__inner=previous;
-  return true;
+  wrapped.__build49=true;
+  wrapped.__inner=previous;
+  return wrapped;
+}
+
+function installOverpass(root){
+  const PD=root.PizzaPlaces;
+  if(!PD)return false;
+  let installed=false;
+  const proto=PD.Service?.prototype;
+  if(proto&&typeof proto.overpass==='function'&&!proto.overpass.__build49){
+    proto.overpass=makeOverpass(root,proto.overpass);
+    installed=true;
+  }
+  let service=null;
+  try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
+  if(service&&typeof service.json==='function'&&typeof service.overpass==='function'&&!service.overpass.__build49){
+    service.overpass=makeOverpass(root,service.overpass);
+    installed=true;
+  }
+  return installed||!!proto?.overpass?.__build49||!!service?.overpass?.__build49;
 }
 
 function installSearch(root){
@@ -257,5 +270,5 @@ function install(root){
   return true;
 }
 
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,lockQuery,installMapPolicy,installOverpass,installSearch,compactUi,syncVersion,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,lockQuery,installMapPolicy,makeOverpass,installOverpass,installSearch,compactUi,syncVersion,install};
 });
