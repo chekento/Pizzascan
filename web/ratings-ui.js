@@ -48,7 +48,7 @@
   function beginRender(){frameKnown=known();frameSummaries=new Map();}
   function summary(p){const key=`${p.placeId}:${p.name}:${p.lat}:${p.lng}`;if(!frameSummaries.has(key))frameSummaries.set(key,service.get(p,frameKnown));return frameSummaries.get(key);}
   const enabled=()=>mapConfig().ratingsEnabled;
-  function filterHtml(cfg){return `<fieldset id="ratings-settings" class="rating-filter" translate="no"><legend>${esc(t('heading'))}</legend><label class="check"><input id="ratings-enabled" type="checkbox" ${cfg.ratingsEnabled?'checked':''}><span>${esc(t('enable'))}</span></label><p class="hint">${esc(t('free'))}</p><div class="field"><label for="filter-min-rating">${esc(t('minimum'))}</label><output id="rating-threshold" for="filter-min-rating">${esc(thresholdText(cfg.minRating))}</output><input id="filter-min-rating" type="range" min="0" max="5" step="0.1" value="${cfg.minRating}" ${cfg.ratingsEnabled?'':'disabled'} aria-describedby="rating-filter-help" aria-valuetext="${esc(thresholdText(cfg.minRating))}"></div><label class="check"><input id="filter-unrated" type="checkbox" ${cfg.includeUnrated?'checked':''} ${cfg.ratingsEnabled&&cfg.minRating>0?'':'disabled'}><span>${esc(t('unknownOption'))}</span></label><p class="hint" id="rating-filter-help">${esc(t('scope'))}</p></fieldset>`;}
+  function filterHtml(cfg){return `<fieldset id="ratings-settings" class="rating-filter" translate="no"><legend>${esc(t('heading'))}</legend><label class="check"><input id="ratings-enabled" type="checkbox" ${cfg.ratingsEnabled?'checked':''}><span>${esc(t('enable'))}</span></label><p class="hint">${esc(t('free'))}</p><div class="field"><label for="filter-min-rating">${esc(t('minimum'))}</label><output id="rating-threshold" for="filter-min-rating">${esc(thresholdText(cfg.minRating))}</output><input id="filter-min-rating" type="range" min="0" max="5" step="0.1" value="${cfg.minRating}" aria-describedby="rating-filter-help" aria-valuetext="${esc(thresholdText(cfg.minRating))}"></div><label class="check"><input id="filter-unrated" type="checkbox" ${cfg.includeUnrated?'checked':''} ><span>${esc(t('unknownOption'))}</span></label><p class="hint" id="rating-filter-help">${esc(t('scope'))}</p></fieldset>`;}
   const thresholdText=value=>Number(value)>0?t('at',{value:number(Number(value))}):t('off');
   function card(p){
     if(!enabled())return '';
@@ -101,8 +101,8 @@
   function syncFilterControls(){
     const range=document.getElementById('filter-min-rating'),toggle=document.getElementById('ratings-enabled'),value=document.getElementById('rating-threshold'),unknown=document.getElementById('filter-unrated');
     if(!range||!toggle)return;
-    range.disabled=!toggle.checked;
-    unknown.disabled=!toggle.checked||Number(range.value)===0;
+    range.disabled=false;
+    unknown.disabled=false;
     const text=thresholdText(range.value);
     if(value)value.textContent=text;
     range.setAttribute('aria-valuetext',text);
