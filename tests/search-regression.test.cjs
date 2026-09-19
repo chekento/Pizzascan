@@ -37,7 +37,7 @@ test('default migration restores viewport results and automatic search regenerat
  assert.equal(fresh.autoSearch,true,'moving the map regenerates results by default');
 });
 
-test('generic restaurants remain visible while pizza evidence is still classified separately',()=>{
+test('named food venues remain visible while pizza evidence is still classified separately',()=>{
  const elements=[
   {type:'node',id:1,lat:53.67,lon:10.24,tags:{name:'Pizza Uno',amenity:'restaurant',cuisine:'pizza'}},
   {type:'node',id:2,lat:53.671,lon:10.241,tags:{name:'Ristorante Roma',amenity:'restaurant',cuisine:'italian'}},
