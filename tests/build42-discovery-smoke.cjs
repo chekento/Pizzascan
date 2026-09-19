@@ -31,13 +31,13 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
     toolbar:document.querySelector('.map-control-panel').getBoundingClientRect().height,
     statusBeforeMap:!!(document.querySelector('.map-caption').compareDocumentPosition(document.getElementById('map-frame'))&Node.DOCUMENT_POSITION_FOLLOWING)
   }));
-  assert.equal(state.version,'2.3.14');
-  assert.equal(state.build.build,49);
+  assert.equal(state.version,'2.3.15');
+  assert.equal(state.build.build,50);
   assert.equal(state.build.viewportBBox,true);
   assert.equal(state.build.exactSelectorFamilies,12);
   assert.equal(state.build.nominatimSearch,true);
   assert.equal(state.build.photonDiscovery,false);
-  assert.equal(state.radius,0,'Build 49 must use the visible viewport like source-original WebSim');
+  assert.equal(state.radius,0,'Build 50 must use the visible viewport like source-original WebSim');
   assert.ok(state.toolbar<=38,'Map control bar must stay ultra-compact: '+state.toolbar);
   assert.equal(state.statusBeforeMap,true,'Search status must stay above the map');
 
@@ -60,6 +60,6 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
   assert.doesNotMatch(query,/ristorante|trattoria|osteria|brand|operator|dish|alt_name/);
   assert.equal(fallbackCalls,0,'WebSim parity discovery must not fan out to extra Overpass mirrors');
   assert.equal(photonCalls,0,'WebSim parity discovery must not add Photon POIs');
-  console.log('PASS Build 49 browser discovery: source-original BBOX selectors, primary WebSim Overpass path, no discovery expansion, slim controls');
+  console.log('PASS Build 50 browser discovery: source-original BBOX selectors, primary WebSim Overpass path, no discovery expansion, slim controls');
  }finally{await browser.close();s.close();}
 })().catch(error=>{console.error(error);process.exit(1);});
