@@ -2,7 +2,7 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.15 · Build 50</h1>
+<h1 align="center">PizzaScan 2.3.16 · Build 51</h1>
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français</p>
 
@@ -13,43 +13,45 @@
 ## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.15.apk"><strong>⬇️ PizzaScan 2.3.15 · Build 50 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.16.apk"><strong>⬇️ PizzaScan 2.3.16 · Build 51 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.15 · Build 50 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.16 · Build 51 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
-> **Build 50 behält die Umgebungssuche der WebSim-Originalquelle unverändert und repariert den Android-Netztransport:** gesucht wird im tatsächlich sichtbaren Karten-BBOX mit denselben Pizza-/Italien-Overpass-Familien aus `source-original/script.js`. Es gibt für die automatische Discovery weder einen erzwungenen 5-km-Kreis noch zusätzliche Photon-/Ristorante-/Trattoria-Heuristiken. Die manuelle Ort-/Adresssuche nutzt wie WebSim Nominatim. Die Kartensteuerung ist jetzt eine sehr schmale Ein-Zeilen-Leiste; Status und Trefferzahl stehen direkt darüber an der Karte. Auch die von WebSim gelieferten Resultate werden nicht nachträglich geometrisch erweitert oder durch zusätzliche Discovery-Quellen ergänzt.
+> **Build 51 bringt die 2026-Oberfläche, eine größere Kartenfläche und die vollständige WebSim-Suchfamilie zurück:** Pizza, Trattoria, Ristorante, Osteria und verwandte italienische Gastro-Orte werden nicht nur über das Wort „Pizza“, sondern über Cuisine-, Name-, Brand-, Betreiber-, Alternativname-, Beschreibung-, Spezialitäts- und Restauranttyp-Signale gefunden. Ways und Relationen werden mit ihrem stabilen Kartenmittelpunkt übernommen. Die Android-Transportstrecke nutzt dieselbe Query mit sicheren Overpass-Spiegeln als Failover.
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.15.txt"><strong>SHA-256</strong></a>
+<a href="downloads/SHA256SUMS-2.3.16.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;
 <a href="CHANGELOG.md"><strong>📝 Changelog</strong></a>
 &nbsp; · &nbsp;
 <a href="downloads/README.md"><strong>📦 APK-Archiv</strong></a>
+&nbsp; · &nbsp;
+<a href="https://groups.google.com/g/pizzascan-beta-testers"><strong>👥 Beta-Testgruppe</strong></a>
 &nbsp; · &nbsp;
 <a href="https://raw.githack.com/chekento/Pizzascan/main/web/index.html"><strong>🌐 Browser-Version</strong></a>
 </p>
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 50 verwendet weiterhin die im Repository erhaltene WebSim-Originalsuche als maßgeblichen Discovery-Vertrag:
+Build 51 behandelt die frühere WebSim-Ausgabe als Suchvertrag: relevante Treffer werden erweitert, aber fachfremde Restaurants ohne Pizza-/Italien-Signal bleiben draußen.
 
-- **Kein allgemeiner Gastro-Vollscan mehr.** Normale Burger-, Döner-, asiatische oder sonstige Restaurants ohne Pizza-/Italien-Bezug werden nicht gelistet.
-- **Pizza muss nicht im Namen stehen.** WebSim sucht u. a. über `cuisine=pizza`, Pizza-/Pizzeria-Cuisine, `speciality~pizza`, Pizza im Namen oder in der Beschreibung sowie Pizzaautomaten.
-- **Italienische Restaurants bleiben sichtbar**, wenn die WebSim-Originalabfrage sie über `amenity=restaurant` + `cuisine=italian` oder die entsprechenden Pizza-/Italian-Cuisine-Familien erfasst.
-- Italienisch bedeutet nicht automatisch Pizza: bestätigte Pizza-Orte und italienische Kandidaten werden getrennt gekennzeichnet.
-- Alte Build-42-Cacheeinträge ohne Pizza-/Italien-Evidenz werden aus der sichtbaren Ergebnisliste entfernt.
+- **Nicht nur „Italiener“:** Pizza, Pizzeria, Pizzaria, Trattoria, Ristorante, Osteria, Tavola, Taverna, Enoteca und italienische Küche werden erkannt.
+- **Mehr als der Name:** Cuisine- und cuisine:it-Tags, restaurant:type, Name, Brand, offizieller/alternativer Name, Betreiber, Beschreibung, Spezialität, Produkt und Pizzaautomaten werden ausgewertet.
+- **Keine beliebigen Treffer:** Burger-, Döner-, asiatische oder sonstige Restaurants ohne relevantes Signal werden nicht künstlich als Pizza-Orte ausgegeben.
+- Pizza- und italienische Evidenz werden getrennt gekennzeichnet; fehlende Pizza-Bestätigung wird transparent angezeigt.
+- Ways und Relationen werden nicht mehr wegen fehlender lat/lon verworfen: out body center hält ihren stabilen Marker am selben OSM-Objekt.
+
 
 ## ⚡ WebSim-identische Umgebungssuche
 
-- Die automatische Discovery verwendet den **aktuellen sichtbaren Leaflet-Kartenausschnitt (BBOX)** – genau das Grundprinzip von `fetchDataForCurrentView()` aus der WebSim-Originalquelle.
-- Die Overpass-Auswahl übernimmt die dort hinterlegten Familien: Pizza-Cuisine, italienische Restaurants, Pizza/Pizzeria-Restaurants, Pizzaautomaten, passende Cafés, Fast Food, Foodtrucks, Spezialität Pizza, Bars/Pubs, Pizza im Namen, Pizza in der Beschreibung und Takeaway mit Pizza/Italian-Cuisine.
-- Für die automatische Umgebungssuche werden **keine zusätzlichen Ristorante/Trattoria/Osteria-, Brand-, Operator-, Dish- oder Photon-Heuristiken** aufgeschlagen.
-- Primäre Discovery-Quelle ist wie im Original **`overpass-api.de`**. Android transportiert dieselbe Query bei Bedarf über den nativen HTTPS-Kanal, damit WebView/CORS die Semantik nicht verändert.
-- **Build 50 behebt den Android-Fehler „Failed to fetch“:** Die exakt gleiche WebSim-Query läuft zuerst nativ gegen `overpass-api.de`. Bei einem Netzwerk-/Timeoutfehler wird **dieselbe Query unverändert** nativ über freigegebene Overpass-Spiegel wiederholt; erst danach wird ein direkter WebView-Versuch erwogen. Damit ändert sich die Suchlogik nicht, nur die Transport-Redundanz.
-- Nach Kartenbewegung wird der neue sichtbare Ausschnitt erneut gesucht; „↻ Suchen“ erzwingt denselben Ablauf.
-- Die manuelle Ort-/Adresssuche verwendet **Nominatim** und übernimmt den ersten Treffer bei Zoom 15 – entsprechend dem WebSim-Verhalten.
-- Der Suchradius steht für diese Standard-Discovery auf **„Kartenausschnitt“ / 0 km**.
+- Gesucht wird automatisch im **aktuell sichtbaren Leaflet-Kartenausschnitt (BBOX)**; Kartenbewegungen lösen eine neue Suche aus.
+- Die Query deckt die WebSim-Familien plus die wiederhergestellten Gastro-Namen ab: Pizza-Cuisine, italienische Küche, Trattoria/Ristorante/Osteria, Pizza-/Italian-Cuisine in Restaurants, Cafés, Fast Food, Foodtrucks, Takeaway, Bars/Pubs, Spezialität, Name, Brand, Betreiber, Beschreibung, Shops und Pizzaautomaten.
+- Die Resultate werden über stabile node/way/relation-IDs dedupliziert und mit Mittelpunktkoordinaten gemappt. Abgebrochene alte Requests dürfen keine neueren Treffer überschreiben.
+- overpass-api.de bleibt primär; drei freigegebene OSM-Spiegel übernehmen bei Fehlern dieselbe Query. Android nutzt dafür den nativen HTTPS-Kanal, danach ist ein kontrollierter WebView-Fallback möglich.
+- Die manuelle Ort-/Adresssuche verwendet Nominatim. „↻ Suchen“ erzwingt die Suche für den aktuellen Kartenausschnitt.
+- Der Standardmodus bleibt „Kartenausschnitt“ / 0 km; es gibt keine versteckte 5-km-Begrenzung.
+
 
 ## 🌍 Weltweit
 
@@ -59,12 +61,13 @@ Unicode-sichere Suche erhält Orts- und Restaurantnamen in Originalschrift. Die 
 
 ## 🗺️ Karte & Bedienung
 
-- OpenStreetMap-/Leaflet-Karte mit GPS und Vollbildmodus.
-- **WebSim-Kartenausschnitt statt festem Suchradius:** Build 50 sucht automatisch im aktuell sichtbaren Karten-BBOX; der alte feste Radius-Regler ist im aktiven WebSim-Modus gesperrt.
-- Filter „Jetzt geöffnet“, Mindestbewertung, Ortstypen, Besuche und persönliche Bewertungen.
-- Pizza-Radar für relevante Orte im aktuellen Gebiet.
-- Build 50 reduziert Offen/Rating/Filter/Radar auf eine **einzeilige, ca. 27 px hohe Toolbar**. Suchstatus, Trefferzahl und „↻ Suchen“ sitzen in einer zweiten, nur ca. 24 px hohen Zeile direkt oberhalb der Karte.
-- Bottom-Navigation für Karte und Fotobewertung, Portrait/Landscape und Dark Mode.
+- OpenStreetMap-/Leaflet-Karte mit moderner 2026-Kartenfläche, Glasflächen, klaren Statuschips, Vollbildmodus, GPS und stabilen Markern.
+- Die Bedienung ist auf zwei Ebenen gegliedert: Suche bei Bedarf öffnen, dann Kartenausschnitt, Status und Trefferzahl direkt am Kartenrand.
+- Standardmäßig bleiben **alle relevanten Ortstypen, alle Bewertungsstände inklusive unbekannt/unbewertet, geschlossene Orte und bereits besuchte Orte** sichtbar. Die Settings können jeden dieser Filter bewusst einschränken.
+- Filter für Offenstatus, Mindestbewertung, Ortstypen, Besuchshistorie, Routenmodus, GPS-Start und dunkles Design.
+- Die Sprache kann in Deutsch, Englisch, Italienisch, Spanisch und Französisch gewechselt werden.
+- Bottom-Navigation für Karte und Fotobewertung sowie responsive Portrait-/Landscape-Darstellung.
+
 
 ## ⭐ Bewertungen & persönliche Historie
 
@@ -110,9 +113,9 @@ Keine öffentliche Quelle kann garantieren, dass jeder reale Betrieb weltweit vo
 
 Der veröffentlichte Android-Build wird vor dem Main-Publish geprüft auf:
 
-- Unit-/Regressionstests
-- Browser-/Playwright-Smokes
-- Build-43-Relevanztest: generisches Restaurant raus, Pizza-Bar ohne „Pizza“ im Namen rein, italienische Trattoria rein
+- Unit-/Regressionstests und Browser-/Playwright-Smokes
+- Build-51-Relevanztest: generisches Restaurant raus, Pizza-Ort ohne „Pizza“ im Namen rein, Trattoria/Ristorante/Osteria rein
+- Way-/Relation-Center, stabile Marker-IDs, Deduplizierung und Request-Abbruch
 - Web-UI direkt aus der gebauten APK
 - Android-Lint, Paket und Signatur
 - Android-16-Installation/Start
