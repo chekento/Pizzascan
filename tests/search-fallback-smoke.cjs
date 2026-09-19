@@ -31,27 +31,20 @@ const {server,until}=require('./helpers.cjs');
   await page.locator('#search').fill('Ahrensburg');
   await page.locator('#search-submit').click();
   await until(page,()=>Math.abs(map.getCenter().lat-53.6759)<0.01&&Math.abs(map.getCenter().lng-10.2393)<0.01,20000);
-  assert.ok(photonCalls>=1,'Primary Photon search was attempted');
-  assert.equal(nominatimCalls,1,'Fallback geocoder runs once after a Photon HTTP failure');
-  assert.equal(await page.locator('#search').isVisible(),false,'Single fallback location is selected and search collapses');
+  assert.equal(photonCalls,0,'Build 49 WebSim manual search must not call Photon');
+  assert.equal(nominatimCalls,1,'WebSim manual search calls Nominatim exactly once');
+  assert.equal(await page.locator('#search').isVisible(),true,'Compact search stays open until the user closes it');
 
   await page.locator('#search-toggle').click();
   await page.locator('#search').fill('Bargteheide');
   await page.locator('#search-submit').click();
   await until(page,()=>Math.abs(map.getCenter().lat-53.7286)<0.01&&Math.abs(map.getCenter().lng-10.2663)<0.01,20000);
-  assert.equal(nominatimCalls,2,'Fallback geocoder also runs when Photon succeeds but returns no usable result');
-  assert.equal(await page.locator('#search').isVisible(),false,'Empty-primary fallback selection also collapses search');
+  assert.equal(photonCalls,0,'Second WebSim manual search still must not call Photon');
+  assert.equal(nominatimCalls,2,'Second WebSim manual search calls Nominatim exactly once');
+  assert.equal(await page.locator('#search').isVisible(),true,'Manual WebSim location navigation does not auto-collapse the compact search');
 
-  // Build 43: explicit venue search follows the same Pizza/Italian relevance contract as the map.
-  // A named Italian restaurant is searchable even without "Pizza" in its name; unrelated generic
-  // restaurants are covered by the dedicated negative Build 43 regression tests and must stay hidden.
-  await page.locator('#search-toggle').click();
-  await page.locator('#search').fill('Trattoria Nord');
-  await page.locator('#search-submit').click();
-  await until(page,()=>[...document.querySelectorAll('#search-results .search-result strong')].some(x=>x.textContent==='Trattoria Nord'),20000);
-  const restaurantResults=await page.locator('#search-results .search-result strong').allTextContents();
-  assert.ok(restaurantResults.includes('Trattoria Nord'),'named Italian restaurant survives explicit POI search');
-  assert.equal(await page.locator('#search').isVisible(),true,'multiple relevant POI/location results remain selectable');
-  console.log('PASS submitted place fallback plus relevant Italian POI search while unrelated generic restaurants stay excluded');
+  await page.locator('#search-collapse').click();
+  assert.equal(await page.locator('#search').isVisible(),false,'User can explicitly collapse the compact search after WebSim/Nominatim navigation');
+  console.log('PASS Build 49 WebSim manual place search: Nominatim first-result navigation only, no Photon fallback');
  }finally{await browser.close();s.close();}
 })().catch(error=>{console.error(error);process.exit(1)});
