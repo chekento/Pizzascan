@@ -99,9 +99,14 @@ function install(root){
   * the later-created placeService inherits the native transport. */
  const proto=root.PizzaPlaces?.Service?.prototype;
  if(proto&&typeof proto.json==='function'&&!proto.json.__nativeOverpass){proto.json=makeWrapped(root,proto.json);installed=true;}
- if(root.placeService&&typeof root.placeService.json==='function'&&!root.placeService.json.__nativeOverpass){root.placeService.json=makeWrapped(root,root.placeService.json);installed=true;}
- if(installed||proto?.json?.__nativeOverpass||root.placeService?.json?.__nativeOverpass){
-  root.PizzaScanNativeOverpass={active:true,nativeFirst:true,longTimeout:true,mirrorFailover:true,prototype:true,endpoints:ENDPOINTS.slice()};
+ /* hotfix-map.js assigns a hardened json function directly on the global
+  * placeService instance before this file runs. Patch that own method too;
+  * changing only Service.prototype would be shadowed by the instance method. */
+ let service=null;
+ try{service=typeof placeService!=='undefined'?placeService:root.placeService;}catch{}
+ if(service&&typeof service.json==='function'&&!service.json.__nativeOverpass){service.json=makeWrapped(root,service.json);installed=true;}
+ if(installed||proto?.json?.__nativeOverpass||service?.json?.__nativeOverpass){
+  root.PizzaScanNativeOverpass={active:true,nativeFirst:true,longTimeout:true,mirrorFailover:true,prototype:true,instance:true,endpoints:ENDPOINTS.slice()};
   return true;
  }
  return false;
