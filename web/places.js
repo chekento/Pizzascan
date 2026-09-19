@@ -1,31 +1,71 @@
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./core.js'):root.PizzaCore);if(typeof module==='object'&&module.exports)module.exports=api;else root.PizzaPlaces=api;})(globalThis,function(C){
 'use strict';
-const TYPES={pizzeria:{emoji:'🍕',name:'Pizzeria'},cafe:{emoji:'☕',name:'Café'},fast_food:{emoji:'🍔',name:'Imbiss / Schnellrestaurant'},food_truck:{emoji:'🚚',name:'Foodtruck'},vending_pizza:{emoji:'🤖',name:'Pizzaautomat'},other:{emoji:'🍽️',name:'Weitere Orte'}};
+const TYPES={pizzeria:{emoji:'🍕',name:'Pizzeria'},trattoria:{emoji:'🍝',name:'Trattoria'},ristorante:{emoji:'🍽️',name:'Ristorante'},osteria:{emoji:'🍷',name:'Osteria'},cafe:{emoji:'☕',name:'Café'},fast_food:{emoji:'🍔',name:'Imbiss / Schnellrestaurant'},food_truck:{emoji:'🚚',name:'Foodtruck'},vending_pizza:{emoji:'🤖',name:'Pizzaautomat'},other:{emoji:'🍴',name:'Weitere Orte'}};
 const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|bar|pub|biergarten|takeaway|food_court';
 const providers=['https://overpass-api.de/api/interpreter','https://overpass.private.coffee/api/interpreter'];
 const fallbackTerms=['pizza','pizzeria','restaurant','cafe','imbiss','food truck','pizza vending','takeaway','bar','biergarten'];
 const defaults={onlyOpen:false,unknownHours:false,includeItalian:true,radius:5,types:Object.keys(TYPES),autoSearch:false,sort:'distance',travelMode:'walking',hideVisited:false};
 const text=v=>String(v??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 function address(t){return t['addr:full']||[[t['addr:street']||t['addr:place'],t['addr:housenumber']].filter(Boolean).join(' '),[t['addr:postcode'],t['addr:city']||t['addr:town']||t['addr:village']].filter(Boolean).join(' ')].filter(Boolean).join(', ');}
-function normalize(element,options={}){const t=element.tags||{},lat=element.lat??element.center?.lat,lng=element.lon??element.center?.lon;if(!C.coords(lat,lng)||!['node','way','relation'].includes(element.type)||!/^\d+$/.test(String(element.id)))return null;if(t.disused==='yes'||t.abandoned==='yes'||['disused','abandoned','demolished','construction'].includes(t.amenity))return null;
- const confirmed=/pizza|pizzeria|pizzaria/i.test([t.cuisine,t.name,t.brand,t.vending,t.speciality].filter(Boolean).join(' '))||t['vending:pizza']==='yes';const possible=/italian|italiano|italiana/i.test(t.cuisine||'')&&new RegExp(`^(${FOOD_AMENITIES})$`).test(t.amenity||'');if(!confirmed&&!possible&&!options.allowNamed)return null;
- const amenity=t.amenity||'',pizzaVending=/pizza/i.test(t.vending||'')||t['vending:pizza']==='yes';let type='other';if(pizzaVending)type='vending_pizza';else if(amenity==='food_truck'||t.mobile==='yes')type='food_truck';else if(amenity==='cafe')type='cafe';else if(amenity==='fast_food')type='fast_food';else if(confirmed&&(['restaurant','takeaway'].includes(amenity)||!amenity))type='pizzeria';
- return C.place({placeId:element.type+'-'+element.id,name:t.name||t.brand||(type==='vending_pizza'?'Pizzaautomat':'Ort ohne Namen'),lat,lng,type,openingHours:t.opening_hours||'',website:t.website||t['contact:website'],phone:t.phone||t['contact:phone']||t.mobile_phone,address:address(t),cuisine:t.cuisine||'',menu:t['website:menu']||t['contact:menu']||t['menu:website'],description:t['description:de']||t.description||'',tags:t,country:t['addr:country']||'',state:t['addr:state']||'',pizzaEvidence:confirmed?'confirmed':possible?'possible':'search',updatedAt:new Date().toISOString(),dataSource:'OpenStreetMap'});
+function normalize(element,options={}){
+ const t=element.tags||{},lat=element.lat??element.center?.lat,lng=element.lon??element.center?.lon;
+ if(!C.coords(lat,lng)||!['node','way','relation'].includes(element.type)||!/^[0-9]+$/.test(String(element.id)))return null;
+ if(t.disused==='yes'||t.abandoned==='yes'||['disused','abandoned','demolished','construction'].includes(t.amenity))return null;
+ const amenity=String(t.amenity||''),shop=String(t.shop||'');
+ const foodAmenity=FOOD_AMENITIES.split('|').includes(amenity);
+ const foodShop=['bakery','deli','convenience','food'].includes(shop);
+ const allText=text([t.name,t.brand,t.official_name,t.alt_name,t.operator,t.cuisine,t['cuisine:it'],t['restaurant:type'],t.vending,t['vending:pizza'],t.speciality,t.product,t.products,t.description,t.menu].filter(Boolean).join(' '));
+ const cuisineText=text([t.cuisine,t['cuisine:it'],t['restaurant:type']].filter(Boolean).join(' '));
+ const pizzaSignal=/(^| )(pizza|pizzeria|pizzaria|pizzerie|pizze|pizzas)( |$)/.test(allText)||t['vending:pizza']==='yes'||/pizza/i.test(String(t.vending||''));
+ const italianCuisine=/(^| )(italian|italiano|italiana|italien|italienne|italienisch|pasta|mediterranean)( |$)/.test(cuisineText);
+ const italianName=/(^| )(trattoria|ristorante|osteria|tavola|taverna|enoteca|italian|italiano|italiana|italiener|italienisch)( |$)/.test(text([t.name,t.brand,t.official_name,t.alt_name,t.operator,t.description].filter(Boolean).join(' ')));
+ const relevantName=pizzaSignal||italianName;
+ if(!pizzaSignal&&!italianCuisine&&!italianName)return null;
+ if(!foodAmenity&&!foodShop&&!t.vending&&!t['vending:pizza']&&!options.allowNamed)return null;
+ const typeText=text([t.name,t.brand,t.official_name,t.alt_name,t.operator,t.cuisine,t['cuisine:it'],t['restaurant:type']].filter(Boolean).join(' '));
+ const pizzaVending=/pizza/i.test(String(t.vending||''))||t['vending:pizza']==='yes';
+ let type='other';
+ if(pizzaVending)type='vending_pizza';
+ else if(/(^| )trattoria( |$)/.test(typeText))type='trattoria';
+ else if(/(^| )osteria( |$)/.test(typeText))type='osteria';
+ else if(/(^| )(ristorante|tavola|taverna|enoteca)( |$)/.test(typeText))type='ristorante';
+ else if(pizzaSignal&&(['restaurant','takeaway'].includes(amenity)||!amenity))type='pizzeria';
+ else if(italianCuisine&&amenity==='restaurant')type='ristorante';
+ else if(amenity==='food_truck'||t.mobile==='yes')type='food_truck';
+ else if(amenity==='cafe')type='cafe';
+ else if(amenity==='fast_food')type='fast_food';
+ else if(pizzaSignal&&foodShop)type='pizzeria';
+ return C.place({placeId:element.type+'-'+element.id,name:t.name||t.brand||(type==='vending_pizza'?'Pizzaautomat':'Ort ohne Namen'),lat,lng,type,openingHours:t.opening_hours||'',website:t.website||t['contact:website'],phone:t.phone||t['contact:phone']||t.mobile_phone,address:address(t),cuisine:t.cuisine||t['cuisine:it']||'',menu:t['website:menu']||t['contact:menu']||t['menu:website'],description:t['description:de']||t['description:it']||t.description||'',tags:t,country:t['addr:country']||'',state:t['addr:state']||'',pizzaEvidence:pizzaSignal?'confirmed':(italianCuisine||italianName?'possible':'search'),updatedAt:new Date().toISOString(),dataSource:'OpenStreetMap'});
 }
 function fromOverpass(elements,options){if(!Array.isArray(elements))throw Error('Ungültige Kartendaten');return merge([],elements.map(e=>normalize(e,options)).filter(Boolean));}
 function merge(old,incoming){const result=new Map(old.map(p=>[p.placeId,p]));for(const p of incoming){const before=result.get(p.placeId);if(!before){result.set(p.placeId,C.place(p));continue;}const merged={...before,...p,tags:{...before.tags,...p.tags}};for(const key of ['address','country','state','website','phone','menu','description','openingHours','detailsAt'])if(!p[key]&&before[key])merged[key]=before[key];result.set(p.placeId,C.place(merged));}return [...result.values()];}
-function query(center,radius,bounds){if(!C.coords(center.lat,center.lng))throw Error('Ungültiger Suchmittelpunkt');const area=radius?`around:${Math.round(Math.min(10,Math.max(.5,radius))*1000)},${center.lat},${center.lng}`:[bounds.south,bounds.west,bounds.north,bounds.east].join(',');return `[out:json][timeout:20];(`+
- `nwr["amenity"~"${FOOD_AMENITIES}"]["name"](${area});`+
- `nwr["amenity"~"${FOOD_AMENITIES}"]["cuisine"~"pizza|pizzeria|italian|italiano|italiana|pasta",i](${area});`+
- `nwr["amenity"~"restaurant|fast_food|cafe|food_truck"]["mobile"="yes"]["name"](${area});`+
- `nwr["shop"~"deli|bakery|convenience"]["name"~"pizza|pizzeria|pizzaria",i](${area});`+
- `nwr["vending"~"pizza",i](${area});nwr["vending:pizza"="yes"](${area});`+
- `);out body center;`;}
+function query(center,radius,bounds){
+ if(!C.coords(center.lat,center.lng))throw Error('Ungültiger Suchmittelpunkt');
+ const area=radius?('around:'+Math.round(Math.min(10,Math.max(.5,radius))*1000)+','+center.lat+','+center.lng):[bounds.south,bounds.west,bounds.north,bounds.east].join(',');
+ const food='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
+ const words='pizza|pizzeria|pizzaria|pizze|trattoria|ristorante|osteria|tavola|taverna|enoteca|italian|italiano|italiana|italien|pasta';
+ return '[out:json][timeout:45];('+
+  'nwr["cuisine"~"'+words+'",i]('+area+');'+
+  'nwr["cuisine:it"~"'+words+'",i]('+area+');'+
+  'nwr["restaurant:type"~"'+words+'",i]('+area+');'+
+  'nwr["amenity"~"'+food+'"]["cuisine"~"'+words+'",i]('+area+');'+
+  'nwr["amenity"~"'+food+'"]["name"~"'+words+'",i]('+area+');'+
+  'nwr["amenity"~"'+food+'"]["brand"~"'+words+'",i]('+area+');'+
+  'nwr["amenity"~"'+food+'"]["official_name"~"'+words+'",i]('+area+');'+
+  'nwr["amenity"~"'+food+'"]["alt_name"~"'+words+'",i]('+area+');'+
+  'nwr["amenity"~"'+food+'"]["operator"~"'+words+'",i]('+area+');'+
+  'nwr["amenity"~"'+food+'"]["description"~"'+words+'",i]('+area+');'+
+  'nwr["amenity"~"'+food+'"]["speciality"~"pizza",i]('+area+');'+
+  'nwr["shop"~"bakery|deli|convenience|food"]["name"~"'+words+'",i]('+area+');'+
+  'nwr["shop"~"bakery|deli|convenience|food"]["product"~"pizza",i]('+area+');'+
+  'nwr["vending"~"pizza",i]('+area+');nwr["vending:pizza"="yes"]('+area+');'+
+  ');out body center;';
+}
 function detailQuery(id){const m=/^(node|way|relation)-(\d+)$/.exec(id);if(!m)throw Error('Kein gültiger OpenStreetMap-Ort');return `[out:json][timeout:15];${m[1]}(${m[2]});out body center;`;}
 function within(p,center,radius,bounds){return radius?C.distance(center,p)<=radius:p.lat>=bounds.south&&p.lat<=bounds.north&&(bounds.west<=bounds.east?p.lng>=bounds.west&&p.lng<=bounds.east:p.lng>=bounds.west||p.lng<=bounds.east);}
 function rank(p,q,center){const n=text(p.name),words=text(q).split(' ').filter(Boolean);let score=n===text(q)?1000:0;for(const w of words){if(n.split(' ').includes(w))score+=100;else if(n.includes(w))score+=45;else if(text(p.address).includes(w))score+=15;else return -1;}return score-Math.min(20,center?C.distance(center,p):0);}
 function suggestions(list,q,center){return [...new Map(list.map(p=>[p.placeId,p])).values()].map(p=>({p,score:rank(p,q,center)})).filter(x=>x.score>=0).sort((a,b)=>b.score-a.score).slice(0,8).map(x=>x.p);}
-function filter(list,settings,context,hours){return list.filter(p=>settings.types.includes(p.type)&&(!settings.onlyOpen||hours(p).state==='open'||settings.unknownHours&&hours(p).state==='unknown')&&(settings.includeItalian||p.pizzaEvidence==='confirmed'||p.pizzaEvidence==='search')&&(!settings.hideVisited||!context.visited?.has(p.placeId)));}
+function filter(list,settings,context,hours){const types=Array.isArray(settings?.types)?settings.types:Object.keys(TYPES);return list.filter(p=>types.includes(p.type)&&(!settings.onlyOpen||hours(p).state==='open'||settings.unknownHours&&hours(p).state==='unknown')&&(settings.includeItalian||p.pizzaEvidence!=='possible')&&(!settings.hideVisited||!context.visited?.has(p.placeId)));}
 function fromPhoton(data){if(!Array.isArray(data?.features))throw Error('Ungültige Suchantwort');return data.features.flatMap(f=>{const p=f.properties||{},[lng,lat]=f.geometry?.coordinates||[];if(!C.coords(lat,lng)||!p.name)return [];const type={N:'node',W:'way',R:'relation',node:'node',way:'way',relation:'relation'}[p.osm_type];const tags={name:p.name,'addr:street':p.street||'','addr:housenumber':p.housenumber||'','addr:postcode':p.postcode||'','addr:city':p.city||p.town||p.village||'','addr:country':p.countrycode||'','addr:state':p.state||''};if(p.osm_key)tags[p.osm_key]=p.osm_value||'';const food=new RegExp(`^(${FOOD_AMENITIES})$`).test(p.osm_value||'');const normalized=type&&p.osm_id?normalize({type,id:p.osm_id,lat,lon:lng,tags},{allowNamed:food}):null;return [{name:p.name,lat,lng,address:address(tags)||[p.city,p.state,p.country].filter(Boolean).join(', '),kind:food?'venue':'location',place:food?normalized:null,osmId:type&&p.osm_id?type+'-'+p.osm_id:'',country:(p.countrycode||'').toLowerCase(),state:p.state||''}];});}
 function queryArea(q){const around=/around:(\d+),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(String(q));if(around)return {center:{lat:Number(around[2]),lng:Number(around[3])},radius:Math.max(.5,Number(around[1])/1000)};const box=/\]\((-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\)/.exec(String(q));if(!box)return null;const south=Number(box[1]),west=Number(box[2]),north=Number(box[3]),east=Number(box[4]),center={lat:(south+north)/2,lng:(west+east)/2},radius=Math.min(10,Math.max(C.distance(center,{lat:south,lng:west}),C.distance(center,{lat:north,lng:east})));return C.coords(center.lat,center.lng)?{center,radius}:null;}
 function photonElement(item,term){const p=item?.place,m=/^(node|way|relation)-(\d+)$/.exec(p?.placeId||'');if(!p||!m)return null;const tags={...(p.tags||{}),name:p.name||item.name},t=text(term);if(/pizza vending|pizzaautomat|automat/.test(t)){tags.amenity='vending_machine';tags.vending='pizza';tags['vending:pizza']='yes';}else if(/food truck|foodtruck/.test(t)){tags.amenity='food_truck';tags.mobile='yes';}else if(/cafe|kaffee/.test(t)){tags.amenity='cafe';}else if(/imbiss|fast food/.test(t)){tags.amenity='fast_food';}else if(/bar|pub|biergarten/.test(t)){tags.amenity=/biergarten/.test(t)?'biergarten':/pub/.test(t)?'pub':'bar';}else if(/takeaway/.test(t)){tags.amenity='takeaway';}else if(/restaurant|ristorante|trattoria|osteria/.test(t)){tags.amenity='restaurant';if(/ristorante|trattoria|osteria|italian/.test(t))tags.cuisine=[tags.cuisine,'italian'].filter(Boolean).join(';');}else if(/pizza|pizzeria|pizzaria/.test(t)){if(!tags.amenity)tags.amenity='restaurant';tags.cuisine=[tags.cuisine,'pizza'].filter(Boolean).join(';');}
