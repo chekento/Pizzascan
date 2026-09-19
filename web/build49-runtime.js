@@ -175,7 +175,7 @@ function installSearch(root){
       form.__build49=true;
       form.addEventListener('submit',e=>{e.stopImmediatePropagation();searchCity(e);},true);
       const input=d.getElementById('search');
-      input?.addEventListener('input',()=>{try{clearTimeout(searchTimer);}catch{};searchTimer=setTimeout(localSuggestions,120);},true);
+      input?.addEventListener('input',e=>{e.stopImmediatePropagation();try{clearTimeout(searchTimer);}catch{};searchTimer=setTimeout(localSuggestions,120);},true);
     }
   }catch(error){console.warn('Build49 Nominatim parity install skipped',error);return false;}
   root.__pizzaBuild49Search=true;return true;
