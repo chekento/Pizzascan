@@ -2,7 +2,7 @@
 
 - Modernizes the map UI for 2026: larger map surface, glass controls, clearer live status, responsive cards, floating navigation and refined dark mode.
 - Restores complete WebSim-oriented discovery coverage for Pizza, Pizzeria, Trattoria, Ristorante, Osteria, Tavola, Taverna, Italian cuisine, pizza vending and related gastro signals.
-- Searches cuisine, cuisine:it, restaurant:type, name, brand, official/alternative name, operator, description, speciality and product signals while excluding unrelated restaurants without relevant evidence.
+- Searches cuisine, cuisine:it, restaurant:type, name, brand, official/alternative name, operator, description, speciality and product signals; generic named food venues remain visible and are not mislabeled as pizza.
 - Uses the Overpass body-center output so OSM ways and relations keep their stable map position instead of disappearing for missing node coordinates.
 - Adds explicit Trattoria/Ristorante/Osteria categories and keeps all place types, unrated places, closed places and visited places visible by default; every option remains configurable.
 - Updates the app to version 2.3.16, Build 51 and prepares the direct APK download on the repository front page.
