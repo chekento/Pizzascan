@@ -21,8 +21,8 @@ function bbox(bounds){
   return [bounds.south,bounds.west,bounds.north,bounds.east].map(Number).join(',');
 }
 
-/* Selector families copied from source-original/script.js.
- * The output clause is copied too; centerizeWebsim reconstructs usable centers from the returned skeleton nodes without broadening the query. */
+/* Selector families and output clause are copied from source-original/script.js.
+ * Build 49 deliberately keeps the returned element semantics literal too. */
 function websimQuery(bounds){
   const b=bbox(bounds),q=[];
   q.push('[out:json][timeout:60];(');
@@ -41,31 +41,6 @@ function websimQuery(bounds){
   q.push('node["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');way["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');relation["amenity"="takeaway"]["cuisine"~"pizza|italian"]('+b+');');
   q.push(');out body; >; out skel qt;');
   return q.join('\n');
-}
-
-function centerizeWebsim(elements){
-  const list=Array.isArray(elements)?elements:[];
-  const nodes=new Map(),ways=new Map();
-  for(const e of list)if(e?.type==='node'&&Number.isFinite(Number(e.lat))&&Number.isFinite(Number(e.lon)))nodes.set(Number(e.id),{lat:Number(e.lat),lon:Number(e.lon)});
-  const mean=points=>{const v=points.filter(p=>p&&Number.isFinite(p.lat)&&Number.isFinite(p.lon));if(!v.length)return null;return {lat:v.reduce((s,p)=>s+p.lat,0)/v.length,lon:v.reduce((s,p)=>s+p.lon,0)/v.length};};
-  for(const e of list)if(e?.type==='way'){
-    const center=e.center&&Number.isFinite(Number(e.center.lat))&&Number.isFinite(Number(e.center.lon))?{lat:Number(e.center.lat),lon:Number(e.center.lon)}:mean((e.nodes||[]).map(id=>nodes.get(Number(id))));
-    if(center)ways.set(Number(e.id),center);
-  }
-  const out=[];
-  for(const e of list){
-    if(!e?.tags||!Object.keys(e.tags).length)continue;
-    if(e.type==='node'){if(nodes.has(Number(e.id)))out.push(e);continue;}
-    if(e.type==='way'){
-      const center=ways.get(Number(e.id));if(center)out.push({...e,center});continue;
-    }
-    if(e.type==='relation'){
-      let center=e.center&&Number.isFinite(Number(e.center.lat))&&Number.isFinite(Number(e.center.lon))?{lat:Number(e.center.lat),lon:Number(e.center.lon)}:null;
-      if(!center)center=mean((e.members||[]).map(m=>m.type==='node'?nodes.get(Number(m.ref)):m.type==='way'?ways.get(Number(m.ref)):null));
-      if(center)out.push({...e,center});
-    }
-  }
-  return out;
 }
 
 function migrationConfig(previous={}){
@@ -116,7 +91,7 @@ function installOverpass(root){
     try{
       const data=await this.json(ENDPOINT,{method:'POST',body:new URLSearchParams({data:query})},options.signal,65000);
       if(!Array.isArray(data?.elements)||data.remark)throw Error(data?.remark||'Unvollständige Kartendaten');
-      const elements=tagHits(centerizeWebsim(data.elements),root);
+      const elements=tagHits(data.elements,root);
       this.lastErrors=[];
       options.onStatus?.(elements.length?String(elements.length)+' WebSim-Treffer · OpenStreetMap':'Keine Pizza-Orte im sichtbaren Kartenausschnitt');
       return {data:{elements},source:'overpass-api.de · WebSim',sources:['overpass-api.de'],complete:true,progressive:false,websimExact:true};
@@ -197,16 +172,16 @@ function installStyles(root){
     '#map-view .map-control-panel{margin:4px 0 3px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}',
     '#map-view .map-control-panel .map-filters{display:flex!important;flex-flow:row nowrap!important;align-items:center!important;gap:5px!important;width:100%!important;overflow-x:auto!important;overscroll-behavior-x:contain!important;scrollbar-width:none!important;padding:0 0 1px!important;margin:0!important}',
     '#map-view .map-control-panel .map-filters::-webkit-scrollbar{display:none!important}',
-    '#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{flex:1 1 0!important;min-width:max-content!important;width:auto!important;height:31px!important;min-height:31px!important;padding:0 8px!important;margin:0!important;border:1px solid var(--line)!important;border-radius:999px!important;background:var(--surface)!important;color:var(--ink)!important;box-shadow:none!important;font-size:10.5px!important;font-weight:780!important;line-height:1!important;white-space:nowrap!important;text-align:center!important}',
+    '#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{flex:1 1 0!important;min-width:max-content!important;width:auto!important;height:27px!important;min-height:27px!important;padding:0 7px!important;margin:0!important;border:1px solid var(--line)!important;border-radius:999px!important;background:var(--surface)!important;color:var(--ink)!important;box-shadow:none!important;font-size:9.8px!important;font-weight:780!important;line-height:1!important;white-space:nowrap!important;text-align:center!important}',
     '#map-view .map-control-panel .map-filters .filter-chip.active,#map-view .map-control-panel .map-filters .filter-chip[aria-pressed="true"]{border-color:var(--green)!important;background:#e1f1e4!important;color:#246939!important}',
     '#map-view .map-control-meta{display:none!important}#map-view .build44-cache-note{display:none!important}',
-    '#map-view .map-caption{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;align-items:center!important;gap:5px!important;min-height:30px!important;margin:3px 0 5px!important;padding:3px 4px 3px 8px!important;border:1px solid var(--line)!important;border-radius:10px!important;background:var(--surface)!important;box-shadow:none!important}',
+    '#map-view .map-caption{display:grid!important;grid-template-columns:minmax(0,1fr) auto auto!important;align-items:center!important;gap:5px!important;min-height:24px!important;margin:2px 0 4px!important;padding:2px 3px 2px 7px!important;border:1px solid var(--line)!important;border-radius:10px!important;background:var(--surface)!important;box-shadow:none!important}',
     '#map-view .map-caption::before{display:none!important}',
-    '#map-view .map-caption #map-status{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:var(--muted)!important;font-size:9.8px!important;line-height:1.15!important}',
-    '#map-view .map-caption #result-count{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:21px!important;padding:0 6px!important;margin:0!important;border-radius:999px!important;background:var(--bg)!important;color:var(--muted)!important;font-size:9px!important;font-weight:800!important;white-space:nowrap!important}',
-    '#map-view .map-caption #map-refresh{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:58px!important;width:auto!important;height:23px!important;min-height:23px!important;padding:0 7px!important;margin:0!important;border:0!important;border-radius:8px!important;background:var(--ink)!important;color:var(--bg)!important;box-shadow:none!important;font-size:9.5px!important;font-weight:800!important;white-space:nowrap!important}',
+    '#map-view .map-caption #map-status{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:var(--muted)!important;font-size:9.2px!important;line-height:1.1!important}',
+    '#map-view .map-caption #result-count{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:18px!important;padding:0 5px!important;margin:0!important;border-radius:999px!important;background:var(--bg)!important;color:var(--muted)!important;font-size:8.6px!important;font-weight:800!important;white-space:nowrap!important}',
+    '#map-view .map-caption #map-refresh{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:52px!important;width:auto!important;height:20px!important;min-height:20px!important;padding:0 6px!important;margin:0!important;border:0!important;border-radius:8px!important;background:var(--ink)!important;color:var(--bg)!important;box-shadow:none!important;font-size:9px!important;font-weight:800!important;white-space:nowrap!important}',
     '#map-view #map-frame{margin-top:0!important}',
-    '@media(max-width:350px){#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{padding:0 6px!important;font-size:9.8px!important}#map-view .map-caption #map-refresh{min-width:50px!important;padding:0 5px!important}}',
+    '@media(max-width:350px){#map-view .map-control-panel .map-filters .filter-chip,#map-view .map-control-panel .map-filters .build44-action{padding:0 5px!important;font-size:9.2px!important}#map-view .map-caption #map-refresh{min-width:46px!important;padding:0 4px!important}}',
     '.dark #map-view .map-control-panel .map-filters .filter-chip.active,.dark #map-view .map-control-panel .map-filters .filter-chip[aria-pressed="true"]{background:#274a31!important;color:#d3f7d9!important}'
   ].join('');
   d.head.appendChild(style);
@@ -267,5 +242,5 @@ function install(root){
   return true;
 }
 
-return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,centerizeWebsim,migrationConfig,migrate,tagHits,installMapPolicy,installOverpass,installSearch,compactUi,syncVersion,install};
+return {VERSION,BUILD,MIGRATION,QUERY_MARKER,ENDPOINT,NOMINATIM,validBounds,bbox,websimQuery,migrationConfig,migrate,tagHits,installMapPolicy,installOverpass,installSearch,compactUi,syncVersion,install};
 });
