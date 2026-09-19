@@ -21,7 +21,8 @@ function queryFrom(options={}){const body=options.body;if(body instanceof URLSea
 function isAndroidNative(root){return typeof root.PizzaScanNative?.postMessage==='function'&&/PizzaScan\/[0-9]/.test(root.navigator?.userAgent||'');}
 function hookReplies(root){
  const bridge=root.PizzaScanBridge;
- if(!bridge||typeof bridge.reply!=='function'||bridge.__overpassReplyHook)return false;
+ if(!bridge||typeof bridge.reply!=='function')return false;
+ if(bridge.__overpassReplyHook)return true;
  const original=bridge.reply.bind(bridge);
  bridge.reply=function(payload){
   const wait=pending.get(payload?.id);
