@@ -16,9 +16,9 @@
   <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.14.apk"><strong>⬇️ PizzaScan 2.3.14 · Build 49 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.13 · Build 48 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.14 · Build 49 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
 
-> **Build 49 übernimmt die Umgebungssuche aus der WebSim-Originalquelle:** gesucht wird im tatsächlich sichtbaren Karten-BBOX mit denselben Pizza-/Italien-Overpass-Familien aus `source-original/script.js`. Es gibt für die automatische Discovery weder einen erzwungenen 5-km-Kreis noch zusätzliche Photon-/Ristorante-/Trattoria-Heuristiken. Die manuelle Ort-/Adresssuche nutzt wie WebSim Nominatim. Die Kartensteuerung ist jetzt eine sehr schmale Ein-Zeilen-Leiste; Status und Trefferzahl stehen direkt darüber an der Karte.
+> **Build 49 übernimmt die Umgebungssuche aus der WebSim-Originalquelle:** gesucht wird im tatsächlich sichtbaren Karten-BBOX mit denselben Pizza-/Italien-Overpass-Familien aus `source-original/script.js`. Es gibt für die automatische Discovery weder einen erzwungenen 5-km-Kreis noch zusätzliche Photon-/Ristorante-/Trattoria-Heuristiken. Die manuelle Ort-/Adresssuche nutzt wie WebSim Nominatim. Die Kartensteuerung ist jetzt eine sehr schmale Ein-Zeilen-Leiste; Status und Trefferzahl stehen direkt darüber an der Karte. Auch die von WebSim gelieferten Resultate werden nicht nachträglich geometrisch erweitert oder durch zusätzliche Discovery-Quellen ergänzt.
 
 <p align="center">
 <a href="downloads/SHA256SUMS-2.3.14.txt"><strong>SHA-256</strong></a>
@@ -62,7 +62,7 @@ Unicode-sichere Suche erhält Orts- und Restaurantnamen in Originalschrift. Die 
 - Suchradius **0–10 km in 0,5-km-Schritten** mit sichtbarem Suchzentrum und Radiuskreis.
 - Filter „Jetzt geöffnet“, Mindestbewertung, Ortstypen, Besuche und persönliche Bewertungen.
 - Pizza-Radar für relevante Orte im aktuellen Gebiet.
-- Build 49 reduziert Offen/Rating/Filter/Radar auf eine **einzeilige, ca. 31 px hohe Toolbar**. Suchstatus, Trefferzahl und „↻ Suchen“ sitzen in einer zweiten, nur ca. 30 px hohen Zeile direkt oberhalb der Karte.
+- Build 49 reduziert Offen/Rating/Filter/Radar auf eine **einzeilige, ca. 27 px hohe Toolbar**. Suchstatus, Trefferzahl und „↻ Suchen“ sitzen in einer zweiten, nur ca. 24 px hohen Zeile direkt oberhalb der Karte.
 - Bottom-Navigation für Karte und Fotobewertung, Portrait/Landscape und Dark Mode.
 
 ## ⭐ Bewertungen & persönliche Historie
