@@ -32,7 +32,7 @@ const {server,until,mapFixtures}=require('./helpers.cjs');
     statusBeforeMap:!!(document.querySelector('.map-caption').compareDocumentPosition(document.getElementById('map-frame'))&Node.DOCUMENT_POSITION_FOLLOWING)
   }));
   assert.equal(state.version,'2.3.21');
-  assert.equal(state.build.build,55);
+  assert.equal(state.build.build,56);
   assert.equal(state.build.viewportBBox,true);
   assert.equal(state.build.exactSelectorFamilies,20);
   assert.equal(state.build.nominatimSearch,true);
