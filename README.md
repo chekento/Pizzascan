@@ -59,7 +59,7 @@ Unicode-sichere Suche erhält Orts- und Restaurantnamen in Originalschrift. Die 
 ## 🗺️ Karte & Bedienung
 
 - OpenStreetMap-/Leaflet-Karte mit GPS und Vollbildmodus.
-- Suchradius **0–10 km in 0,5-km-Schritten** mit sichtbarem Suchzentrum und Radiuskreis.
+- **WebSim-Kartenausschnitt statt festem Suchradius:** Build 49 sucht automatisch im aktuell sichtbaren Karten-BBOX; der alte feste Radius-Regler ist im aktiven WebSim-Modus gesperrt.
 - Filter „Jetzt geöffnet“, Mindestbewertung, Ortstypen, Besuche und persönliche Bewertungen.
 - Pizza-Radar für relevante Orte im aktuellen Gebiet.
 - Build 49 reduziert Offen/Rating/Filter/Radar auf eine **einzeilige, ca. 27 px hohe Toolbar**. Suchstatus, Trefferzahl und „↻ Suchen“ sitzen in einer zweiten, nur ca. 24 px hohen Zeile direkt oberhalb der Karte.
