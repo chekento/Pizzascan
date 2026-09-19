@@ -4,7 +4,8 @@ Hier liegen die direkt installierbaren PizzaScan-APKs und ältere Vergleichsstä
 
 | Version | Status | SHA-256 | Download |
 |---|---|---|---|
-| **2.3.19 · Build 54** | **aktuelle Direktversion** | [Prüfsumme](SHA256SUMS-2.3.19.txt) | [⬇️ PizzaScan-2.3.19.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.19.apk) |
+| **2.3.20 · Build 55** | **aktuelle Direktversion** | [Prüfsumme](SHA256SUMS-2.3.20.txt) | [⬇️ PizzaScan-2.3.20.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.20.apk) |
+| 2.3.19 · Build 54 | Archiv | [Prüfsumme](SHA256SUMS-2.3.19.txt) | [⬇️ PizzaScan-2.3.19.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.19.apk) |
 | 2.3.18 · Build 53 | Archiv | [Prüfsumme](SHA256SUMS-2.3.18.txt) | [⬇️ PizzaScan-2.3.18.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.18.apk) |
 | 2.3.17 · Build 52 | Archiv | [Prüfsumme](SHA256SUMS-2.3.17.txt) | [⬇️ PizzaScan-2.3.17.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.17.apk) |
 | 2.3.5 · Build 39 | Archiv | [Prüfsumme](SHA256SUMS-2.3.5.txt) | [⬇️ PizzaScan-2.3.5.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk) |
@@ -16,9 +17,9 @@ Hier liegen die direkt installierbaren PizzaScan-APKs und ältere Vergleichsstä
 
 ## Aktuelle Version
 
-Für die normale Direktinstallation die **PizzaScan 2.3.19 · Build 54 APK** verwenden. Sie trägt den Android-Paketnamen `cloud.kosch.pizzascan`, den App-Namen `PizzaScan` und keinen zusätzlichen Test-Namenszusatz.
+Für die normale Direktinstallation die **PizzaScan 2.3.20 · Build 55 APK** verwenden. Sie trägt den Android-Paketnamen `cloud.kosch.pizzascan`, den App-Namen `PizzaScan` und keinen zusätzlichen Test-Namenszusatz.
 
-Build 54 verwendet die WebSim-komplette Suche im sichtbaren Karten-BBOX: Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Signale über Cuisine-, Name-, Brand-, Betreiber-, Beschreibung-, Spezialitäts- und Restauranttyp-Tags. Ways und Relationen erhalten ihren stabilen Kartenmittelpunkt. Der verifizierte Build enthält außerdem die moderne Karten- und Filter-UX, Place-Historie, Bewertungen, Review Builder, optionale Mangrove/Open-Reviews-Funktionen und lokale Fotoanalyse.
+Build 55 verwendet die WebSim-komplette Suche im sichtbaren Karten-BBOX: Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Signale über Cuisine-, Name-, Brand-, Betreiber-, Beschreibung-, Spezialitäts- und Restauranttyp-Tags. Ways und Relationen erhalten ihren stabilen Kartenmittelpunkt. Der verifizierte Build enthält außerdem die moderne Karten- und Filter-UX, Place-Historie, Bewertungen, Review Builder, optionale Mangrove/Open-Reviews-Funktionen und lokale Fotoanalyse.
 
 ## Signatur- und Update-Hinweis
 
@@ -28,11 +29,11 @@ Vor einer Deinstallation persönliche PizzaScan-Daten exportieren bzw. sichern. 
 
 ## Prüfsummen
 
-Für 2.3.19 ist [SHA256SUMS-2.3.19.txt](SHA256SUMS-2.3.19.txt) maßgeblich. Der aktuelle veröffentlichte Build 2.3.19 hat die SHA-256-Prüfsumme:
+Für 2.3.20 ist [SHA256SUMS-2.3.20.txt](SHA256SUMS-2.3.20.txt) maßgeblich. Der aktuelle veröffentlichte Build 2.3.20 hat die SHA-256-Prüfsumme:
 
-`a93f28e3d3f2a1ed27c951052e5117e37472b451d882e5957323ae857d0bd5fd`
+`34bb768d52811408401a6a82415105212e856f1706594cf92384a4b86141a58b`
 
-Die Prüfsummendatei wurde vom erfolgreichen CI-Publish zusammen mit `PizzaScan-2.3.19.apk` aktualisiert.
+Die Prüfsummendatei wurde vom erfolgreichen CI-Publish zusammen mit `PizzaScan-2.3.20.apk` aktualisiert.
 
 ## Versionshistorie
 

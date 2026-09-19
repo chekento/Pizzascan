@@ -1,3 +1,12 @@
+## 2.3.20 · Build 55
+
+- Repariert die zuletzt fehlenden WebSim-/OSM-Suchergebnisse: Die automatische Suche bleibt im sichtbaren Karten-BBOX und deckt neben Pizza auch Trattoria, Ristorante, Osteria, italienische Küche und die übrigen relevanten Gastro-Signale ab.
+- Startet die erste Places-Suche nach der Standortfreigabe automatisch und sucht nach jeder Kartenbewegung im neuen Ausschnitt; das Suchsymbol zeigt jeden laufenden Abruf animiert an.
+- Die Suchleiste liefert lokale Restaurant-/POI-Vorschläge und kann Adressen gezielt geocodieren, ohne die manuelle Suche von der Restaurant-Suche zu trennen.
+- POI-Popups schließen nicht mehr unmittelbar nach dem Antippen; Detailbereiche lassen sich einklappen und die Zustände bleiben gespeichert.
+- Import und Export speichern die vollständige Sammlung aus Orten, Koordinaten, eigenen 0,1–10,0-Bewertungen, Besuchen, Favoriten und Rezensionen. Der IndexedDB-/JSON-Pfad ist für mehr als 1.000 bewertete Orte ausgelegt; die Android-Brücke überträgt große Exporte in Chunks.
+- Place-Details, Review Builder und Export/Import verwenden pro Ort denselben synchronisierten 0,1–10,0-Wert. Der Google-Abschnitt erscheint ausschließlich bei hinterlegtem Google-API-Schlüssel.
+
 ## 2.3.19 · Build 54
 
 - Repariert die letzte Build-54-Smoke-Test-Regression und liefert die verifizierte APK jetzt nach erfolgreichem Android-16-Emulator-Test aus.
