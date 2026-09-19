@@ -4,7 +4,8 @@ Hier liegen die direkt installierbaren PizzaScan-APKs und ältere Vergleichsstä
 
 | Version | Status | SHA-256 | Download |
 |---|---|---|---|
-| **2.3.5 · Build 39** | **aktuelle Direktversion** | [Prüfsumme](SHA256SUMS-2.3.5.txt) | [⬇️ PizzaScan-2.3.5.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk) |
+| **2.3.14 · Build 49** | **aktuelle Direktversion** | [Prüfsumme](SHA256SUMS-2.3.14.txt) | [⬇️ PizzaScan-2.3.14.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.14.apk) |
+| 2.3.5 · Build 39 | Archiv | [Prüfsumme](SHA256SUMS-2.3.5.txt) | [⬇️ PizzaScan-2.3.5.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk) |
 | 2.3.4 | Archiv | [Prüfsumme](SHA256SUMS-2.3.4.txt) | [⬇️ PizzaScan-2.3.4.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.4.apk) |
 | 2.3.3 | Archiv / Maintenance-Line | [Prüfsumme](SHA256SUMS-2.3.3.txt) | [⬇️ archivierte APK](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.3-Test.apk) |
 | 2.3.2 | Archiv / Regression | `3743978624aa52a624ab5eb4be6e4de35660ad94a84fb85a63fd55cee82229a0` | [⬇️ archivierte APK](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.2-Test.apk) |
@@ -13,9 +14,9 @@ Hier liegen die direkt installierbaren PizzaScan-APKs und ältere Vergleichsstä
 
 ## Aktuelle Version
 
-Für die normale Direktinstallation die **PizzaScan 2.3.5 · Build 39 APK** verwenden. Sie trägt den Android-Paketnamen `cloud.kosch.pizzascan`, den App-Namen `PizzaScan` und keinen zusätzlichen Test-Namenszusatz.
+Für die normale Direktinstallation die **PizzaScan 2.3.14 · Build 49 APK** verwenden. Sie trägt den Android-Paketnamen `cloud.kosch.pizzascan`, den App-Namen `PizzaScan` und keinen zusätzlichen Test-Namenszusatz.
 
-Build 39 enthält die aktuelle Karten-/Pizza-Discovery ohne künstliche POI-Obergrenze, persistente Place-Historie, dauerhaft erhaltene besuchte/bewertete Orte, einen Filter für besuchte Orte, Markdown-Export/-Import der Besuchshistorie, Review Builder, optionale Mangrove/Open-Reviews-Veröffentlichung und die lokale Fotoanalyse.
+Build 49 verwendet die WebSim-Originalsuche über den sichtbaren Karten-BBOX mit denselben Pizza-/Italien-Overpass-Familien, Nominatim für die Orts-/Adresssuche und die ultra-kompakte Kartensteuerung. Der verifizierte Build enthält außerdem die bestehende Place-Historie, Bewertungen, Review Builder, optionale Mangrove/Open-Reviews-Funktionen und lokale Fotoanalyse.
 
 ## Signatur- und Update-Hinweis
 
@@ -25,11 +26,11 @@ Vor einer Deinstallation persönliche PizzaScan-Daten exportieren bzw. sichern. 
 
 ## Prüfsummen
 
-Für 2.3.5 ist [SHA256SUMS-2.3.5.txt](SHA256SUMS-2.3.5.txt) maßgeblich. Der aktuelle veröffentlichte Build hat die SHA-256-Prüfsumme:
+Für 2.3.14 ist [SHA256SUMS-2.3.14.txt](SHA256SUMS-2.3.14.txt) maßgeblich. Der aktuelle veröffentlichte Build hat die SHA-256-Prüfsumme:
 
-`12613e3dc9a397b8aad56db2f24b3873785af924cf2ea73b2e956752ff3fba3e`
+`2024d5e7eb40604ce5141d07188d313d3d07629f2d6af39265fe25343d77f0b8`
 
-Die Prüfsummendatei wird vom erfolgreichen CI-Publish zusammen mit `PizzaScan-2.3.5.apk` aktualisiert.
+Die Prüfsummendatei wurde vom erfolgreichen CI-Publish zusammen mit `PizzaScan-2.3.14.apk` aktualisiert.
 
 ## Versionshistorie
 
