@@ -58,36 +58,36 @@ public class AppSmokeTest {
     @Test public void packagedAppStartsAndKeepsDataAcrossRecreation() throws Exception {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
-            assertEquals("true", js(scenario, "PizzaScan.diagnostics().native"));
-            assertEquals("true", js(scenario, "window.PizzaScanNativeOverpass?.active===true && PizzaScanNativeOverpass.nativeFirst===true && PizzaScanNativeOverpass.mirrorFailover===true"));
-            assertEquals("true", js(scenario, "!!window.L && location.protocol === 'https:'"));
+            assertEquals("JS check: PizzaScan.diagnostics().native", "true", js(scenario, "PizzaScan.diagnostics().native"));
+            assertEquals("JS check: window.PizzaScanNativeOverpass?.active===true && PizzaScanNativeOverpass.nativeFirst===true && PizzaScanNativeOverpass.mirrorFailover===true", "true", js(scenario, "window.PizzaScanNativeOverpass?.active===true && PizzaScanNativeOverpass.nativeFirst===true && PizzaScanNativeOverpass.mirrorFailover===true"));
+            assertEquals("JS check: !!window.L && location.protocol === 'https:'", "true", js(scenario, "!!window.L && location.protocol === 'https:'"));
             scenario.onActivity(a -> {
                 assertFalse(web(a).getSettings().getAllowFileAccess());
                 assertEquals(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW, web(a).getSettings().getMixedContentMode());
                 assertEquals("Launcher icon must be the adaptive PizzaScan icon", R.mipmap.ic_launcher, a.getApplicationInfo().icon);
             });
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click(); document.getElementById('nav-photo').click();");
-            assertEquals("true", js(scenario, "document.getElementById('photo-view').classList.contains('active')"));
+            assertEquals("JS check: document.getElementById('photo-view').classList.contains('active')", "true", js(scenario, "document.getElementById('photo-view').classList.contains('active')"));
             js(scenario, "runModel(true);");
             String downloadState = js(scenario, "JSON.stringify({dialog:!!document.getElementById('confirm-model-download'),worker:!!worker,busy:PizzaScan.diagnostics().busy})");
             assertEquals(downloadState, "true", js(scenario, "!!document.getElementById('confirm-model-download') && !worker && !PizzaScan.diagnostics().busy"));
             assertEquals("Localized model notice must name the selected model", "true", js(scenario, "document.getElementById('sheet-body').textContent.includes('CLIP ViT-B/32')"));
-            assertEquals("true", js(scenario, "PizzaScan.back()"));
-            assertEquals("true", js(scenario, "!worker && !document.getElementById('sheet').open"));
-            assertEquals("true", js(scenario, "PizzaScan.back()"));
+            assertEquals("JS check: PizzaScan.back()", "true", js(scenario, "PizzaScan.back()"));
+            assertEquals("JS check: !worker && !document.getElementById('sheet').open", "true", js(scenario, "!worker && !document.getElementById('sheet').open"));
+            assertEquals("JS check: PizzaScan.back()", "true", js(scenario, "PizzaScan.back()"));
             js(scenario, "document.getElementById('map-fullscreen').click();");
             SystemClock.sleep(300);
             String fullscreenBounds = js(scenario, "JSON.stringify({active:PizzaScan.diagnostics().mapFullscreen,rect:document.getElementById('map').getBoundingClientRect().toJSON(),width:innerWidth,height:innerHeight,dpr:devicePixelRatio})");
             System.out.println("PizzaScan fullscreen bounds: " + fullscreenBounds);
             assertEquals(fullscreenBounds, "true", js(scenario, "(()=>{const r=document.getElementById('map').getBoundingClientRect();return PizzaScan.diagnostics().mapFullscreen&&Math.abs(r.x)<1&&Math.abs(r.y)<1&&Math.abs(r.width-innerWidth)<1&&Math.abs(r.height-innerHeight)<1;})()"));
-            assertEquals("true", js(scenario, "PizzaScan.back()"));
+            assertEquals("JS check: PizzaScan.back()", "true", js(scenario, "PizzaScan.back()"));
             assertEquals("false", js(scenario, "PizzaScan.diagnostics().mapFullscreen"));
             js(scenario, "document.getElementById('settings-open').click(); document.querySelector('input[value=clip16]').click(); document.getElementById('dark-mode').click(); document.getElementById('settings-save').click();");
             String dark = js(scenario,"document.body.classList.contains('dark')");
             js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});document.querySelector('[data-visit-mode=dinein]').click();document.getElementById('review-rating').value='7.8';document.getElementById('review-rating').dispatchEvent(new Event('input'));document.querySelector('[data-aspect=service][data-choice=friendly]').click();document.getElementById('review-visited').click();");
-            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && !document.getElementById('copy-draft').disabled"));
+            assertEquals("JS check: document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && !document.getElementById('copy-draft').disabled", "true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && !document.getElementById('copy-draft').disabled"));
             js(scenario, "PizzaScan.back();");
-            assertEquals("true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));
+            assertEquals("JS check: PizzaScan.diagnostics().model === 'clip16'", "true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));
             js(scenario, "window.nativeCheck='pending';bridge('copy',{text:'PizzaScan Android Test'}).then(()=>window.nativeCheck='ok');");
             long replyDeadline = SystemClock.elapsedRealtime() + 10000;
             while (!"\"ok\"".equals(js(scenario,"window.nativeCheck")) && SystemClock.elapsedRealtime()<replyDeadline) SystemClock.sleep(200);
@@ -103,10 +103,10 @@ public class AppSmokeTest {
             scenario.recreate();
             ready(scenario);
             assertEquals(dark, js(scenario,"document.body.classList.contains('dark')"));
-            assertEquals("true", js(scenario,"!document.getElementById('welcome').open"));
-            assertEquals("true", js(scenario,"PizzaScan.diagnostics().model === 'clip16'"));
+            assertEquals("JS check: !document.getElementById('welcome').open", "true", js(scenario, "!document.getElementById('welcome').open"));
+            assertEquals("JS check: PizzaScan.diagnostics().model === 'clip16'", "true", js(scenario, "PizzaScan.diagnostics().model === 'clip16'"));
             js(scenario, "showDraft({placeId:'native-review',name:'Android Testrestaurant',lat:53.55,lng:10});");
-            assertEquals("true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && document.getElementById('review-rating').value === '7.8'"));
+            assertEquals("JS check: document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && document.getElementById('review-rating').value === '7.8'", "true", js(scenario, "document.getElementById('draft-text').value.includes(PizzaI18n.language === 'en' ? 'friendly' : 'freundlich') && document.getElementById('review-rating').value === '7.8'"));
             js(scenario, "PizzaScan.back();");
         }
     }
@@ -115,23 +115,23 @@ public class AppSmokeTest {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             ready(scenario);
             js(scenario, "if(document.getElementById('welcome').open)document.getElementById('welcome-start').click();navigate('map');");
-            assertEquals("true", js(scenario, "PizzaScan.version==='2.3.16' && document.querySelector('.brand small').textContent==='2.3.16'"));
-            assertEquals("true", js(scenario, "window.PizzaScanDiscovery51?.build===51 && PizzaScanDiscovery51.viewportBBox===true && PizzaScanDiscovery51.exactSelectorFamilies===20 && PizzaScanDiscovery51.trattoriaSearch===true && PizzaScanDiscovery51.stableElementCenters===true && PizzaScanDiscovery51.nominatimSearch===true && PizzaScanDiscovery51.photonDiscovery===false && PizzaScanDiscovery51.slimToolbar===false"));
-            assertEquals("true", js(scenario, "document.querySelector('.app-bottom-bar').getBoundingClientRect().height<=76 && document.querySelectorAll('.app-footer a').length===2"));
+            assertEquals("JS check: PizzaScan.version==='2.3.16' && document.querySelector('.brand small').textContent==='2.3.16'", "true", js(scenario, "PizzaScan.version==='2.3.16' && document.querySelector('.brand small').textContent==='2.3.16'"));
+            assertEquals("JS check: window.PizzaScanDiscovery51?.build===51 && PizzaScanDiscovery51.viewportBBox===true && PizzaScanDiscovery51.exactSelectorFamilies===20 && PizzaScanDiscovery51.trattoriaSearch===true && PizzaScanDiscovery51.stableElementCenters===true && PizzaScanDiscovery51.nominatimSearch===true && PizzaScanDiscovery51.photonDiscovery===false && PizzaScanDiscovery51.slimToolbar===false", "true", js(scenario, "window.PizzaScanDiscovery51?.build===51 && PizzaScanDiscovery51.viewportBBox===true && PizzaScanDiscovery51.exactSelectorFamilies===20 && PizzaScanDiscovery51.trattoriaSearch===true && PizzaScanDiscovery51.stableElementCenters===true && PizzaScanDiscovery51.nominatimSearch===true && PizzaScanDiscovery51.photonDiscovery===false && PizzaScanDiscovery51.slimToolbar===false"));
+            assertEquals("JS check: document.querySelector('.app-bottom-bar').getBoundingClientRect().height<=76 && document.querySelectorAll('.app-footer a').length===2", "true", js(scenario, "document.querySelector('.app-bottom-bar').getBoundingClientRect().height<=76 && document.querySelectorAll('.app-footer a').length===2"));
             js(scenario, "document.getElementById('rating-filter-open').click();");
-            assertEquals("true", js(scenario, "document.getElementById('filter-min-rating').step==='0.1' && document.getElementById('filter-min-rating').getBoundingClientRect().height>0"));
+            assertEquals("JS check: document.getElementById('filter-min-rating').step==='0.1' && document.getElementById('filter-min-rating').getBoundingClientRect().height>0", "true", js(scenario, "document.getElementById('filter-min-rating').step==='0.1' && document.getElementById('filter-min-rating').getBoundingClientRect().height>0"));
             js(scenario, "document.getElementById('filter-min-rating').value='4.6';document.getElementById('filter-min-rating').dispatchEvent(new Event('input',{bubbles:true}));document.getElementById('rating-apply').click();");
-            assertEquals("true", js(scenario, "mapConfig().minRating===4.6 && document.getElementById('rating-filter-open').getAttribute('aria-pressed')==='true'"));
+            assertEquals("JS check: mapConfig().minRating===4.6 && document.getElementById('rating-filter-open').getAttribute('aria-pressed')==='true'", "true", js(scenario, "mapConfig().minRating===4.6 && document.getElementById('rating-filter-open').getAttribute('aria-pressed')==='true'"));
             scenario.recreate();ready(scenario);
-            assertEquals("true", js(scenario, "mapConfig().minRating===4.6"));
+            assertEquals("JS check: mapConfig().minRating===4.6", "true", js(scenario, "mapConfig().minRating===4.6"));
             js(scenario, "(()=>{const p=PlaceData.fromOverpass([{type:'node',id:990000001,lat:53.55,lon:10,tags:{name:'APK UI Testrestaurant',cuisine:'pizza'}}])[0];openSheet('place','TEST',detailsHtml(p));})();");
-            assertEquals("true", js(scenario, "document.querySelectorAll('#venue-ratings .rating-portals [data-action=venue-link]').length===3 && ['google.com','tripadvisor.com','yelp.com'].every(host=>[...document.querySelectorAll('#venue-ratings .rating-portals button')].some(b=>new URL(b.dataset.url).hostname.endsWith(host)))"));
+            assertEquals("JS check: document.querySelectorAll('#venue-ratings .rating-portals [data-action=venue-link]').length===3 && ['google.com','tripadvisor.com','yelp.com'].every(host=>[...document.querySelectorAll('#venue-ratings .rating-portals button')].some(b=>new URL(b.dataset.url).hostname.endsWith(host)))", "true", js(scenario, "document.querySelectorAll('#venue-ratings .rating-portals [data-action=venue-link]').length===3 && ['google.com','tripadvisor.com','yelp.com'].every(host=>[...document.querySelectorAll('#venue-ratings .rating-portals button')].some(b=>new URL(b.dataset.url).hostname.endsWith(host)))"));
             js(scenario, "closeSheet();settings.filters={...mapConfig(),minRating:0};saveSettings();document.getElementById('settings-open').click();");
-            assertEquals("true", js(scenario, "document.getElementById('build41-settings')!==null && document.getElementById('health-run')!==null && document.getElementById('repair-cache')!==null"));
+            assertEquals("JS check: document.getElementById('build41-settings')!==null && document.getElementById('health-run')!==null && document.getElementById('repair-cache')!==null", "true", js(scenario, "document.getElementById('build41-settings')!==null && document.getElementById('health-run')!==null && document.getElementById('repair-cache')!==null"));
             js(scenario, "document.getElementById('sheet-close').click();document.getElementById('filter-open').click();");
-            assertEquals("true", js(scenario, "document.getElementById('filter-radius').type==='range' && document.getElementById('filter-radius').min==='0' && document.getElementById('filter-radius').max==='10' && document.getElementById('filter-radius').step==='0.5'"));
+            assertEquals("JS check: document.getElementById('filter-radius').type==='range' && document.getElementById('filter-radius').min==='0' && document.getElementById('filter-radius').max==='10' && document.getElementById('filter-radius').step==='0.5'", "true", js(scenario, "document.getElementById('filter-radius').type==='range' && document.getElementById('filter-radius').min==='0' && document.getElementById('filter-radius').max==='10' && document.getElementById('filter-radius').step==='0.5'"));
             js(scenario, "document.getElementById('sheet-close').click();navigate('photo');");
-            assertEquals("true", js(scenario, "document.getElementById('nav-photo').getAttribute('aria-pressed')==='true'"));
+            assertEquals("JS check: document.getElementById('nav-photo').getAttribute('aria-pressed')==='true'", "true", js(scenario, "document.getElementById('nav-photo').getAttribute('aria-pressed')==='true'"));
         }
     }
 
@@ -156,7 +156,7 @@ public class AppSmokeTest {
             do { SystemClock.sleep(500); result = js(scenario, "window.nativeModelResult"); }
             while ("\"pending\"".equals(result) && SystemClock.elapsedRealtime()<deadline);
             assertEquals("Real local model must run in the packaged HTTPS WebView", "\"ok\"", result);
-            assertEquals("true", js(scenario, "typeof PizzaCommunity === 'undefined'"));
+            assertEquals("JS check: typeof PizzaCommunity === 'undefined'", "true", js(scenario, "typeof PizzaCommunity === 'undefined'"));
         }
     }
 }
