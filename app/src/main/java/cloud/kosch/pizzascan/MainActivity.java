@@ -55,6 +55,13 @@ public class MainActivity extends Activity {
     private static final int LOCATION = 41, PICK_FILE = 42, SAVE_FILE = 43;
     private static final int MAX_OVERPASS_BYTES = 16 * 1024 * 1024;
     private static final int MAX_OVERPASS_TIMEOUT_MS = 70000;
+    private static final int MIRROR_OVERPASS_TIMEOUT_MS = 30000;
+    private static final String[] OVERPASS_ENDPOINTS = new String[]{
+            "https://overpass-api.de/api/interpreter",
+            "https://overpass.private.coffee/api/interpreter",
+            "https://overpass.osm.jp/api/interpreter",
+            "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
+    };
     private WebView web;
     private PersistentModelStore modelStore;
     private ValueCallback<Uri[]> fileCallback;
@@ -193,10 +200,9 @@ public class MainActivity extends Activity {
                 && (uri.getPort() == -1 || uri.getPort() == 443);
     }
     private static boolean isAllowedOverpass(String endpoint) {
-        return "https://overpass-api.de/api/interpreter".equals(endpoint)
-                || "https://overpass.private.coffee/api/interpreter".equals(endpoint)
-                || "https://overpass.osm.jp/api/interpreter".equals(endpoint)
-                || "https://maps.mail.ru/osm/tools/overpass/api/interpreter".equals(endpoint);
+        if (endpoint == null) return false;
+        for (String allowed : OVERPASS_ENDPOINTS) if (allowed.equals(endpoint)) return true;
+        return false;
     }
     private static String readLimited(InputStream input, int limit) throws Exception {
         if (input == null) return "";
@@ -236,6 +242,40 @@ public class MainActivity extends Activity {
             if (parsed.optJSONArray("elements") == null) throw new java.io.IOException("Invalid Overpass JSON");
             return response;
         } finally { connection.disconnect(); }
+    }
+    /**
+     * Keep the exact WebSim query intact while making the native transport
+     * independent of the availability of one Overpass host.
+     */
+    private static String fetchOverpassWithFailover(String preferred, String query, int requestedTimeout) throws Exception {
+        String[] order = new String[OVERPASS_ENDPOINTS.length + 1];
+        int count = 0;
+        if (isAllowedOverpass(preferred)) order[count++] = preferred;
+        for (String endpoint : OVERPASS_ENDPOINTS) {
+            boolean alreadyQueued = false;
+            for (int i = 0; i < count; i++) if (endpoint.equals(order[i])) {
+                alreadyQueued = true;
+                break;
+            }
+            if (!alreadyQueued) order[count++] = endpoint;
+        }
+        Exception last = null;
+        StringBuilder failures = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            int timeout = i == 0
+                    ? Math.min(MAX_OVERPASS_TIMEOUT_MS, Math.max(5000, requestedTimeout))
+                    : MIRROR_OVERPASS_TIMEOUT_MS;
+            try {
+                return fetchOverpass(order[i], query, timeout);
+            } catch (Exception error) {
+                last = error;
+                if (failures.length() > 0) failures.append(" · ");
+                failures.append(new URL(order[i]).getHost()).append(": ")
+                        .append(error.getMessage() == null ? error.getClass().getSimpleName() : error.getMessage());
+            }
+        }
+        throw new java.io.IOException("Alle Overpass-Quellen fehlgeschlagen"
+                + (failures.length() == 0 ? "" : ": " + failures), last);
     }
     private boolean hasLocationPermission() {
         return checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -303,7 +343,7 @@ public class MainActivity extends Activity {
                     if (!isAllowedOverpass(endpoint) || query.isEmpty()) throw new SecurityException("Invalid Overpass request");
                     new Thread(() -> {
                         try {
-                            String response = fetchOverpass(endpoint, query, timeout);
+                            String response = fetchOverpassWithFailover(endpoint, query, timeout);
                             runOnUiThread(() -> reply(request, response, null));
                         } catch (Exception e) {
                             runOnUiThread(() -> reply(request, "", ui(R.string.action_error) + ": " + e.getClass().getSimpleName()));
