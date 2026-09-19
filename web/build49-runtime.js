@@ -26,13 +26,15 @@ function bbox(bounds){
  * Build 49 deliberately keeps the returned element semantics literal too. */
 function websimQuery(bounds){
   const b=bbox(bounds),q=[];
-  const food='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
+  const food='restaurant|fast_food|cafe|food_truck|bar|pub|biergarten|takeaway|food_court';
   const pizza='pizza|pizzeria|pizzaria|pizze';
   const italian='italian|italiano|italiana|italien|italienne|italienisch|pasta|mediterranean';
   const italianWords='trattoria|ristorante|osteria|tavola|taverna|enoteca|italian|italiano|italiana|italien';
   const nameWords=pizza+'|'+italianWords;
   q.push('[out:json][timeout:60];(');
   q.push('/* '+QUERY_MARKER+' */');
+  q.push('nwr["amenity"~"'+food+'"]["name"]('+b+');');
+  q.push('nwr["amenity"="food_truck"]["mobile"="yes"]('+b+');');
   q.push('nwr["cuisine"~"'+pizza+'|'+italian+'",i]('+b+');');
   q.push('nwr["cuisine:it"~"'+pizza+'|'+italian+'",i]('+b+');');
   q.push('nwr["restaurant:type"~"'+pizza+'|'+italianWords+'",i]('+b+');');
