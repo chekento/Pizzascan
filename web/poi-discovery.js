@@ -10,7 +10,7 @@
 'use strict';
 
 const MARKER='pizzascan-poi-discovery-v11';
-const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|bar|pub|biergarten|takeaway|food_court';
+const FOOD_AMENITIES='restaurant|fast_food|cafe|food_truck|takeaway|food_court|bar|pub|biergarten';
 const FOOD_SET=new Set(FOOD_AMENITIES.split('|'));
 const PIZZA_WORDS='pizza|pizzeria|pizzaria|pizzerie|pizze';
 const ITALIAN_CUISINE='italian|italiano|italiana|pasta';
