@@ -141,7 +141,8 @@ function installSearch(root){
       if(input){input.value=result.name||'';input.blur();}
       document.body.classList.remove('fs-search-open');
       d.getElementById('fs-search')?.setAttribute('aria-expanded','false');
-      root.PizzaSearchUI?.collapse?.();
+      d.getElementById('search-panel')?.classList.add('search-panel-collapsed');
+      d.getElementById('search-toggle')?.setAttribute('aria-expanded','false');
       try{mapRequest?.abort();}catch{}
       if(Number.isFinite(Number(result.lat))&&Number.isFinite(Number(result.lng)))map.setView([Number(result.lat),Number(result.lng)],15);
     };
