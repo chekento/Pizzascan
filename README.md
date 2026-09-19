@@ -34,11 +34,11 @@
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 51 behandelt die frühere WebSim-Ausgabe als Suchvertrag: relevante Treffer werden erweitert, aber fachfremde Restaurants ohne Pizza-/Italien-Signal bleiben draußen.
+Build 51 behandelt die frühere WebSim-Ausgabe als Suchvertrag: alle benannten Gastro-Orte im Kartenausschnitt bleiben als neutrale Orte sichtbar; Pizza-/Italien-Signale werden zusätzlich präzise markiert.
 
 - **Nicht nur „Italiener“:** Pizza, Pizzeria, Pizzaria, Trattoria, Ristorante, Osteria, Tavola, Taverna, Enoteca und italienische Küche werden erkannt.
 - **Mehr als der Name:** Cuisine- und cuisine:it-Tags, restaurant:type, Name, Brand, offizieller/alternativer Name, Betreiber, Beschreibung, Spezialität, Produkt und Pizzaautomaten werden ausgewertet.
-- **Keine beliebigen Treffer:** Burger-, Döner-, asiatische oder sonstige Restaurants ohne relevantes Signal werden nicht künstlich als Pizza-Orte ausgegeben.
+- **Keine falsche Etikettierung:** Burger-, Döner-, asiatische oder sonstige Restaurants ohne relevantes Signal bleiben auffindbar, werden aber nicht künstlich als Pizza-Orte ausgegeben.
 - Pizza- und italienische Evidenz werden getrennt gekennzeichnet; fehlende Pizza-Bestätigung wird transparent angezeigt.
 - Ways und Relationen werden nicht mehr wegen fehlender lat/lon verworfen: out body center hält ihren stabilen Marker am selben OSM-Objekt.
 
