@@ -5,6 +5,7 @@ Hier liegen die direkt installierbaren PizzaScan-APKs und ältere Vergleichsstä
 | Version | Status | SHA-256 | Download |
 |---|---|---|---|
 | **2.3.18 · Build 53** | **aktuelle Direktversion** | [Prüfsumme](SHA256SUMS-2.3.18.txt) | [⬇️ PizzaScan-2.3.18.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.18.apk) |
+| 2.3.17 · Build 52 | Archiv | [Prüfsumme](SHA256SUMS-2.3.17.txt) | [⬇️ PizzaScan-2.3.17.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.17.apk) |
 | 2.3.5 · Build 39 | Archiv | [Prüfsumme](SHA256SUMS-2.3.5.txt) | [⬇️ PizzaScan-2.3.5.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.5.apk) |
 | 2.3.4 | Archiv | [Prüfsumme](SHA256SUMS-2.3.4.txt) | [⬇️ PizzaScan-2.3.4.apk](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.4.apk) |
 | 2.3.3 | Archiv / Maintenance-Line | [Prüfsumme](SHA256SUMS-2.3.3.txt) | [⬇️ archivierte APK](https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.3-Test.apk) |
