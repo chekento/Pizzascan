@@ -7,9 +7,9 @@ android {
         applicationId 'cloud.kosch.pizzascan'
         minSdk 26
         targetSdk 36
-        // Build 49: source-original WebSim search parity and ultra-compact map controls.
-        versionCode 49
-        versionName '2.3.14'
+        // Build 50: WebSim-exact search with repaired Android native POI transport.
+        versionCode 50
+        versionName '2.3.15'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     sourceSets { main { assets.srcDirs = ['../web'] } }

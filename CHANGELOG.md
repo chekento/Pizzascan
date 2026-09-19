@@ -1,3 +1,13 @@
+## 2.3.15 · Build 50
+
+- Fixes the Android device failure where the map showed **“Kartendaten konnten nicht aktualisiert werden / Failed to fetch”** and returned zero Pizza/Italian POIs.
+- Keeps the Build 49/WebSim discovery contract unchanged: current visible map BBOX, the same Pizza/Italian selector families, the same Overpass query text, automatic search after map movement, and Nominatim for explicit place/address search.
+- Removes an unnecessary dependency on the generic JavaScript bridge when detecting the Android native Overpass channel.
+- Sends the WebSim query through the native Android HTTPS channel first. If the primary `overpass-api.de` transport fails, the **identical query** is retried on the existing trusted Overpass mirrors before any WebView/CORS rescue path is attempted.
+- Extends the Android native Overpass read budget to match the WebSim `[timeout:60]` query, uses a bounded 15-second connect timeout, and raises the guarded response limit for larger visible-map responses.
+- Preserves the ultra-compact map toolbar from Build 49.
+- Adds regression coverage proving mirror failover does not mutate the WebSim query and does not fall back to WebView when a native mirror succeeds.
+
 ## 2.3.14 · Build 49
 
 - Restores the automatic map discovery to the PizzaScan WebSim source contract preserved in `source-original/script.js`: the visible Leaflet BBOX is queried directly instead of forcing a 5 km circle.

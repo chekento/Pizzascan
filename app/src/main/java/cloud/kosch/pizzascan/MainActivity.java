@@ -53,8 +53,8 @@ public class MainActivity extends Activity {
     static final String ORIGIN = "https://appassets.androidplatform.net";
     static final String START_URL = ORIGIN + "/assets/index.html";
     private static final int LOCATION = 41, PICK_FILE = 42, SAVE_FILE = 43;
-    private static final int MAX_OVERPASS_BYTES = 8 * 1024 * 1024;
-    private static final int MAX_OVERPASS_TIMEOUT_MS = 30000;
+    private static final int MAX_OVERPASS_BYTES = 16 * 1024 * 1024;
+    private static final int MAX_OVERPASS_TIMEOUT_MS = 70000;
     private WebView web;
     private PersistentModelStore modelStore;
     private ValueCallback<Uri[]> fileCallback;
@@ -218,7 +218,7 @@ public class MainActivity extends Activity {
         HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
         try {
             connection.setRequestMethod("POST");
-            connection.setConnectTimeout(timeout);
+            connection.setConnectTimeout(Math.min(timeout, 15000));
             connection.setReadTimeout(timeout);
             connection.setInstanceFollowRedirects(false);
             connection.setDoOutput(true);
