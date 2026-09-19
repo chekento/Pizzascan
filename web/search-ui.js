@@ -68,11 +68,16 @@
    const local=localCandidates(q,center,helper);showSearchResults(local,true);decorate(local);
    const states=helper.stateIntent(q),category=helper.categoryIntent(q),stateOnly=states.length&&!category.length&&helper.tokens(q).every(word=>helper.GENERIC.has(word));
    if(stateOnly){byId('search-status').textContent=local.length?`${local.length} lokale Treffer · ${states.includes('saved')?'⭐ Gemerkt ':''}${states.includes('visited')?'✓ Besucht ':''}${states.includes('location')?'📍 Standort':''}`.trim():states.includes('location')?'Standort ist noch nicht gesetzt. Nutze zuerst den GPS-Button.':'Keine passenden lokal gespeicherten Orte.';return;}
-   fallbackNext={query:q,time:Date.now()};
-   const [geoResult,poiResult]=await Promise.allSettled([placeService.photon(q,center,{signal:ctl.signal}),directPoiSearch(q,center,ctl.signal,helper)]);
+   fallbackNext=null;
+   const [geoResult,poiResult,addressResult]=await Promise.allSettled([placeService.photon(q,center,{signal:ctl.signal}),directPoiSearch(q,center,ctl.signal,helper),fallbackRequest(q,center,ctl.signal)]);
    if(revision!==searchRevision||ctl.signal.aborted)return;
-   const geo=geoResult.status==='fulfilled'?geoResult.value:[],poi=poiResult.status==='fulfilled'?poiResult.value:[];
-   const combined=helper.mergeRanked([local,poi,geo],q,center,PizzaCore.distance);
+   const geo=geoResult.status==='fulfilled'?geoResult.value:[],poi=poiResult.status==='fulfilled'?poiResult.value:[],address=addressResult.status==='fulfilled'?addressResult.value:[];
+   const queryWords=helper.tokens(q).filter(word=>word.length>1);
+   const exactVenue=[...poi,...geo].some(item=>{if(item.kind!=='venue'&&!item.place)return false;const name=item.name||item.place?.name||'',tokens=new Set(helper.tokens(name));return queryWords.length>0&&queryWords.every(word=>tokens.has(word));});
+   if(address.length&&!exactVenue){
+    const best=address[0];input.value=best.name||q;showSearchResults([]);byId('search-status').textContent='Adresse gefunden · Kartenausschnitt wird geladen …';mapRequest?.abort();map.setView([best.lat,best.lng],15);loadPlaces({force:true});return;
+   }
+   const combined=helper.mergeRanked([local,poi,geo,address],q,center,PizzaCore.distance);
    showSearchResults(combined);decorate(combined);
    const venueCount=combined.filter(x=>x.kind==='venue'||x.place).length;
    byId('search-status').textContent=combined.length?`${combined.length} genaue Treffer · ${venueCount} POI${venueCount===1?'':'s'} · Kategorie, Name, Adresse und OSM-Identität berücksichtigt.`:'Keine passende POI-/Ort-Übereinstimmung. Ergänze Restaurantname und Stadt oder verschiebe die Karte.';
