@@ -1,4 +1,4 @@
-/* PizzaScan Build 56: WebSim-complete discovery, stable map geometry and Android transport failover. */
+/* PizzaScan Build 57: WebSim-complete discovery, stable map geometry and Android transport failover. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -6,8 +6,8 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 
-const VERSION='2.3.21';
-const BUILD=56
+const VERSION='2.3.22';
+const BUILD=57
 const MIGRATION='pizzascan-build56-search-migration-v1';
 const QUERY_MARKER='pizzascan-build54-websim-coverage-complete';
 const ENDPOINT='https://overpass-api.de/api/interpreter';
@@ -273,7 +273,7 @@ function compactUi(root){
     auto.checked=true;auto.disabled=true;
     const label=auto.closest?.('label');if(label)label.title='WebSim-Modus: Nach Kartenbewegungen wird automatisch neu gesucht.';
   }
-  const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 56:</strong> WebSim-komplette Kartenausschnittsuche für Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Treffer; Wege und Relationen werden mit Mittelpunkt übernommen.';
+  const ps=[...d.querySelectorAll('.map-legend p')];if(ps[1])ps[1].innerHTML='<strong>Build 57:</strong> WebSim-komplette Kartenausschnittsuche für Pizza, Trattoria, Ristorante, Osteria, italienische Küche und verwandte Gastro-Treffer; Wege und Relationen werden mit Mittelpunkt übernommen.';
 }
 
 function installSheetHook(root){
@@ -307,13 +307,13 @@ function syncVersion(root){
     const badge=root.document?.querySelector('.brand small');
     if(badge){if(badge.textContent!==VERSION)badge.textContent=VERSION;if(!badge.__build49Observer){badge.__build49Observer=true;new MutationObserver(()=>{if(badge.textContent!==VERSION)badge.textContent=VERSION;}).observe(badge,{childList:true,characterData:true,subtree:true});}}
   }catch{}
-  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.21.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
+  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.22.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
 }
 
 function install(root){
   if(!root.document||!root.PizzaPlaces)return false;
   lockQuery(root);
-  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice(),websimQuery};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;root.PizzaScanDiscovery52=root.PizzaScanDiscovery49;root.PizzaScanDiscovery53=root.PizzaScanDiscovery49;root.PizzaScanDiscovery54=root.PizzaScanDiscovery49;root.PizzaScanDiscovery55=root.PizzaScanDiscovery49;root.PizzaScanDiscovery56=root.PizzaScanDiscovery49;
+  root.PizzaScanDiscovery49={version:VERSION,build:BUILD,mode:'source-original-websim-coverage-complete',viewportBBox:true,exactSelectorFamilies:20,trattoriaSearch:true,stableElementCenters:true,nominatimSearch:true,photonDiscovery:false,localSuggestionZoom:15,slimToolbar:false,providers:ENDPOINTS.slice(),websimQuery};root.PizzaScanDiscovery50=root.PizzaScanDiscovery49;root.PizzaScanDiscovery51=root.PizzaScanDiscovery49;root.PizzaScanDiscovery52=root.PizzaScanDiscovery49;root.PizzaScanDiscovery53=root.PizzaScanDiscovery49;root.PizzaScanDiscovery54=root.PizzaScanDiscovery49;root.PizzaScanDiscovery55=root.PizzaScanDiscovery49;root.PizzaScanDiscovery56=root.PizzaScanDiscovery49;root.PizzaScanDiscovery57=root.PizzaScanDiscovery49;
   let attempts=0,refresh=false;
   const ready=()=>{
     attempts++;if(migrate(root))refresh=true;

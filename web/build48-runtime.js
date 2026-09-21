@@ -425,3 +425,4 @@ return {
   normalizedRadius,migrate,finalizeNearbyDefault,syncVersion,upgradeUi,photonFallback,installRecovery,install
 };
 });
+if(typeof document!=='undefined'&&!document.querySelector('script[data-pizzascan-build57]')){const s=document.createElement('script');s.src='build57-runtime.js';s.defer=true;s.dataset.pizzascanBuild57='1';document.head.appendChild(s);}

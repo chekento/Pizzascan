@@ -1,3 +1,11 @@
+## 2.3.22 · Build 57
+
+- Synchronisiert den persönlichen Score live zwischen Popup, „Mein Besuch“, Place-Detail und Rezensionsbaukasten.
+- Übernimmt vorhandene Besuchsscores in den gemeinsamen lokalen Score-Speicher und hält das Besuchsarchiv bei Änderungen aktuell.
+- Übersetzt spät erzeugte Karten-, Review-, Backup-, Besuchsarchiv-, Open-Reviews- und Coverage-Inhalte in Deutsch, Englisch, Italienisch, Spanisch und Französisch.
+- Startet nach GPS-Zentrierung automatisch eine Suche im tatsächlich sichtbaren neuen Kartenausschnitt.
+- Behält die Vollbildkarte als reine Kartenansicht mit POIs und Popups ohne nachgelagerte POI-Liste.
+
 ## 2.3.21 · Build 56
 
 - Beschleunigt die Suche: die erste erfolgreiche POI-Antwort wird sofort gerendert, spätere OSM-Spiegel werden progressiv zusammengeführt und passende Antworten werden 15 Minuten zwischengespeichert.

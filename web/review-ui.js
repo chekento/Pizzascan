@@ -16,9 +16,9 @@ function personalRatingSet(place,value){
  const key=personalRatingKey(place),n=validPersonalRating(value),lat=Number(place?.lat),lng=Number(place?.lng);
  if(!key||n===null||!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return false;
  const all=personalRatingData();const record={rating:n,updatedAt:new Date().toISOString(),place:{placeId:key,name:String(place.name||'').slice(0,200),lat,lng,address:String(place.address||'').slice(0,300),type:String(place.type||'other').slice(0,60)}};
- all[key]=record;const ok=placeService.write(PERSONAL_RATINGS,all);globalThis.PizzaPlaceHistoryRuntime?.rememberRating?.(record);return ok;
+ all[key]=record;const ok=placeService.write(PERSONAL_RATINGS,all);globalThis.PizzaPlaceHistoryRuntime?.rememberRating?.(record);if(typeof globalThis.dispatchEvent==='function')globalThis.dispatchEvent(new CustomEvent('pizzascan:personal-rating-change',{detail:{placeId:key,rating:n,place:record.place}}));return ok;
 }
-function personalRatingClear(place){const key=personalRatingKey(place),all=personalRatingData();if(!key||!Object.prototype.hasOwnProperty.call(all,key))return true;delete all[key];globalThis.PizzaPlaceHistoryRuntime?.forgetRating?.(key);return placeService.write(PERSONAL_RATINGS,all);}
+function personalRatingClear(place){const key=personalRatingKey(place),all=personalRatingData();if(!key||!Object.prototype.hasOwnProperty.call(all,key))return true;delete all[key];globalThis.PizzaPlaceHistoryRuntime?.forgetRating?.(key);const ok=placeService.write(PERSONAL_RATINGS,all);if(typeof globalThis.dispatchEvent==='function')globalThis.dispatchEvent(new CustomEvent('pizzascan:personal-rating-change',{detail:{placeId:key,rating:null,place:{placeId:key}}}));return ok;}
 globalThis.PizzaPersonalRatings={get:personalRatingGet,set:personalRatingSet,clear:personalRatingClear,all:personalRatingData};
 'use strict';
 const DRAFTS='pizzascan-drafts-v1';

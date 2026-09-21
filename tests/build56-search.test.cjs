@@ -3,7 +3,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 
-test('Build 56 renders first map/POI results without waiting for every provider',()=>{
+test('Build 57 renders first map/POI results without waiting for every provider',()=>{
  const map=fs.readFileSync('web/map-ui.js','utf8');
  const history=fs.readFileSync('web/place-history.js','utf8');
  assert.match(map,/onBatch:batch=>acceptBatch/);
@@ -12,7 +12,7 @@ test('Build 56 renders first map/POI results without waiting for every provider'
  assert.match(history,/__pizzascanProgressive/);
 });
 
-test('Build 56 keeps the magnifying glass still and animates only the search button',()=>{
+test('Build 57 keeps the magnifying glass still and animates only the search button',()=>{
  const css=fs.readFileSync('web/hotfix-map.css','utf8');
  assert.match(css,/pizzascan-search-button/);
  assert.match(css,/#map-view\.map-searching #map-refresh/);
@@ -20,7 +20,7 @@ test('Build 56 keeps the magnifying glass still and animates only the search but
  assert.doesNotMatch(css,/search-rotate/);
 });
 
-test('Build 56 collection backup is visible and accepts large archives',()=>{
+test('Build 57 collection backup is visible and accepts large archives',()=>{
  const history=fs.readFileSync('web/place-history.js','utf8');
  assert.match(history,/Sammlung exportieren \/ importieren/);
  assert.match(history,/MAX_ARCHIVE_RECORDS=1000000/);
