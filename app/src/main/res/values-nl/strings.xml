@@ -1,0 +1,19 @@
+<resources>
+    <string name="pick_photo">Een pizzafoto kiezen</string>
+    <string name="import_json">PizzaScan-JSON importeren</string>
+    <string name="share_photo">Pizzafoto en review delen</string>
+    <string name="exit_title">PizzaScan sluiten?</string>
+    <string name="exit_message">Je foto’s en beoordelingen blijven op dit apparaat.</string>
+    <string name="exit_close">Sluiten</string>
+    <string name="exit_stay">Blijven</string>
+    <string name="no_picker">Geen bestandskiezer beschikbaar.</string>
+    <string name="request_error">App-verzoek kan niet worden gelezen.</string>
+    <string name="reply_error">Android-antwoord mislukt.</string>
+    <string name="action_error">Android-actie mislukt</string>
+    <string name="no_link_app">Geen app beschikbaar om deze link te openen.</string>
+    <string name="no_browser">Geen app beschikbaar om deze link te openen.</string>
+    <string name="export_saved">JSON-export opgeslagen.</string>
+    <string name="export_error">Export kon niet worden opgeslagen.</string>
+    <string name="export_failed">Export mislukt.</string>
+    <string name="review_clip">PizzaScan-review</string>
+</resources>

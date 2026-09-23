@@ -1,0 +1,19 @@
+<resources>
+    <string name="pick_photo">选择披萨照片</string>
+    <string name="import_json">导入 PizzaScan JSON</string>
+    <string name="share_photo">分享披萨照片和评论</string>
+    <string name="exit_title">关闭 PizzaScan？</string>
+    <string name="exit_message">你的照片和评分会保留在此设备上。</string>
+    <string name="exit_close">关闭</string>
+    <string name="exit_stay">留下</string>
+    <string name="no_picker">没有可用的文件选择器。</string>
+    <string name="request_error">无法读取应用请求。</string>
+    <string name="reply_error">Android 响应失败。</string>
+    <string name="action_error">Android 操作失败</string>
+    <string name="no_link_app">没有可打开此链接的应用。</string>
+    <string name="no_browser">没有可打开此链接的应用。</string>
+    <string name="export_saved">JSON 导出已保存。</string>
+    <string name="export_error">无法保存导出文件。</string>
+    <string name="export_failed">导出失败。</string>
+    <string name="review_clip">PizzaScan 评论</string>
+</resources>

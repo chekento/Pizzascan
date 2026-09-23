@@ -1,0 +1,19 @@
+<resources>
+    <string name="pick_photo">ピザの写真を選択</string>
+    <string name="import_json">PizzaScan JSONをインポート</string>
+    <string name="share_photo">ピザの写真とレビューを共有</string>
+    <string name="exit_title">PizzaScanを終了しますか？</string>
+    <string name="exit_message">写真と評価はこの端末に保存されます。</string>
+    <string name="exit_close">終了</string>
+    <string name="exit_stay">とどまる</string>
+    <string name="no_picker">利用できるファイル選択機能がありません。</string>
+    <string name="request_error">アプリのリクエストを読み取れませんでした。</string>
+    <string name="reply_error">Androidの応答に失敗しました。</string>
+    <string name="action_error">Androidの操作に失敗しました</string>
+    <string name="no_link_app">このリンクを開けるアプリがありません。</string>
+    <string name="no_browser">このリンクを開けるアプリがありません。</string>
+    <string name="export_saved">JSONを書き出しました。</string>
+    <string name="export_error">書き出しを保存できませんでした。</string>
+    <string name="export_failed">書き出しに失敗しました。</string>
+    <string name="review_clip">PizzaScanレビュー</string>
+</resources>

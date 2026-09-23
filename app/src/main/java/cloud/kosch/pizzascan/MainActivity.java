@@ -317,7 +317,7 @@ public class MainActivity extends Activity {
             switch (request.optString("type")) {
                 case "setLanguage": {
                     String language = request.optString("language");
-                    if (!language.matches("de|en|it|es|fr")) throw new IllegalArgumentException("Unsupported language");
+                    if (!language.matches("de|en|it|es|fr|pt|nl|pl|tr|ru|ja|zh|ko|ar")) throw new IllegalArgumentException("Unsupported language");
                     appLanguage = language;
                     break;
                 }

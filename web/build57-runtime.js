@@ -229,6 +229,6 @@
   const target=root.document.body;if(target&&!target.__pizzaBuild57I18nObserver){target.__pizzaBuild57I18nObserver=true;let pending=false;new MutationObserver(()=>{if(pending)return;pending=true;root.setTimeout(()=>{pending=false;run();},40);}).observe(target,{childList:true,subtree:true,characterData:true});}
  }
  function install(){installScoreSync();installGpsBridge();installDetailsBridge();installActionBridge();installReviewBridge();installLocalization();}
- root.PizzaBuild57={build:57,version:'2.3.22',scanCurrentViewport,updateScoreSurfaces,install};
+ root.PizzaBuild57={build:57,version:'2.3.23',scanCurrentViewport,updateScoreSurfaces,install};
  if(root.document?.readyState==='loading')root.document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 })(globalThis);

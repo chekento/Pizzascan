@@ -1,3 +1,17 @@
+## 2.3.23 · Build 58
+
+- Erweitert App und GitHub-Sprachseite um automatische Browser-/Gerätespracherkennung und vierzehn UI-Sprachen: Deutsch, Englisch, Italienisch, Spanisch, Französisch, Portugiesisch, Niederländisch, Polnisch, Türkisch, Russisch, Japanisch, Chinesisch, Koreanisch und Arabisch.
+- Übersetzt statische und spät erzeugte Inhalte zentral nach: Navigation, Tabs, Einstellungen, Dropdowns, Ladeanzeigen, Statusmeldungen, Bewertungs- und Review-Flows, Datenschutz, Backup und Release-Informationen.
+- Lädt die Build-57-Laufzeit jetzt tatsächlich in der APK-Weboberfläche und hält Mini-/Vollbildkarte, GPS-Viewport-Scan sowie den gemeinsamen Live-Score aktiv.
+- Ergänzt Android-Systemdialoge und native Bridge-Meldungen für die zusätzlichen Sprachen.
+- Veröffentlicht die installierbare `PizzaScan-2.3.23.apk` zusammen mit korrespondierender SHA-256-Datei, Frontpage-Link und archivierter 2.3.22-Version.
+
+## 2.3.23 · Build 58 · English summary
+
+- Adds browser/device language detection and fourteen UI languages to the app and GitHub language page.
+- Covers navigation, tabs, settings, dropdowns, loading/status text, ratings, reviews, privacy, backup and release information through one late-runtime localization layer.
+- Packages the Build-57 runtime in the WebView so the shared POI set, GPS viewport scan and live score remain active in the installable APK.
+
 ## 2.3.22 · Build 57
 
 - Synchronisiert den persönlichen Score live zwischen Popup, „Mein Besuch“, Place-Detail und Rezensionsbaukasten.

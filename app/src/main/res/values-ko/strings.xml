@@ -1,0 +1,19 @@
+<resources>
+    <string name="pick_photo">피자 사진 선택</string>
+    <string name="import_json">PizzaScan JSON 가져오기</string>
+    <string name="share_photo">피자 사진 및 리뷰 공유</string>
+    <string name="exit_title">PizzaScan을 닫을까요?</string>
+    <string name="exit_message">사진과 평가는 이 기기에 보관됩니다.</string>
+    <string name="exit_close">닫기</string>
+    <string name="exit_stay">머무르기</string>
+    <string name="no_picker">사용할 수 있는 파일 선택기가 없습니다.</string>
+    <string name="request_error">앱 요청을 읽지 못했습니다.</string>
+    <string name="reply_error">Android 응답에 실패했습니다.</string>
+    <string name="action_error">Android 작업에 실패했습니다</string>
+    <string name="no_link_app">이 링크를 열 수 있는 앱이 없습니다.</string>
+    <string name="no_browser">이 링크를 열 수 있는 앱이 없습니다.</string>
+    <string name="export_saved">JSON 내보내기를 저장했습니다.</string>
+    <string name="export_error">내보내기를 저장하지 못했습니다.</string>
+    <string name="export_failed">내보내기에 실패했습니다.</string>
+    <string name="review_clip">PizzaScan 리뷰</string>
+</resources>

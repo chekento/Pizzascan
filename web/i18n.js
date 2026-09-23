@@ -254,6 +254,11 @@ add('Beschädigt','Damaged','Danneggiato','Dañado','Endommagé');
 
 for(const row of root.PizzaI18nExtra||[])add(...row);
 const exact=new Map(rows.map(([de,t])=>[de,t]));
+// Expose the source catalogue to the late universal layer.  The existing
+// five-language runtime keeps its original behaviour; additional languages
+// can use the same German source keys with a translated core and an English
+// fallback for the long tail instead of ever falling back to German.
+const catalog=Object.fromEntries(rows.map(([de,t])=>[de,{de,...t}]));
 const attrs=['aria-label','placeholder','title','alt'];
 const skip='script,style,textarea,code,[translate=\"no\"],[data-i18n-ignore]';
 function tr(s){if(lang==='de'||!s)return s;const direct=exact.get(s);if(direct?.[lang])return direct[lang];
@@ -320,5 +325,5 @@ function hookPhoton(){if(!root.PizzaPlaces?.Service||lang==='de'||root.PizzaPlac
 
 function init(){if(root.PizzaScanNative&&typeof root.bridge==='function')root.bridge('setLanguage',{language:lang}).catch(console.error);const confirmOriginal=root.confirm.bind(root);root.confirm=message=>confirmOriginal(tr(String(message)));welcomeLanguage();hookReview();hookPhoton();hookSettings();translateTree(document.body);new MutationObserver(muts=>{for(const m of muts){if(m.type==='attributes')translateElement(m.target);if(m.type==='characterData')translateTextNode(m.target);for(const n of m.addedNodes){if(n.nodeType===Node.TEXT_NODE)translateTextNode(n);else if(n.nodeType===Node.ELEMENT_NODE)translateTree(n);}}}).observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:attrs});}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-root.PizzaI18n={get language(){return lang;},supported,names,translate:tr,setLanguage:changeLanguage};
+root.PizzaI18n={get language(){return lang;},supported,names,catalog,translate:tr,setLanguage:changeLanguage};
 })(globalThis);

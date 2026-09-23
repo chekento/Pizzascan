@@ -1,0 +1,19 @@
+<resources>
+    <string name="pick_photo">Pizza fotoğrafı seç</string>
+    <string name="import_json">PizzaScan JSON\'ını içe aktar</string>
+    <string name="share_photo">Pizza fotoğrafını ve incelemeyi paylaş</string>
+    <string name="exit_title">PizzaScan kapatılsın mı?</string>
+    <string name="exit_message">Fotoğraflarınız ve değerlendirmeleriniz bu cihazda kalır.</string>
+    <string name="exit_close">Kapat</string>
+    <string name="exit_stay">Kal</string>
+    <string name="no_picker">Kullanılabilir dosya seçici yok.</string>
+    <string name="request_error">Uygulama isteği okunamadı.</string>
+    <string name="reply_error">Android yanıtı başarısız oldu.</string>
+    <string name="action_error">Android işlemi başarısız oldu</string>
+    <string name="no_link_app">Bu bağlantıyı açacak uygulama yok.</string>
+    <string name="no_browser">Bu bağlantıyı açacak uygulama yok.</string>
+    <string name="export_saved">JSON dışa aktarma kaydedildi.</string>
+    <string name="export_error">Dışa aktarma kaydedilemedi.</string>
+    <string name="export_failed">Dışa aktarma başarısız oldu.</string>
+    <string name="review_clip">PizzaScan incelemesi</string>
+</resources>

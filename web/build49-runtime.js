@@ -1,4 +1,4 @@
-/* PizzaScan Build 57: WebSim-complete discovery, stable map geometry and Android transport failover. */
+/* PizzaScan Build 58: multilingual release on the Build-57 discovery contract. */
 (function(root,factory){
   const api=factory();
   if(typeof module==='object'&&module.exports)module.exports=api;
@@ -6,8 +6,8 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 
-const VERSION='2.3.22';
-const BUILD=57
+const VERSION='2.3.23';
+const BUILD=58
 const MIGRATION='pizzascan-build56-search-migration-v1';
 const QUERY_MARKER='pizzascan-build54-websim-coverage-complete';
 const ENDPOINT='https://overpass-api.de/api/interpreter';
@@ -307,7 +307,7 @@ function syncVersion(root){
     const badge=root.document?.querySelector('.brand small');
     if(badge){if(badge.textContent!==VERSION)badge.textContent=VERSION;if(!badge.__build49Observer){badge.__build49Observer=true;new MutationObserver(()=>{if(badge.textContent!==VERSION)badge.textContent=VERSION;}).observe(badge,{childList:true,characterData:true,subtree:true});}}
   }catch{}
-  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.22.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
+  try{const R=root.PizzaReleaseInfo;if(R?.RELEASE)Object.assign(R.RELEASE,{version:VERSION,build:BUILD,apk:'https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.23.apk'});R?.syncVersion?.();R?.decorate?.();}catch{}
 }
 
 function install(root){

@@ -2,9 +2,13 @@
   <img src="store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan" width="112" height="112">
 </p>
 
-<h1 align="center">PizzaScan 2.3.22 · Build 57</h1>
+<h1 align="center">PizzaScan 2.3.23 · Build 58</h1>
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
-<p align="center">Deutsch · English · Italiano · Español · Français</p>
+<p align="center">Deutsch · English · Italiano · Español · Français · Português · Nederlands · Polski · Türkçe · Русский · 日本語 · 中文 · 한국어 · العربية</p>
+
+<p align="center"><strong>Sprachseiten / Language pages:</strong><br>
+<a href="README.de.md">Deutsch</a> · <a href="README.en.md">English</a> · <a href="README.it.md">Italiano</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.pt.md">Português</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.pl.md">Polski</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.ru.md">Русский</a> · <a href="README.ja.md">日本語</a> · <a href="README.zh.md">中文</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a><br>
+<a href="https://chekento.github.io/Pizzascan/">🌐 Automatische GitHub-Sprachseite / browser-detected language page</a></p>
 
 <p align="center">
   <img src="store/graphics/PizzaScan-Feature-EN-1024x500.png" alt="PizzaScan Feature Graphic" width="1024">
@@ -13,17 +17,18 @@
 ## 📱 Aktuelle APK direkt herunterladen
 
 <p align="center">
-  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.22.apk"><strong>⬇️ PizzaScan 2.3.22 · Build 57 APK herunterladen</strong></a>
+  <a href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.23.apk"><strong>⬇️ PizzaScan 2.3.23 · Build 58 APK herunterladen</strong></a>
 </p>
 
-<p align="center"><strong>Version 2.3.22 · Build 57 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><strong>Version 2.3.23 · Build 58 · Android 8+ · Target SDK 36 · cloud.kosch.pizzascan</strong></p>
+<p align="center"><code>SHA-256: d08a3c968740801d5993a901bed09a6ee51db999bb722f299ea058d292f03bf2</code></p>
 
-> **Build 57 synchronisiert Scores live über Popup, „Mein Besuch“ und Rezensionsbaukasten, lokalisiert auch spät erzeugte Inhalte in fünf Sprachen und scannt nach GPS-Zentrierung automatisch den neuen Kartenausschnitt:** Die vollständige WebSim-Suchfamilie bleibt erhalten; Pizza, Trattoria, Ristorante, Osteria und verwandte italienische Gastro-Orte werden im sichtbaren BBOX gefunden. Ways und Relationen werden mit ihrem stabilen Kartenmittelpunkt übernommen.
+> **Build 58 erweitert die Build-57-Kartenlogik um automatische Browser-/Gerätespracherkennung und vierzehn UI-Sprachen:** Scores bleiben zwischen Popup, „Mein Besuch“ und Rezensionsbaukasten live synchron; GPS scannt automatisch den sichtbaren Kartenausschnitt. Die vollständige WebSim-Suchfamilie bleibt erhalten; Pizza, Trattoria, Ristorante, Osteria und verwandte italienische Gastro-Orte werden im sichtbaren BBOX gefunden. Ways und Relationen werden mit ihrem stabilen Kartenmittelpunkt übernommen.
 
-**Neu in 2.3.22:** Die erste erfolgreiche POI-Antwort wird sofort angezeigt und weitere OSM-Spiegel werden danach zusammengeführt; GPS-Zentrierung startet den Scan erst nach der Kartenbewegung im aktuellen Ausschnitt. Popup, Place-Detail, „Mein Besuch“ und Rezensionsbaukasten verwenden pro Ort denselben live synchronisierten Wert von 0,1 bis 10,0. Spät erzeugte Karten-, Archiv- und Review-Inhalte werden in Deutsch, Englisch, Italienisch, Spanisch und Französisch nachgezogen. Die Vollbildkarte bleibt auf Karte, POIs und Popups beschränkt.
+**Neu in 2.3.23:** Die App lädt jetzt die Build-57-Laufzeit tatsächlich in der APK-Weboberfläche, erkennt die Browser-/Gerätesprache automatisch und bietet vierzehn Sprachen für App, Menüs, Dropdowns, Ladeanzeigen, Statusmeldungen, Datenschutz, Backup und Reviews. Die erste erfolgreiche POI-Antwort wird sofort angezeigt und weitere OSM-Spiegel werden danach zusammengeführt; GPS-Zentrierung startet den Scan erst nach der Kartenbewegung im aktuellen Ausschnitt. Popup, Place-Detail, „Mein Besuch“ und Rezensionsbaukasten verwenden pro Ort denselben live synchronisierten Wert von 0,1 bis 10,0. Die Vollbildkarte bleibt auf Karte, POIs und Popups beschränkt.
 
 <p align="center">
-<a href="downloads/SHA256SUMS-2.3.22.txt"><strong>SHA-256</strong></a>
+<a href="downloads/SHA256SUMS-2.3.23.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;
 <a href="CHANGELOG.md"><strong>📝 Changelog</strong></a>
 &nbsp; · &nbsp;
@@ -36,7 +41,7 @@
 
 ## 🍕 Relevanz statt beliebiger Restaurant-Treffer
 
-Build 57 behandelt die frühere WebSim-Ausgabe als Suchvertrag: alle benannten Gastro-Orte im Kartenausschnitt bleiben als neutrale Orte sichtbar; Pizza-/Italien-Signale werden zusätzlich präzise markiert.
+Build 58 behandelt die frühere WebSim-Ausgabe als Suchvertrag: alle benannten Gastro-Orte im Kartenausschnitt bleiben als neutrale Orte sichtbar; Pizza-/Italien-Signale werden zusätzlich präzise markiert.
 
 - **Nicht nur „Italiener“:** Pizza, Pizzeria, Pizzaria, Trattoria, Ristorante, Osteria, Tavola, Taverna, Enoteca und italienische Küche werden erkannt.
 - **Mehr als der Name:** Cuisine- und cuisine:it-Tags, restaurant:type, Name, Brand, offizieller/alternativer Name, Betreiber, Beschreibung, Spezialität, Produkt und Pizzaautomaten werden ausgewertet.
@@ -67,7 +72,7 @@ Unicode-sichere Suche erhält Orts- und Restaurantnamen in Originalschrift. Die 
 - Die Bedienung ist auf zwei Ebenen gegliedert: Suche bei Bedarf öffnen, dann Kartenausschnitt, Status und Trefferzahl direkt am Kartenrand.
 - Standardmäßig bleiben **alle relevanten Ortstypen, alle Bewertungsstände inklusive unbekannt/unbewertet, geschlossene Orte und bereits besuchte Orte** sichtbar. Die Settings können jeden dieser Filter bewusst einschränken.
 - Filter für Offenstatus, Mindestbewertung, Ortstypen, Besuchshistorie, Routenmodus, GPS-Start und dunkles Design.
-- Die Sprache kann in Deutsch, Englisch, Italienisch, Spanisch und Französisch gewechselt werden.
+- Die Sprache wird aus Browser-/Gerätesprachen automatisch erkannt und kann in Deutsch, Englisch, Italienisch, Spanisch, Französisch, Portugiesisch, Niederländisch, Polnisch, Türkisch, Russisch, Japanisch, Chinesisch, Koreanisch und Arabisch gewechselt werden.
 - Bottom-Navigation für Karte und Fotobewertung sowie responsive Portrait-/Landscape-Darstellung.
 
 

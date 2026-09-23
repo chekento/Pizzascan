@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="PizzaScan 2.3.23 · Build 58 — multilingual pizza map and local photo analysis.">
+  <title>PizzaScan · Build 58</title>
+  <style>
+    :root{color-scheme:light dark;--bg:#fff9f6;--ink:#201b19;--muted:#746b66;--card:#fff;--line:#eadbd4;--accent:#f2583d;--accent-ink:#fff}
+    @media(prefers-color-scheme:dark){:root{--bg:#1d1917;--ink:#fff8f4;--muted:#c5b8b1;--card:#2b2522;--line:#4b3d37}}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}main{max-width:900px;margin:auto;padding:36px 20px 64px}header{text-align:center}img{max-width:112px;border-radius:24px}h1{margin:12px 0 4px;font-size:clamp(2rem,7vw,4rem);letter-spacing:-.05em}h2{margin-top:2rem}p{color:var(--muted)}.lead{font-size:1.15rem}.card{margin:20px 0;padding:22px;border:1px solid var(--line);border-radius:22px;background:var(--card);box-shadow:0 12px 32px #6c463411}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}a,button,select{font:inherit}a,button{display:inline-block;border:0;border-radius:999px;padding:10px 16px;background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none;cursor:pointer}a.secondary,button.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}label{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--muted)}select{padding:8px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}small{color:var(--muted)}[dir=rtl] th,[dir=rtl] td{text-align:right}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="../store/graphics/PizzaScan-App-Icon-512.png" alt="PizzaScan">
+    <h1>PizzaScan</h1>
+    <p id="tagline" class="lead">Pizza und italienische Orte finden · Fotoanalyse lokal auf deinem Gerät</p>
+    <label><span id="language-label">Sprache</span><select id="language"></select></label>
+  </header>
+  <section class="card">
+    <h2 id="download-title">PizzaScan 2.3.23 · Build 58</h2>
+    <p id="download-copy">Installierbare Android-APK mit automatischer Browser-/Gerätespracherkennung und vollständiger UI-Lokalisierung.</p>
+    <div class="actions"><a id="download" href="https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.23.apk">⬇️ APK herunterladen</a><a id="checksum" class="secondary" href="https://github.com/chekento/Pizzascan/blob/main/downloads/SHA256SUMS-2.3.23.txt">SHA-256</a></div>
+    <p><code>d08a3c968740801d5993a901bed09a6ee51db999bb722f299ea058d292f03bf2</code></p>
+  </section>
+  <section class="card">
+    <h2 id="features-title">Was ist neu?</h2>
+    <p id="features-copy">Karte und Vollbildkarte verwenden dieselben POIs. GPS scannt automatisch den sichtbaren Ausschnitt. Popup, Besuch, Rezension und Ortsdetail teilen denselben Live-Wert. Alle Status-, Lade-, Menü- und Dropdown-Texte folgen der gewählten Sprache.</p>
+    <div class="actions"><a id="changelog" class="secondary" href="https://github.com/chekento/Pizzascan/blob/main/CHANGELOG.md">📝 Changelog</a><a id="archive" class="secondary" href="https://github.com/chekento/Pizzascan/blob/main/downloads/README.md">📦 APK-Archiv</a><a id="source" class="secondary" href="https://github.com/chekento/Pizzascan">GitHub</a></div>
+  </section>
+  <section class="card">
+    <h2 id="languages-title">Sprachen</h2>
+    <p id="languages-copy">Automatisch ausgewählt werden Deutsch, Englisch, Italienisch, Spanisch, Französisch, Portugiesisch, Niederländisch, Polnisch, Türkisch, Russisch, Japanisch, Chinesisch, Koreanisch und Arabisch. Die Auswahl bleibt lokal gespeichert und kann jederzeit geändert werden.</p>
+    <table><thead><tr><th id="app-label">App</th><th id="web-label">GitHub-Seite</th></tr></thead><tbody><tr><td id="app-value">Automatische Gerätesprache + Auswahl in den Einstellungen</td><td id="web-value">Diese Seite erkennt die Browsersprache automatisch.</td></tr></tbody></table>
+  </section>
+  <footer><small id="footer">PizzaScan · KoSch · OpenStreetMap/Leaflet · lokale Fotoanalyse</small></footer>
+</main>
+<script>
+(()=>{
+  const key='pizzascan-language-v1', codes=['de','en','it','es','fr','pt','nl','pl','tr','ru','ja','zh','ko','ar'];
+  const names={de:'Deutsch',en:'English',it:'Italiano',es:'Español',fr:'Français',pt:'Português',nl:'Nederlands',pl:'Polski',tr:'Türkçe',ru:'Русский',ja:'日本語',zh:'中文',ko:'한국어',ar:'العربية'};
+  const text={
+    de:{tag:'Pizza und italienische Orte finden · Fotoanalyse lokal auf deinem Gerät',download:'APK herunterladen',copy:'Installierbare Android-APK mit automatischer Browser-/Gerätespracherkennung und vollständiger UI-Lokalisierung.',newTitle:'Was ist neu?',newCopy:'Karte und Vollbildkarte verwenden dieselben POIs. GPS scannt automatisch den sichtbaren Ausschnitt. Popup, Besuch, Rezension und Ortsdetail teilen denselben Live-Wert. Alle Status-, Lade-, Menü- und Dropdown-Texte folgen der gewählten Sprache.',langs:'Sprachen',langCopy:'Automatisch ausgewählt werden Deutsch, Englisch, Italienisch, Spanisch, Französisch, Portugiesisch, Niederländisch, Polnisch, Türkisch, Russisch, Japanisch, Chinesisch, Koreanisch und Arabisch. Die Auswahl bleibt lokal gespeichert und kann jederzeit geändert werden.',app:'App',web:'GitHub-Seite',appValue:'Automatische Gerätesprache + Auswahl in den Einstellungen',webValue:'Diese Seite erkennt die Browsersprache automatisch.',language:'Sprache',change:'Changelog',archive:'APK-Archiv'},
+    en:{tag:'Find pizza and Italian places · photo analysis stays on your device',download:'Download APK',copy:'Installable Android APK with automatic browser/device-language detection and complete UI localization.',newTitle:'What is new?',newCopy:'The map and fullscreen map use the same POIs. GPS automatically scans the visible area. Popup, visit, review and place detail share the same live value. All status, loading, menu and dropdown text follows the selected language.',langs:'Languages',langCopy:'Automatic choices include German, English, Italian, Spanish, French, Portuguese, Dutch, Polish, Turkish, Russian, Japanese, Chinese, Korean and Arabic. The choice is stored locally and can be changed at any time.',app:'App',web:'GitHub page',appValue:'Automatic device language + selection in Settings',webValue:'This page detects the browser language automatically.',language:'Language',change:'Changelog',archive:'APK archive'},
+    it:{tag:'Trova pizza e locali italiani · analisi foto sul dispositivo',download:'Scarica APK',copy:'APK Android installabile con rilevamento automatico della lingua del browser/dispositivo e UI completamente localizzata.',newTitle:'Novità',newCopy:'La mappa e la mappa a schermo intero usano gli stessi POI. Il GPS scansiona automaticamente l’area visibile. Popup, visita, recensione e dettaglio usano lo stesso valore live. Stati, caricamenti, menu e tendine seguono la lingua scelta.',langs:'Lingue',langCopy:'Sono disponibili automaticamente tedesco, inglese, italiano, spagnolo, francese, portoghese, olandese, polacco, turco, russo, giapponese, cinese, coreano e arabo.',app:'App',web:'Pagina GitHub',appValue:'Lingua dispositivo automatica + scelta nelle impostazioni',webValue:'Questa pagina rileva automaticamente la lingua del browser.',language:'Lingua',change:'Changelog',archive:'Archivio APK'},
+    es:{tag:'Encuentra pizza y lugares italianos · análisis de fotos en tu dispositivo',download:'Descargar APK',copy:'APK Android instalable con detección automática del idioma del navegador/dispositivo y UI completamente localizada.',newTitle:'Novedades',newCopy:'El mapa y el mapa a pantalla completa usan los mismos POI. El GPS analiza automáticamente el área visible. El popup, la visita, la reseña y el detalle comparten el mismo valor en vivo. Estados, cargas, menús y desplegables siguen el idioma elegido.',langs:'Idiomas',langCopy:'Incluye alemán, inglés, italiano, español, francés, portugués, neerlandés, polaco, turco, ruso, japonés, chino, coreano y árabe.',app:'App',web:'Página de GitHub',appValue:'Idioma automático del dispositivo + selección en Ajustes',webValue:'Esta página detecta automáticamente el idioma del navegador.',language:'Idioma',change:'Cambios',archive:'Archivo APK'},
+    fr:{tag:'Trouvez des pizzas et lieux italiens · analyse photo sur votre appareil',download:'Télécharger l’APK',copy:'APK Android installable avec détection automatique de la langue du navigateur/appareil et interface entièrement localisée.',newTitle:'Nouveautés',newCopy:'La carte et la carte plein écran utilisent les mêmes POI. Le GPS analyse automatiquement la zone visible. La popup, la visite, l’avis et le détail partagent la même valeur en direct. Les états, chargements, menus et listes déroulantes suivent la langue choisie.',langs:'Langues',langCopy:'Allemand, anglais, italien, espagnol, français, portugais, néerlandais, polonais, turc, russe, japonais, chinois, coréen et arabe sont disponibles.',app:'Application',web:'Page GitHub',appValue:'Langue automatique de l’appareil + choix dans les réglages',webValue:'Cette page détecte automatiquement la langue du navigateur.',language:'Langue',change:'Changelog',archive:'Archive APK'}
+  };
+  const fallback={pt:text.en,nl:text.en,pl:text.en,tr:text.en,ru:text.en,ja:text.en,zh:text.en,ko:text.en,ar:text.en};
+  const pick=v=>{const value=String(v||'').toLowerCase().replace('_','-');const base=value.split('-')[0];return codes.includes(value)?value:(codes.includes(base)?base:'de');};
+  const detect=()=>{let list=[];try{list=(navigator.languages||[]).concat(navigator.language||'');}catch{}for(const value of list){const code=pick(value);if(code)return code;}return 'de';};
+  let lang=pick(localStorage.getItem(key))||detect();
+  const select=document.getElementById('language');select.innerHTML=codes.map(c=>`<option value="${c}">${names[c]}</option>`).join('');select.value=lang;select.setAttribute('aria-label',names[lang]);
+  const apply=()=>{const c=text[lang]||fallback[lang]||text.en;document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';document.getElementById('tagline').textContent=c.tag;document.getElementById('download').textContent='⬇️ '+c.download;document.getElementById('download-copy').textContent=c.copy;document.getElementById('features-title').textContent=c.newTitle;document.getElementById('features-copy').textContent=c.newCopy;document.getElementById('languages-title').textContent=c.langs;document.getElementById('languages-copy').textContent=c.langCopy;document.getElementById('app-label').textContent=c.app;document.getElementById('web-label').textContent=c.web;document.getElementById('app-value').textContent=c.appValue;document.getElementById('web-value').textContent=c.webValue;document.getElementById('language-label').textContent=c.language;document.getElementById('changelog').textContent='📝 '+c.change;document.getElementById('archive').textContent='📦 '+c.archive;select.setAttribute('aria-label',c.language);};
+  select.onchange=()=>{lang=pick(select.value);localStorage.setItem(key,lang);apply();};apply();
+})();
+</script>
+</body>
+</html>

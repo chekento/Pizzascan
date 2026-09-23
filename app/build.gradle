@@ -7,9 +7,9 @@ android {
         applicationId 'cloud.kosch.pizzascan'
         minSdk 26
         targetSdk 36
-        // Build 57: shared live scores, complete late-runtime localization and GPS viewport scans.
-        versionCode 57
-        versionName '2.3.22'
+        // Build 58: shared live scores, automatic browser-language detection and universal localization.
+        versionCode 58
+        versionName '2.3.23'
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     sourceSets { main { assets.srcDirs = ['../web'] } }
@@ -47,7 +47,7 @@ tasks.register('verifyWebAssets') {
         ['index.html', 'script.js', 'core.js', 'style.css',
          'hotfix-map.js', 'hotfix-map.css', 'persistent-model-ui.js', 'search-ui.js', 'search-ui.css', 'settings-search.js', 'review-discovery.js', 'broad-defaults.js', 'poi-discovery.js', 'pizza-only.js', 'smart-discovery.js', 'place-history.js', 'runtime-finalize.js', 'open-reviews-publish.js', 'build39-runtime.js', 'build40-runtime.js', 'build41-hardening.js', 'build42-discovery.js', 'build42-release.js', 'build44-runtime.js', 'build46-runtime.js', 'build47-runtime.js', 'build48-runtime.js', 'build49-runtime.js', 'build57-runtime.js', 'build41-hardening.css', 'poi-search.js', 'native-overpass.js', 'release-info.js', 'google-reviews.js', 'google-reviews.css', 'i18n.js', 'i18n-extra.js', 'i18n.css', 'i18n-shim.js', 'i18n-content.js', 'i18n-static.js',
          'vendor/leaflet/leaflet.js', 'vendor/leaflet/leaflet.css',
-         'analysis.js', 'model-info.js', 'ratings.js', 'ratings-ui.js', 'places.js', 'map-ui.js', 'vendor/hours.js', 'vendor/ai-worker.js', 'review-builder.js', 'draft-store.js', 'draft-list.js', 'review-ui.js', 'privacy-ui.js', 'privacy-233.js', 'privacy.html', 'geocoder-proxy.html', 'geocoder-proxy.js'].each { name ->
+         'analysis.js', 'model-info.js', 'ratings.js', 'ratings-ui.js', 'places.js', 'map-ui.js', 'vendor/hours.js', 'vendor/ai-worker.js', 'review-builder.js', 'draft-store.js', 'draft-list.js', 'review-ui.js', 'privacy-ui.js', 'privacy-233.js', 'privacy.html', 'geocoder-proxy.html', 'geocoder-proxy.js', 'i18n-universal.js'].each { name ->
             if (!file("../web/$name").isFile()) {
                 throw new GradleException("Missing web/$name. Run npm install and npm run assets first.")
             }

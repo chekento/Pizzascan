@@ -35,7 +35,7 @@ const copy={
 };
 const cache=new Map(),loading=new Set(),errors=new Map();
 const lang=()=>{const l=(document.documentElement.lang||'de').slice(0,2);return langs.includes(l)?l:'de';};
-const t=(key,values={})=>copy[key][langs.indexOf(lang())].replace(/\{(\w+)\}/g,(_,k)=>String(values[k]??''));
+const t=(key,values={})=>{const index=langs.indexOf(lang());return (copy[key]?.[index<0?1:index]||copy[key]?.[1]||key).replace(/\{(\w+)\}/g,(_,k)=>String(values[k]??''));};
 const esc=s=>root.PizzaCore?.esc?root.PizzaCore.esc(String(s??'')):String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safeUrl=value=>{try{const u=new URL(value);return u.protocol==='https:'?u.href:'';}catch{return '';}};
 const apiKey=()=>{try{return localStorage.getItem(KEY)||'';}catch{return '';}};

@@ -1,0 +1,19 @@
+<resources>
+    <string name="pick_photo">Выбрать фото пиццы</string>
+    <string name="import_json">Импортировать JSON PizzaScan</string>
+    <string name="share_photo">Поделиться фото пиццы и отзывом</string>
+    <string name="exit_title">Закрыть PizzaScan?</string>
+    <string name="exit_message">Ваши фотографии и оценки останутся на этом устройстве.</string>
+    <string name="exit_close">Закрыть</string>
+    <string name="exit_stay">Остаться</string>
+    <string name="no_picker">Нет доступного выбора файлов.</string>
+    <string name="request_error">Не удалось прочитать запрос приложения.</string>
+    <string name="reply_error">Ошибка ответа Android.</string>
+    <string name="action_error">Ошибка действия Android</string>
+    <string name="no_link_app">Нет приложения для открытия этой ссылки.</string>
+    <string name="no_browser">Нет приложения для открытия этой ссылки.</string>
+    <string name="export_saved">Экспорт JSON сохранён.</string>
+    <string name="export_error">Не удалось сохранить экспорт.</string>
+    <string name="export_failed">Экспорт не выполнен.</string>
+    <string name="review_clip">Отзыв PizzaScan</string>
+</resources>

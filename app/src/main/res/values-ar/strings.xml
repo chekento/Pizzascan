@@ -1,0 +1,19 @@
+<resources>
+    <string name="pick_photo">اختيار صورة بيتزا</string>
+    <string name="import_json">استيراد JSON من PizzaScan</string>
+    <string name="share_photo">مشاركة صورة البيتزا والمراجعة</string>
+    <string name="exit_title">إغلاق PizzaScan؟</string>
+    <string name="exit_message">تبقى صورك وتقييماتك على هذا الجهاز.</string>
+    <string name="exit_close">إغلاق</string>
+    <string name="exit_stay">البقاء</string>
+    <string name="no_picker">لا يتوفر منتقي ملفات.</string>
+    <string name="request_error">تعذرت قراءة طلب التطبيق.</string>
+    <string name="reply_error">فشلت استجابة Android.</string>
+    <string name="action_error">فشل إجراء Android</string>
+    <string name="no_link_app">لا يتوفر تطبيق لفتح هذا الرابط.</string>
+    <string name="no_browser">لا يتوفر تطبيق لفتح هذا الرابط.</string>
+    <string name="export_saved">تم حفظ تصدير JSON.</string>
+    <string name="export_error">تعذر حفظ التصدير.</string>
+    <string name="export_failed">فشل التصدير.</string>
+    <string name="review_clip">مراجعة PizzaScan</string>
+</resources>
