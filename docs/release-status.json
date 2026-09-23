@@ -1,61 +1,49 @@
 {
-  "updated": "2026-09-14",
-  "version": "2.3.3",
-  "source_commit": "743a578d48a2b8fd6a5f83dd9f2404c0adbc9725",
-  "stage": "Pre-closed-test",
-  "completed": 3,
-  "total": 8,
-  "summary": "3 erledigt · 3 in Arbeit · 2 ausstehend",
+  "updated": "2026-09-23",
+  "version": "2.3.23",
+  "build": 58,
+  "source_commit": "a349a0b9e98e3062a715de7017f52d7ed624bf45",
+  "stage": "published",
+  "completed": 5,
+  "total": 5,
+  "summary": "Build 58 · 14 languages · direct APK",
+  "languages": ["de", "en", "it", "es", "fr", "pt", "nl", "pl", "tr", "ru", "ja", "zh", "ko", "ar"],
+  "apk": "https://raw.githubusercontent.com/chekento/Pizzascan/main/downloads/PizzaScan-2.3.23.apk",
+  "checksum": "https://github.com/chekento/Pizzascan/blob/main/downloads/SHA256SUMS-2.3.23.txt",
+  "changelog": "https://github.com/chekento/Pizzascan/blob/main/CHANGELOG.md",
+  "archive": "https://github.com/chekento/Pizzascan/blob/main/downloads/README.md",
   "tester_group": "https://groups.google.com/g/pizzascan-beta-testers",
-  "distribution_note": "Die eigentliche Tester-App wird später ausschließlich über den geschlossenen Google-Play-Test und dessen offiziellen Opt-in-Link ausgegeben. Die GitHub-APK ist nur für technische Vorab- und Geräteprüfungen bestimmt und zählt nicht als Teilnahme am Play-Test.",
+  "distribution_note": "Die direkt installierbare Build-58-APK ist veröffentlicht. Der Google-Play-Test bleibt ein separater Vertriebskanal.",
   "items": [
     {
-      "id": "source",
-      "label": "2.3.3 Quellstand & Repo",
+      "id": "frontpage",
       "status": "done",
-      "note": "Build 18 enthält die breite Overpass-Discovery für benannte Restaurants, Imbisse, Cafés, Takeaways und Food-Courts, klare Kennzeichnung unbestätigter Pizza-Kandidaten, gezielte Ergänzung sehr dünner Kartenantworten, Cache-Heilung, Suchfallback, Karten-Recovery, Bewertungsfilter, Ratings-Links, 5 Sprachen und optionale Google-Maps-Reviews."
+      "label": "Repository-Frontpage",
+      "note": "README, Sprachseiten, Downloadlink, SHA-256, Changelog und Archiv zeigen gemeinsam auf 2.3.23 · Build 58."
     },
     {
-      "id": "ci",
-      "label": "CI-Build & Android-16-Test",
+      "id": "languages",
       "status": "done",
-      "note": "Build, Lint, Web/UI-Tests einschließlich der aus der realen APK extrahierten Oberfläche, Discovery-/Map-/Rating-Regressionstests, lokale Modelltests und Android-16-Smoke-Test sind für 2.3.3 Build 18 erfolgreich durchgelaufen."
+      "label": "Web- und App-Sprachen",
+      "note": "Vierzehn Sprachen mit automatischer Browser-/Gerätespracherkennung, Menüs, Dropdowns, Ladeanzeigen und Statusmeldungen."
+    },
+    {
+      "id": "runtime",
+      "status": "done",
+      "label": "Karte, GPS und Live-Bewertung",
+      "note": "Mini- und Vollbildkarte nutzen dieselben POIs; GPS scannt den sichtbaren Ausschnitt; alle Bewertungsanzeigen teilen einen Live-Wert."
     },
     {
       "id": "apk",
-      "label": "Technische 2.3.3-Vorab-APK · Build 18",
       "status": "done",
-      "note": "downloads/PizzaScan-2.3.3-Test.apk ist aus Build 18 für direkte Geräte- und Funktionsprüfung veröffentlicht; sie verwendet das Testpaket cloud.kosch.pizzascan.lang1 und ist nicht die offizielle Play-Testausgabe."
+      "label": "Installierbare APK",
+      "note": "PizzaScan-2.3.23.apk · versionCode 58 · SHA-256 d08a3c968740801d5993a901bed09a6ee51db999bb722f299ea058d292f03bf2."
     },
     {
-      "id": "deviceqa",
-      "label": "Echter Geräte-Abnahmetest",
-      "status": "in_progress",
-      "note": "Build 18 muss auf dem realen Android-Gerät insbesondere gegen die zuvor zu kleine Ortsmenge in Ahrensburg bestätigt werden; danach folgen Standort, Ratings, optionale Google-Maps-Reviews und Offline-KI."
-    },
-    {
-      "id": "aab",
-      "label": "Google-Play-AAB & Signierung",
-      "status": "in_progress",
-      "note": "Der CI-Workflow erzeugt und validiert ein 2.3.3 Release-AAB. Die finale Upload-Signierung für cloud.kosch.pizzascan steht noch aus; das CI-Bundle ist nicht als fertig signiertes Play-Paket zu behandeln."
-    },
-    {
-      "id": "console",
-      "label": "Play-Console-Eintrag & Erklärungen",
-      "status": "in_progress",
-      "note": "Store-Grafiken, Datenschutz- und Datensicherheitsunterlagen sind vorbereitet und werden auf 2.3.3 abgeglichen; die Console-Formulare sind noch nicht vollständig abgeschlossen."
-    },
-    {
-      "id": "closedtest",
-      "label": "Geschlossener Google-Play-Test",
-      "status": "pending",
-      "note": "Die Google Group ist vorbereitet. AAB-Upload, Track-Freigabe und offizieller Play-Opt-in-Link fehlen noch. Über diesen Play-Link wird die eigentliche Tester-App verteilt."
-    },
-    {
-      "id": "production",
-      "label": "Produktionszugang & Veröffentlichung",
-      "status": "pending",
-      "note": "Startet nach erfolgreichem geschlossenen Test und den gegebenenfalls geltenden Play-Testanforderungen."
+      "id": "archive",
+      "status": "done",
+      "label": "Release-Historie",
+      "note": "2.3.22 und ältere APKs bleiben im Archiv für Regression und Gerätevergleiche verfügbar."
     }
   ]
 }
