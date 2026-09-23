@@ -27,6 +27,8 @@
 
 **Neu in 2.3.23:** Die App lädt jetzt die Build-57-Laufzeit tatsächlich in der APK-Weboberfläche, erkennt die Browser-/Gerätesprache automatisch und bietet vierzehn Sprachen für App, Menüs, Dropdowns, Ladeanzeigen, Statusmeldungen, Datenschutz, Backup und Reviews. Die erste erfolgreiche POI-Antwort wird sofort angezeigt und weitere OSM-Spiegel werden danach zusammengeführt; GPS-Zentrierung startet den Scan erst nach der Kartenbewegung im aktuellen Ausschnitt. Popup, Place-Detail, „Mein Besuch“ und Rezensionsbaukasten verwenden pro Ort denselben live synchronisierten Wert von 0,1 bis 10,0. Die Vollbildkarte bleibt auf Karte, POIs und Popups beschränkt.
 
+**Installationshinweis:** Build 58 ist mit dem verfügbaren Direct-Release-Schlüssel signiert. Wenn Android ein Update von einer älteren, anders signierten Direkt-APK ablehnt, bitte persönliche Daten exportieren und die alte APK vor der Neuinstallation entfernen. Die SHA-256-Prüfsumme oben gehört exakt zu diesem Download.
+
 <p align="center">
 <a href="downloads/SHA256SUMS-2.3.23.txt"><strong>SHA-256</strong></a>
 &nbsp; · &nbsp;

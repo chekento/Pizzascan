@@ -28,6 +28,8 @@ Build 58 erweitert Build 57 um automatische Browser-/Gerätespracherkennung und 
 
 Die GitHub-Direkt-APK ist installierbar signiert. Google Play verwendet Play App Signing; deshalb kann die Play-Store-Ausgabe eine andere Signatur als die Direkt-APK besitzen. Bei einem Wechsel zwischen Direktinstallation und Play-Version kann Android eine Neuinstallation verlangen.
 
+Build 58 nutzt den verfügbaren Direct-Release-Schlüssel. Falls Android das Update von einer älteren, anders signierten Direkt-APK ablehnt, zuerst persönliche Daten exportieren/sichern und anschließend die alte Direktversion entfernen. Danach lässt sich `PizzaScan-2.3.23.apk` frisch installieren.
+
 Vor einer Deinstallation persönliche PizzaScan-Daten exportieren bzw. sichern. App-lokale Daten, Review-Entwürfe und heruntergeladene Offline-Modelle können beim Entfernen der App verloren gehen.
 
 ## Prüfsummen
