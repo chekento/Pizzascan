@@ -1,53 +1,150 @@
-# PizzaScan – Datenschutzerklärung
+# Datenschutz, KI- & Drittanbietertransparenz — PizzaScan
 
-**Stand:** 16. September 2026  
-**Version:** 2.3.5  
-**Android-Paket für Google Play:** `cloud.kosch.pizzascan`
+**Stand:** 1. Oktober 2026  
+**Version:** 2.3.23 · Build 58  
+**Android-Paket:** `cloud.kosch.pizzascan`  
+**Projekt:** https://github.com/chekento/Pizzascan  
+**Kontakt / Anbieterinformationen:** https://kosch.cloud
 
-Die ausführliche und für den aktuellen Release maßgebliche Datenschutzerklärung wird unter [`docs/Datenschutz.md`](docs/Datenschutz.md) gepflegt. Diese Root-Datei fasst die wichtigsten Punkte zusammen und verweist für Details, Anbieterinformationen, Speicherfristen und Betroffenenrechte auf die vollständige Fassung.
+Die ausführliche Datenschutzerklärung wird unter [`docs/Datenschutz.md`](docs/Datenschutz.md) gepflegt. Diese Root-Seite fasst zusätzlich KI-/ML-Funktionen, Drittanbieter, externe Dienste, Build-Werkzeuge und APK-Signierung transparent zusammen.
 
-## Verantwortlicher und Kontakt
+## 1. Kurzfassung
 
-Verantwortlich für PizzaScan ist **Kolja Werner Schumann (KoSch), Deutschland**. Kontakt ist über <https://kosch.cloud/> und das öffentliche Projekt <https://github.com/chekento/Pizzascan> möglich. Weitere veröffentlichte Entwickler-Kontaktdaten ergeben sich aus dem Google-Play-Entwicklerprofil.
+PizzaScan benötigt kein Benutzerkonto und betreibt keinen eigenen Server für Benutzerprofile, Pizza-Fotos oder private Restaurantbewertungen.
 
-## Kurzfassung
+- Keine Werbung.
+- Kein eigenes Analytics-/Tracking-SDK.
+- Standortzugriff ist optional und nur im Vordergrund.
+- Fotos für die KI-Analyse werden lokal verarbeitet.
+- KI-Modelle werden erst nach ausdrücklicher Bestätigung geladen.
+- Eigene Bewertungen und Besuchsdaten bleiben grundsätzlich lokal.
+- Eine Veröffentlichung zu Open Reviews / Mangrove erfolgt nur nach ausdrücklicher Aktivierung und konkretem Nutzerbefehl.
+- Google Maps, Tripadvisor und Yelp werden nur nach bewusster Nutzeraktion als externe Ziele geöffnet.
+- Eine optionale Google-Places-Funktion benötigt einen vom Nutzer selbst bereitgestellten API-Key.
 
-PizzaScan benötigt kein Benutzerkonto und betreibt keinen eigenen Server für Benutzerprofile, Pizza-Fotos oder private Restaurantbewertungen. Die App enthält keine Werbung, kein eigenes Analytics-SDK, kein Community-System und verkauft keine personenbezogenen Daten.
+## 2. KI / Machine Learning — was macht die KI?
 
-- Fotos für die KI-Analyse werden lokal auf dem Gerät verarbeitet.
-- Offline-KI-Modelle werden erst nach Bestätigung geladen und im privaten persistenten App-Speicher wiederverwendet.
-- Standortzugriff ist optional, nur im Vordergrund und kann jederzeit entzogen werden.
-- Karten-, Restaurant- und Suchdaten kommen aus dem OpenStreetMap-Ökosystem; für die Pizza-/Italien-Suche können mehrere öffentliche Overpass-Mirrors parallel abgefragt und nach OSM-ID zusammengeführt werden.
-- Bereits gefundene passende Orte werden lokal in IndexedDB zwischengespeichert und beim nächsten Start wieder geladen.
-- Als selbst besucht bestätigte und selbst bewertete Orte werden in einem dauerhaften lokalen Besuchsarchiv gespeichert. Dieses Archiv kann als Markdown-Datei gesichert und später wieder geladen werden.
-- Öffentliche Ortsbewertungen können optional von Mangrove / Open Reviews gelesen werden.
-- Das **freiwillige Veröffentlichen eigener Bewertungen zu Open Reviews / Mangrove ist standardmäßig ausgeschaltet**. Auch nach Aktivierung findet kein automatischer Upload statt; jede konkrete Veröffentlichung erfordert einen ausdrücklichen Nutzerbefehl.
-- Für einen freiwillig veröffentlichten Open-Reviews-Beitrag werden Bewertung, optionaler freigegebener Rezensionstext, Ortsname/Koordinaten, OSM-ID und ein pseudonymer öffentlicher Signaturschlüssel direkt an `api.mangrove.reviews` übertragen. Der zugehörige private P-256-Schlüssel bleibt lokal in der App.
-- Google Maps, Tripadvisor und Yelp werden nur nach Antippen als externe Ziele geöffnet. Eine optionale Google-Places-Reviews-Funktion benötigt einen vom Nutzer selbst hinterlegten API-Key.
+PizzaScan verwendet KI/ML **ausschließlich für die optionale Analyse eines vom Nutzer ausgewählten Pizza-/Food-Fotos**.
 
-## Lokale Daten und Exporte
+| Modell / Komponente | Aufgabe | Datenfluss |
+|---|---|---|
+| **CLIP ViT-B/32 (OpenAI)** | Bild-Text-Ähnlichkeiten für sichtbare Fotoeigenschaften | Lokale Inferenz nach Modelldownload |
+| **CLIP ViT-B/16 (OpenAI)** | Alternative, feinere Bild-Text-Ähnlichkeitsanalyse | Lokale Inferenz |
+| **SigLIP Base Patch16-224 (Google)** | Alternative visuelle Embedding-/Ähnlichkeitsanalyse | Lokale Inferenz |
+| **Xenova / Transformers.js** | Browser-/WebView-Laufzeit für die Modelle | Modelllauf lokal in App/WebView |
+| **Hugging Face** | Downloadquelle der bestätigten Modellgewichte | Erhält beim Download technische Verbindungsdaten, aber kein Foto |
 
-Je nach Nutzung speichert PizzaScan lokal Einstellungen, Kartenansicht und Filter, gefundene Ortsdaten, gemerkte Orte, das Besuchsarchiv, eigene Bewertungen und Notizen, Rezensionsentwürfe, Fotoanalysen, ausgewählte Fotos, Offline-KI-Modelle sowie reduzierte Caches für offene Bewertungs- und Suchdaten.
+Die Analyse erzeugt experimentelle Werte für **25 sichtbare Kriterien**. Die in der Oberfläche verwendeten **100 Perspektiven sind simulierte Gewichtungsprofile** derselben Fotoanalyse. Sie sind keine 100 realen Experten, keine unabhängigen Gutachten und keine Menschen.
 
-Das Besuchsarchiv kann als Markdown exportiert werden. Der Export enthält Ortsdaten, eigene Bewertungen und gegebenenfalls eigene Notizen, aber keine Fotos und keinen privaten Open-Reviews-Signaturschlüssel. Außerhalb der App gespeicherte Dateien liegen in der Verantwortung des vom Nutzer gewählten Speicherorts oder Cloud-Anbieters.
+### Was die KI nicht macht
 
-## Externe Dienste
+- Keine Fotos werden zur KI-Auswertung an OpenAI, Google oder Hugging Face hochgeladen.
+- Die Modelle werden nicht mit Nutzerfotos nachtrainiert.
+- Es findet keine Gesichtserkennung oder biometrische Identifikation statt.
+- Die KI bewertet nicht zuverlässig Geschmack, Geruch, Temperatur, Allergene, Hygiene oder Lebensmittelsicherheit.
+- KI-Werte werden nicht automatisch als persönliche Restaurantbewertung veröffentlicht.
+- PizzaScan verwendet keinen ChatGPT-/LLM-Chatbot für die Fotoanalyse.
 
-Abhängig von der verwendeten Funktion kann PizzaScan direkte HTTPS-Verbindungen insbesondere zu folgenden Diensten aufbauen:
+## 3. Android-Berechtigungen
 
-- OpenStreetMap-Kartenkacheln,
-- `overpass-api.de`, `overpass.private.coffee`, `overpass.osm.jp` und `maps.mail.ru` für OSM-POI-Daten,
-- `photon.komoot.io` und bei ausdrücklich abgesendeter Suche gegebenenfalls Nominatim für Ort-/Adresssuche,
-- `api.mangrove.reviews` für optional geladene offene Bewertungen und nur nach ausdrücklicher Freigabe für eigene veröffentlichte Beiträge,
-- Hugging Face für den Download der vom Nutzer bestätigten lokalen KI-Modelle,
-- optional Google Places API (New), wenn der Nutzer selbst einen API-Key hinterlegt und die Funktion aufruft.
+Die aktuelle App deklariert:
 
-Solche Dienste erhalten technisch notwendige Verbindungsdaten wie IP-Adresse und Zeitpunkt. Standortnahe Suchbereiche können Rückschlüsse auf einen ungefähren oder genauen Standort ermöglichen. Details und Links zu den Anbieterinformationen stehen in [`docs/Datenschutz.md`](docs/Datenschutz.md).
+- `INTERNET` — Karten, Restaurant-/Adresssuche, Modelldownloads und optionale externe Bewertungsdienste.
+- `ACCESS_COARSE_LOCATION` — optionaler ungefährer Vordergrundstandort.
+- `ACCESS_FINE_LOCATION` — optionaler genauer Vordergrundstandort.
 
-## Löschen und Widerruf
+Es gibt keine Hintergrundstandortberechtigung.
 
-Lokale Daten können über die jeweiligen App-Funktionen beziehungsweise vollständig über **Android → Apps → PizzaScan → Speicher → Daten löschen** oder durch Deinstallation entfernt werden. Das Abschalten einer optionalen Netzwerkfunktion stoppt zukünftige Übermittlungen, löscht aber keine bereits bewusst extern veröffentlichten Beiträge. Außerhalb von PizzaScan gespeicherte Exporte und extern veröffentlichte Inhalte müssen am jeweiligen Ziel separat verwaltet werden.
+Für Fotos nutzt PizzaScan die Android-Dateiauswahl bzw. eine externe Kamera-App. Die App fordert keinen pauschalen Medienbibliothekszugriff an.
 
-Soweit die DSGVO anwendbar ist, erläutert die vollständige Datenschutzerklärung Rechtsgrundlagen, internationale Datenübermittlungen und Betroffenenrechte. Für ausschließlich lokal gespeicherte Daten kann der Entwickler keine Fernlöschung durchführen.
+## 4. Externe Dienste und Datenquellen
 
-**Vollständige Datenschutzerklärung:** [`docs/Datenschutz.md`](docs/Datenschutz.md)
+Je nach verwendeter Funktion kann PizzaScan HTTPS-Verbindungen aufbauen zu:
+
+| Dienst | Zweck | Typische übertragene Daten |
+|---|---|---|
+| **OpenStreetMap / tile.openstreetmap.org** | Kartenkacheln | sichtbarer Kartenbereich, IP/Verbindungsdaten |
+| **Overpass** (`overpass-api.de`, `overpass.private.coffee`, `overpass.osm.jp`, `maps.mail.ru`) | Pizza-/Restaurant-POIs | Karten-BBox, OSM-Abfragen |
+| **Photon / komoot** | Ort-/Adresssuche | Suchtext, je nach Funktion Suchmittelpunkt |
+| **Nominatim** | expliziter Such-Fallback | Suchtext, Sprache und technische Parameter |
+| **Mangrove / Open Reviews** | offene Bewertungen lesen; optional bewusst eigene veröffentlichen | Suchbereich; bei Veröffentlichung Bewertung, freigegebener Text, Ortsdaten, öffentlicher Schlüssel |
+| **Hugging Face** | Download lokaler ML-Modelle | Modelldatei-Anfrage und technische Verbindungsdaten |
+| **Google Places API (optional)** | ausgewählte Google-Reviews, nur mit eigenem Key | Ortsname, Adresse, Koordinaten, Sprache, API-Key/Cloudprojekt |
+| **Google Maps / Tripadvisor / Yelp** | externe Gegenprüfung | erst nach Nutzer-Tap im externen Ziel |
+
+Externe Dienste können IP-Adresse, Zeitpunkt, User-Agent und weitere technisch notwendige Protokolldaten nach ihren eigenen Regeln verarbeiten.
+
+## 5. Lokale Daten
+
+Je nach Nutzung können lokal gespeichert werden:
+
+- Kartenansicht und Filter,
+- gefundene OSM-Orte und lokale Caches,
+- Favoriten,
+- Besuchsarchiv,
+- persönliche Bewertungen und Notizen,
+- Rezensionsentwürfe,
+- Fotoanalysen,
+- ausgewählte lokale Fotos,
+- heruntergeladene KI-Modelle,
+- optionaler eigener Google-Places-Key,
+- lokaler privater P-256-Schlüssel für bewusst veröffentlichte Open-Reviews-Beiträge.
+
+Diese Daten werden nicht als PizzaScan-Nutzerprofil an einen eigenen Server übertragen.
+
+## 6. Drittanbieter-Bibliotheken und Werkzeuge
+
+### App-/WebView-Laufzeit
+
+- **Leaflet 1.9.4** — Kartenoberfläche.
+- **@huggingface/transformers 3.8.1** — lokale ML-Inferenz.
+- **opening_hours 3.11.0** — Verarbeitung von Öffnungszeiten.
+- **tz-lookup 6.1.25** — Zeitzonenbestimmung aus Koordinaten.
+- **AndroidX WebKit / AndroidX Core** — Android-WebView- und Plattformintegration.
+
+### Entwicklungs-/Testwerkzeuge
+
+- **Playwright** — Browser-/Smoke-Tests.
+- **esbuild** — Asset-/Build-Verarbeitung.
+- **Sharp** — Grafik-/Asset-Verarbeitung.
+- **Node.js, Gradle, Android SDK, JDK** — Build-System.
+- **GitHub Actions / GitHub Releases** — CI und Distribution.
+
+Entwicklungswerkzeuge sind nicht automatisch Laufzeit-Tracker in der installierten App.
+
+## 7. Eigene Bewertungen und Open Reviews
+
+Das Lesen öffentlicher Mangrove/Open-Reviews-Daten ist getrennt von der Veröffentlichung eigener Inhalte.
+
+Eine eigene Bewertung wird **nicht automatisch veröffentlicht**. Für die Veröffentlichung muss die Funktion aktiviert und anschließend die konkrete Bewertung ausdrücklich gesendet werden.
+
+Der private P-256-Schlüssel bleibt lokal; nur der öffentliche Signaturschlüssel wird für den öffentlichen Beitrag verwendet.
+
+## 8. Zertifikate, Signierung und Prüfsummen
+
+Der im Repository verwendete `direct`-Build ist derzeit mit einer **Android-Test-/Debug-Signierkonfiguration** signiert. Diese Identität ermöglicht die technische APK-Installation, ist aber **kein Play-Store-Produktionszertifikat und keine unabhängige Sicherheits-/Datenschutz-Zertifizierung**.
+
+SHA-256-Prüfsummen werden zur Integritätskontrolle veröffentlicht. Sie bestätigen, ob eine Datei dem veröffentlichten Hash entspricht; sie zertifizieren nicht die inhaltliche Sicherheit der App.
+
+PizzaScan installiert keine eigene Root-CA und verlangt keine Benutzerzertifikate.
+
+## 9. Löschung und Kontrolle
+
+Lokale Daten können über App-Funktionen, **Android → Apps → PizzaScan → Speicher → Daten löschen** oder durch Deinstallation entfernt werden. Exportdateien und extern bewusst veröffentlichte Inhalte müssen am jeweiligen Ziel separat verwaltet werden.
+
+Modelle können über die App-Funktion zum Entfernen heruntergeladener Modelle gelöscht werden. Standortberechtigungen lassen sich jederzeit über Android widerrufen.
+
+## 10. Ausführliche Datenschutzerklärung
+
+Die vollständige Fassung mit Speicherfristen, externen Datenflüssen, Rechtsgrundlagen, Nutzerrechten und Details zu Mangrove/Open Reviews und Google Places steht hier:
+
+**[docs/Datenschutz.md](docs/Datenschutz.md)**
+
+## 11. Änderungen
+
+Wenn neue KI-Modelle, Online-Dienste, Berechtigungen, Accounts, Analytics oder andere Datenflüsse hinzukommen, müssen diese Dokumente vor Veröffentlichung entsprechend aktualisiert werden.
+
+---
+
+**Repository:** https://github.com/chekento/Pizzascan  
+**Anbieter / Kontakt:** https://kosch.cloud
