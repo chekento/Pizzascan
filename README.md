@@ -6,7 +6,9 @@
 <p align="center"><strong>Weltweit Pizza und italienische Restaurants finden · schnell · relevant · transparent</strong></p>
 <p align="center">Deutsch · English · Italiano · Español · Français · Português · Nederlands · Polski · Türkçe · Русский · 日本語 · 中文 · 한국어 · العربية</p>
 
-<p align="center"><a href="PRIVACY.md"><strong>🔐 Datenschutz · KI · Drittanbieter</strong></a> · <a href="docs/Datenschutz.md"><strong>Vollständige Datenschutzerklärung</strong></a></p>\n\n<p align="center"><strong>Sprachseiten / Language pages:</strong><br>
+<p align="center"><a href="PRIVACY.md"><strong>🔐 Datenschutz · KI · Drittanbieter</strong></a> · <a href="docs/Datenschutz.md"><strong>Vollständige Datenschutzerklärung</strong></a></p>
+
+<p align="center"><strong>Sprachseiten / Language pages:</strong><br>
 <a href="README.de.md">Deutsch</a> · <a href="README.en.md">English</a> · <a href="README.it.md">Italiano</a> · <a href="README.es.md">Español</a> · <a href="README.fr.md">Français</a> · <a href="README.pt.md">Português</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.pl.md">Polski</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.ru.md">Русский</a> · <a href="README.ja.md">日本語</a> · <a href="README.zh.md">中文</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a><br>
 <a href="https://chekento.github.io/Pizzascan/">🌐 Automatische GitHub-Sprachseite / browser-detected language page</a></p>
 
