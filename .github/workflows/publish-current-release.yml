@@ -1,0 +1,65 @@
+name: Publish PizzaScan GitHub Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/build.gradle'
+      - 'downloads/PizzaScan-*.apk'
+      - 'downloads/SHA256SUMS-*.txt'
+      - '.github/workflows/publish-current-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve current version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n "s/.*versionName '\\([^']*\\)'.*/\\1/p" app/build.gradle | head -1)
+          test -n "$VERSION"
+          APK="downloads/PizzaScan-${VERSION}.apk"
+          test -f "$APK"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          APK="${{ steps.version.outputs.apk }}"
+          mkdir -p release
+          cp "$APK" "release/PizzaScan-${VERSION}.apk"
+          sha256sum "release/PizzaScan-${VERSION}.apk" > "release/PizzaScan-${VERSION}.apk.sha256"
+
+      - name: Create or refresh versioned release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          APK="release/PizzaScan-${VERSION}.apk"
+          SUM="${APK}.sha256"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" "$SUM" --clobber
+          else
+            gh release create "$TAG" "$APK" "$SUM" \
+              --target "$GITHUB_SHA" \
+              --title "PizzaScan ${VERSION} · Android" \
+              --notes "Current direct Android build of PizzaScan. Distributed through GitHub for testing. See the repository README for installation notes, privacy information and known limitations." \
+              --prerelease
+          fi
