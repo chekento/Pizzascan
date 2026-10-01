@@ -1,6 +1,6 @@
 # Datenschutzerklärung für PizzaScan
 
-Stand: 16. September 2026 · Version 2.3.5 · Android-Paket `cloud.kosch.pizzascan`
+Stand: 1. Oktober 2026 · Version 2.3.23 · Build 58 · Android-Paket `cloud.kosch.pizzascan`
 
 ## Verantwortlicher und Kontakt
 
@@ -85,3 +85,12 @@ Nach den gesetzlichen Voraussetzungen hast du Rechte auf Auskunft, Berichtigung,
 ## Grenzen der Fotoanalyse
 
 Die Werte sind experimentelle Bild-Text-Vergleiche. Die 100 Perspektiven sind simulierte Gewichtungsprofile derselben 25 Fotowerte, keine echten Experten und keine unabhängigen Gutachten. Geschmack, Geruch, Temperatur, Allergene, Hygiene und Lebensmittelsicherheit lassen sich damit nicht zuverlässig bestimmen. Die App trifft keine rechtlich oder ähnlich erheblichen automatisierten Entscheidungen über Personen.
+
+
+## Drittanbieter-Software, KI-Transparenz und APK-Signierung
+
+Zusätzlich zu den oben beschriebenen Netzwerkdiensten verwendet PizzaScan in der App-/WebView-Laufzeit Leaflet 1.9.4, @huggingface/transformers 3.8.1, opening_hours 3.11.0, tz-lookup 6.1.25 sowie AndroidX WebKit/Core. Playwright, esbuild, Sharp, Node.js, Gradle, Android SDK, JDK und GitHub Actions dienen Entwicklung, Tests und Build/Distribution und sind keine eingebetteten Analytics-SDKs.
+
+Die KI-Fotoanalyse ist **nicht generativ**: CLIP ViT-B/32 und ViT-B/16 sowie SigLIP vergleichen lokal visuelle Bildmerkmale mit Text-/Kriteriumsrepräsentationen. Sie schreiben keine Rezensionen selbstständig, identifizieren keine Personen und laden das ausgewählte Foto nicht zu OpenAI, Google oder Hugging Face hoch. Die 100 Perspektiven sind simulierte Gewichtungsprofile, keine realen Expertinnen oder Experten.
+
+Der aktuelle Direct-Build verwendet eine Android-Test-/Debug-Signieridentität. Eine APK-Signatur bestätigt die technische Build-Identität, ist aber keine externe Sicherheits- oder Datenschutz-Zertifizierung. SHA-256-Prüfsummen dienen ausschließlich der Integritätskontrolle.
